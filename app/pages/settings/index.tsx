@@ -1,0 +1,136 @@
+import { type FC, useState } from "react";
+import { Header } from "~/components/layouts";
+import { TextInput } from "~/components/core";
+import { PrimaryButton } from "~/components/buttons";
+import SelectInput from "~/components/core/SelectInput";
+import { useFormik } from "formik";
+import { mockOrg } from "~/mock/data";
+import { mockSubmit } from "~/mock/service";
+import { cn } from "~/lib/utils";
+
+type Tab = "general" | "billing" | "notifications";
+
+const tabs: { id: Tab; label: string }[] = [
+  { id: "general", label: "General" },
+  { id: "billing", label: "Billing" },
+  { id: "notifications", label: "Notifications" },
+];
+
+const timezoneOptions = [
+  { label: "UTC", value: "UTC" },
+  { label: "America/New_York", value: "America/New_York" },
+  { label: "America/Los_Angeles", value: "America/Los_Angeles" },
+  { label: "Europe/London", value: "Europe/London" },
+  { label: "Africa/Accra", value: "Africa/Accra" },
+];
+
+const GeneralSettings: FC = () => {
+  const [saved, setSaved] = useState(false);
+
+  const form = useFormik({
+    initialValues: {
+      name: mockOrg.name,
+      industry: mockOrg.industry,
+      timezone: mockOrg.timezone,
+    },
+    onSubmit: async (_v) => {
+      await mockSubmit(null);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    },
+  });
+
+  return (
+    <form onSubmit={form.handleSubmit} className="max-w-xl space-y-6">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Organization</p>
+        <div className="mt-3 space-y-4">
+          <TextInput
+            id="name"
+            label="Organization Name"
+            values={form.values}
+            errors={form.errors}
+            touched={form.touched}
+            handleChange={form.handleChange}
+            handleBlur={form.handleBlur}
+          />
+          <TextInput
+            id="industry"
+            label="Industry"
+            values={form.values}
+            errors={form.errors}
+            touched={form.touched}
+            handleChange={form.handleChange}
+            handleBlur={form.handleBlur}
+          />
+          <SelectInput
+            id="timezone"
+            label="Timezone"
+            options={timezoneOptions}
+            values={form.values}
+            errors={form.errors}
+            touched={form.touched}
+            setFieldValue={form.setFieldValue}
+            handleBlur={form.handleBlur}
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <PrimaryButton type="submit" loading={form.isSubmitting}>Save Changes</PrimaryButton>
+        {saved && <span className="text-sm text-green-600">Saved!</span>}
+      </div>
+    </form>
+  );
+};
+
+const SettingsPage: FC = () => {
+  const [activeTab, setActiveTab] = useState<Tab>("general");
+
+  return (
+    <div>
+      <Header title="Settings" description="Manage your organization settings" />
+      <div className="mb-6 flex gap-1 border-b" style={{ borderColor: "var(--color-surface-border)" }}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "-mb-px border-b-2 px-4 py-2 text-sm font-medium transition",
+              activeTab === tab.id
+                ? "border-blue-500 text-blue-400"
+                : "border-transparent text-slate-500 hover:text-slate-300"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      {activeTab === "general" && <GeneralSettings />}
+      {activeTab === "billing" && (
+        <div
+          className="max-w-xl rounded-xl border p-6"
+          style={{ background: "var(--color-surface-card)", borderColor: "var(--color-surface-border)" }}
+        >
+          <p className="text-sm font-semibold text-slate-200">
+            Current Plan: <span className="capitalize text-blue-400">{mockOrg.plan}</span>
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Billing management will be available once connected to the backend.
+          </p>
+        </div>
+      )}
+      {activeTab === "notifications" && (
+        <div
+          className="max-w-xl rounded-xl border p-6"
+          style={{ background: "var(--color-surface-card)", borderColor: "var(--color-surface-border)" }}
+        >
+          <p className="text-sm text-slate-500">
+            Notification preferences will be available once connected to the backend.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SettingsPage;

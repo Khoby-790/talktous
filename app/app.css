@@ -3,6 +3,34 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Playfair Display", Georgia, serif;
+  /* Primary → blue (matches landing page) */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* Dark surface system (matches landing page palette) */
+  --color-surface-base: #080d1e;
+  --color-surface-card: #0c1220;
+  --color-surface-elevated: #1a2035;
+  --color-surface-sidebar: #080d1e;
+  --color-surface-border: rgba(255, 255, 255, 0.08);
+
+  --color-status-open: #3b82f6;
+  --color-status-pending: #f59e0b;
+  --color-status-resolved: #10b981;
+  --color-status-closed: #6b7280;
+  --color-online: #22c55e;
+  --color-busy: #ef4444;
+  --color-away: #f59e0b;
+  --color-offline: #9ca3af;
 }
 
 html,
@@ -13,3 +41,40 @@ body {
     color-scheme: dark;
   }
 }
+
+@keyframes orb-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(60px, -80px) scale(1.08); }
+  66%       { transform: translate(-40px, 50px) scale(0.95); }
+}
+
+@keyframes orb-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-70px, 60px) scale(1.1); }
+  66%       { transform: translate(50px, -40px) scale(0.92); }
+}
+
+@keyframes orb-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(40px, 70px) scale(1.06); }
+}
+
+@keyframes grid-pulse {
+  0%, 100% { opacity: 0.03; }
+  50%       { opacity: 0.07; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.orb-1 { animation: orb-drift-1 18s ease-in-out infinite; }
+.orb-2 { animation: orb-drift-2 22s ease-in-out infinite; }
+.orb-3 { animation: orb-drift-3 26s ease-in-out infinite; }
+.hero-grid { animation: grid-pulse 6s ease-in-out infinite; }
+.fade-up-1 { animation: fade-up 0.7s ease both; animation-delay: 0.1s; opacity: 0; }
+.fade-up-2 { animation: fade-up 0.7s ease both; animation-delay: 0.25s; opacity: 0; }
+.fade-up-3 { animation: fade-up 0.7s ease both; animation-delay: 0.4s; opacity: 0; }
+.fade-up-4 { animation: fade-up 0.7s ease both; animation-delay: 0.55s; opacity: 0; }
+.fade-up-5 { animation: fade-up 0.7s ease both; animation-delay: 0.7s; opacity: 0; }

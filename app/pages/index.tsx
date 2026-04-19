@@ -1,0 +1,12 @@
+export { default as LandingPage } from "./landing";
+export { default as DashboardPage } from "./dashboard";
+export { default as SignInPage } from "./sign-in";
+export { default as OnboardingPage } from "./onboarding";
+export { default as AppsPage } from "./apps";
+export { default as AgentsPage } from "./agents";
+export { default as IntegrationsPage } from "./integrations";
+export { default as InboxPage } from "./inbox";
+export { default as ConversationsPage } from "./conversations";
+export { default as CustomersPage } from "./customers";
+export { default as SettingsPage } from "./settings";
+export { default as ProfilePage } from "./profile";
