@@ -46,7 +46,7 @@ const badgeStyles: Record<BadgeVariant, string> = {
   away: "bg-amber-500/15 text-amber-400",
   active: "bg-green-500/15 text-green-400",
   inactive: "bg-slate-500/15 text-slate-400",
-  draft: "bg-blue-500/15 text-blue-400",
+  draft: "bg-violet-500/15 text-violet-400",
 };
 
 export const Badge: FC<{ status: BadgeVariant; className?: string }> = ({
@@ -115,7 +115,7 @@ export const Avatar: FC<{
   ) : (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full bg-blue-500/20 font-semibold text-blue-300",
+        "inline-flex items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700",
         sizeMap[size],
         className
       )}
@@ -156,7 +156,7 @@ export const TextInput: FC<InputProps> = ({
   const hasError = touched[id] && errors[id];
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      <label htmlFor={id} className="text-sm font-medium text-slate-400">
+      <label htmlFor={id} className="text-sm font-medium text-gray-700">
         {label}
       </label>
       <input
@@ -169,13 +169,12 @@ export const TextInput: FC<InputProps> = ({
         onBlur={handleBlur}
         disabled={disabled}
         className={cn(
-          "h-[38px] w-full rounded-md border px-3 text-sm text-slate-200 outline-none transition placeholder-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50",
-          hasError ? "border-red-500/50" : "border-white/10"
+          "h-[38px] w-full rounded-md border px-3 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-gray-50",
+          hasError ? "border-red-400" : "border-gray-300"
         )}
-        style={{ background: "var(--color-surface-elevated)" }}
       />
       {hasError && (
-        <p className="text-xs text-red-400">{errors[id] as string}</p>
+        <p className="text-xs text-red-500">{errors[id] as string}</p>
       )}
     </div>
   );
@@ -203,7 +202,7 @@ export const TextArea: FC<TextAreaProps> = ({
   const hasError = touched[id] && errors[id];
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      <label htmlFor={id} className="text-sm font-medium text-slate-400">
+      <label htmlFor={id} className="text-sm font-medium text-gray-700">
         {label}
       </label>
       <textarea
@@ -216,13 +215,12 @@ export const TextArea: FC<TextAreaProps> = ({
         onBlur={handleBlur as React.FocusEventHandler<HTMLTextAreaElement>}
         disabled={disabled}
         className={cn(
-          "w-full rounded-md border px-3 py-2 text-sm text-slate-200 outline-none transition placeholder-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50",
-          hasError ? "border-red-500/50" : "border-white/10"
+          "w-full rounded-md border px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-gray-50",
+          hasError ? "border-red-400" : "border-gray-300"
         )}
-        style={{ background: "var(--color-surface-elevated)" }}
       />
       {hasError && (
-        <p className="text-xs text-red-400">{errors[id] as string}</p>
+        <p className="text-xs text-red-500">{errors[id] as string}</p>
       )}
     </div>
   );
@@ -246,7 +244,7 @@ export const Toggle: FC<{
       onClick={() => onChange(!checked)}
       className={cn(
         "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-        checked ? "bg-blue-600" : "bg-white/10",
+        checked ? "bg-primary-600" : "bg-gray-200",
         disabled && "cursor-not-allowed opacity-50"
       )}
     >
@@ -259,7 +257,7 @@ export const Toggle: FC<{
     </button>
     <label
       htmlFor={id}
-      className="cursor-pointer text-sm font-medium text-slate-300"
+      className="cursor-pointer text-sm font-medium text-gray-700"
     >
       {label}
     </label>
@@ -278,7 +276,7 @@ export const Paginator: FC<{
   const end = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 text-sm text-slate-500">
+    <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600">
       <span>
         Showing {start}–{end} of {total} results
       </span>
@@ -286,17 +284,17 @@ export const Paginator: FC<{
         <button
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="rounded px-3 py-1 transition disabled:opacity-40 hover:bg-white/5"
+          className="rounded px-3 py-1 transition disabled:opacity-40 hover:bg-gray-100"
         >
           Previous
         </button>
-        <span className="font-medium text-slate-300">
+        <span className="font-medium text-gray-800">
           {page} / {totalPages}
         </span>
         <button
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="rounded px-3 py-1 transition disabled:opacity-40 hover:bg-white/5"
+          className="rounded px-3 py-1 transition disabled:opacity-40 hover:bg-gray-100"
         >
           Next
         </button>
@@ -325,8 +323,8 @@ export const CopyButton: FC<{ text: string; className?: string }> = ({
       className={cn(
         "rounded px-2 py-1 text-xs font-medium transition",
         copied
-          ? "bg-green-500/15 text-green-400"
-          : "bg-white/5 text-slate-400 hover:bg-white/10",
+          ? "bg-green-100 text-green-700"
+          : "bg-gray-100 text-gray-600 hover:bg-gray-200",
         className
       )}
     >
