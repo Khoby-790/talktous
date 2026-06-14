@@ -130,22 +130,22 @@ const AgentsPage: FC = () => {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Avatar name={agent.name} src={agent.avatar} size="sm" />
-                  <StatusDot status={agent.status} className="absolute -bottom-0.5 -right-0.5 ring-2 ring-surface-card" />
+                  <StatusDot status={agent.status} className="absolute -bottom-0.5 -right-0.5 ring-2 ring-surface" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-200">{agent.name}</p>
-                  <p className="text-xs text-slate-500">{agent.email}</p>
+                  <p className="text-sm font-medium text-ink">{agent.name}</p>
+                  <p className="text-xs text-ink-muted">{agent.email}</p>
                 </div>
               </div>
             </td>
             <td className="px-4 py-3">
-              <span className="text-sm capitalize text-slate-400">{agent.role}</span>
+              <span className="text-sm capitalize text-ink-soft">{agent.role}</span>
             </td>
             <td className="px-4 py-3">
               <Badge status={agent.status} />
             </td>
-            <td className="px-4 py-3 text-sm text-slate-400">{agent.stats.totalConversations}</td>
-            <td className="px-4 py-3 text-sm text-slate-500">{formatDate(agent.createdAt)}</td>
+            <td className="px-4 py-3 text-sm text-ink-soft">{agent.stats.totalConversations}</td>
+            <td className="px-4 py-3 text-sm text-ink-muted">{formatDate(agent.createdAt)}</td>
             <td className="px-4 py-3 text-right">
               <div className="flex items-center justify-end gap-1">
                 <ActionButton action="view" tooltip="View agent" />

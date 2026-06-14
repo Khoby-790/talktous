@@ -28,29 +28,25 @@ const IntegrationsPage: FC = () => {
         {integrations.map((integration) => (
           <div
             key={integration.id}
-            className="flex flex-col gap-4 rounded-xl border p-5"
-            style={{ background: "var(--color-surface-card)", borderColor: "var(--color-surface-border)" }}
+            className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)]"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-bold text-slate-300"
-                  style={{ background: "var(--color-surface-elevated)" }}
-                >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-sm font-bold text-ink-soft">
                   {integration.icon}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-100">{integration.name}</p>
-                  <p className="text-xs text-slate-500">{integration.category}</p>
+                  <p className="text-sm font-semibold text-ink">{integration.name}</p>
+                  <p className="text-xs text-ink-muted">{integration.category}</p>
                 </div>
               </div>
               {integration.status === "connected" && (
-                <span className="rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-400">
+                <span className="rounded-full bg-green-500/12 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">
                   Connected
                 </span>
               )}
             </div>
-            <p className="text-sm text-slate-500">{integration.description}</p>
+            <p className="text-sm text-ink-muted">{integration.description}</p>
             <PrimaryButton
               variant={integration.status === "connected" ? "secondary" : "primary"}
               size="sm"

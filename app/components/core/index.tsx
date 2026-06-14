@@ -21,6 +21,22 @@ export const Spinner: FC<{ className?: string }> = ({ className }) => (
   />
 );
 
+// ─── Card ────────────────────────────────────────────────────────────────────
+export const Card: FC<{
+  className?: string;
+  children: ReactNode;
+  as?: React.ElementType;
+}> = ({ className, children, as: Tag = "div" }) => (
+  <Tag
+    className={cn(
+      "rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]",
+      className
+    )}
+  >
+    {children}
+  </Tag>
+);
+
 // ─── Badge ───────────────────────────────────────────────────────────────────
 type BadgeVariant =
   | "open"
@@ -36,17 +52,17 @@ type BadgeVariant =
   | "draft";
 
 const badgeStyles: Record<BadgeVariant, string> = {
-  open: "bg-blue-500/15 text-blue-400",
-  pending: "bg-amber-500/15 text-amber-400",
-  resolved: "bg-green-500/15 text-green-400",
-  closed: "bg-slate-500/15 text-slate-400",
-  online: "bg-green-500/15 text-green-400",
-  offline: "bg-slate-500/15 text-slate-400",
-  busy: "bg-red-500/15 text-red-400",
-  away: "bg-amber-500/15 text-amber-400",
-  active: "bg-green-500/15 text-green-400",
-  inactive: "bg-slate-500/15 text-slate-400",
-  draft: "bg-violet-500/15 text-violet-400",
+  open: "bg-primary-500/10 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300",
+  pending: "bg-amber-500/12 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  resolved: "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  closed: "bg-slate-500/12 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300",
+  online: "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  offline: "bg-slate-500/12 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300",
+  busy: "bg-red-500/12 text-red-700 dark:bg-red-500/15 dark:text-red-300",
+  away: "bg-amber-500/12 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  active: "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  inactive: "bg-slate-500/12 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300",
+  draft: "bg-violet-500/12 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300",
 };
 
 export const Badge: FC<{ status: BadgeVariant; className?: string }> = ({
@@ -55,7 +71,7 @@ export const Badge: FC<{ status: BadgeVariant; className?: string }> = ({
 }) => (
   <span
     className={cn(
-      "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
       badgeStyles[status],
       className
     )}
@@ -66,7 +82,7 @@ export const Badge: FC<{ status: BadgeVariant; className?: string }> = ({
 
 // ─── StatusDot ───────────────────────────────────────────────────────────────
 const dotStyles: Record<string, string> = {
-  online: "bg-green-500",
+  online: "bg-emerald-500",
   offline: "bg-gray-400",
   busy: "bg-red-500",
   away: "bg-amber-400",
@@ -115,7 +131,7 @@ export const Avatar: FC<{
   ) : (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700",
+        "inline-flex items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300",
         sizeMap[size],
         className
       )}
@@ -140,6 +156,9 @@ interface InputProps {
   handleBlur?: React.FocusEventHandler<HTMLInputElement>;
 }
 
+const fieldBase =
+  "w-full rounded-xl border bg-surface px-3.5 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 disabled:cursor-not-allowed disabled:opacity-60";
+
 export const TextInput: FC<InputProps> = ({
   id,
   label,
@@ -155,8 +174,8 @@ export const TextInput: FC<InputProps> = ({
 }) => {
   const hasError = touched[id] && errors[id];
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      <label htmlFor={id} className="text-sm font-medium text-gray-700">
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <label htmlFor={id} className="text-sm font-medium text-ink-soft">
         {label}
       </label>
       <input
@@ -169,8 +188,9 @@ export const TextInput: FC<InputProps> = ({
         onBlur={handleBlur}
         disabled={disabled}
         className={cn(
-          "h-[38px] w-full rounded-md border px-3 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-gray-50",
-          hasError ? "border-red-400" : "border-gray-300"
+          fieldBase,
+          "h-[42px]",
+          hasError ? "border-red-400 focus:border-red-400 focus:ring-red-500/15" : "border-line"
         )}
       />
       {hasError && (
@@ -201,8 +221,8 @@ export const TextArea: FC<TextAreaProps> = ({
 }) => {
   const hasError = touched[id] && errors[id];
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      <label htmlFor={id} className="text-sm font-medium text-gray-700">
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <label htmlFor={id} className="text-sm font-medium text-ink-soft">
         {label}
       </label>
       <textarea
@@ -215,8 +235,9 @@ export const TextArea: FC<TextAreaProps> = ({
         onBlur={handleBlur as React.FocusEventHandler<HTMLTextAreaElement>}
         disabled={disabled}
         className={cn(
-          "w-full rounded-md border px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-gray-50",
-          hasError ? "border-red-400" : "border-gray-300"
+          fieldBase,
+          "py-2.5",
+          hasError ? "border-red-400 focus:border-red-400 focus:ring-red-500/15" : "border-line"
         )}
       />
       {hasError && (
@@ -243,8 +264,8 @@ export const Toggle: FC<{
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-        checked ? "bg-primary-600" : "bg-gray-200",
+        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary-500/20",
+        checked ? "bg-primary-600" : "bg-surface-2 dark:bg-white/15",
         disabled && "cursor-not-allowed opacity-50"
       )}
     >
@@ -257,7 +278,7 @@ export const Toggle: FC<{
     </button>
     <label
       htmlFor={id}
-      className="cursor-pointer text-sm font-medium text-gray-700"
+      className="cursor-pointer text-sm font-medium text-ink-soft"
     >
       {label}
     </label>
@@ -276,7 +297,7 @@ export const Paginator: FC<{
   const end = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600">
+    <div className="flex items-center justify-between px-4 py-3 text-sm text-ink-soft">
       <span>
         Showing {start}–{end} of {total} results
       </span>
@@ -284,17 +305,17 @@ export const Paginator: FC<{
         <button
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="rounded px-3 py-1 transition disabled:opacity-40 hover:bg-gray-100"
+          className="rounded-lg px-3 py-1.5 font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent"
         >
           Previous
         </button>
-        <span className="font-medium text-gray-800">
+        <span className="font-medium text-ink">
           {page} / {totalPages}
         </span>
         <button
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="rounded px-3 py-1 transition disabled:opacity-40 hover:bg-gray-100"
+          className="rounded-lg px-3 py-1.5 font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent"
         >
           Next
         </button>
@@ -321,10 +342,10 @@ export const CopyButton: FC<{ text: string; className?: string }> = ({
       type="button"
       onClick={copy}
       className={cn(
-        "rounded px-2 py-1 text-xs font-medium transition",
+        "rounded-lg px-2.5 py-1 text-xs font-medium transition",
         copied
-          ? "bg-green-100 text-green-700"
-          : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+          ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
+          : "bg-surface-2 text-ink-soft hover:text-ink",
         className
       )}
     >
@@ -346,9 +367,9 @@ export const EmptyState: FC<{
       className
     )}
   >
-    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "var(--color-surface-elevated)" }}>
+    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-2">
       <svg
-        className="h-8 w-8 text-slate-600"
+        className="h-8 w-8 text-ink-muted"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -361,10 +382,8 @@ export const EmptyState: FC<{
         />
       </svg>
     </div>
-    <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
-    {description && (
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
-    )}
+    <h3 className="text-sm font-semibold text-ink">{title}</h3>
+    {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
     {action && <div className="mt-4">{action}</div>}
   </div>
 );

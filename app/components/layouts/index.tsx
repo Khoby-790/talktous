@@ -43,7 +43,7 @@ export const Modal: FC<ModalProps> = ({
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60" />
       </Transition.Child>
       <div className="fixed inset-0 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
@@ -58,17 +58,17 @@ export const Modal: FC<ModalProps> = ({
           >
             <Dialog.Panel
               className={cn(
-                "w-full rounded-xl bg-white shadow-xl",
+                "w-full rounded-2xl border border-line bg-surface shadow-[var(--shadow-pop)]",
                 sizeClasses[size]
               )}
             >
-              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                <Dialog.Title className="text-base font-semibold text-gray-900">
+              <div className="flex items-center justify-between border-b border-line px-6 py-4">
+                <Dialog.Title className="text-base font-semibold text-ink">
                   {title}
                 </Dialog.Title>
                 <button
                   onClick={onClose}
-                  className="rounded-md p-1 text-gray-400 transition hover:text-gray-600"
+                  className="rounded-lg p-1 text-ink-muted transition hover:bg-surface-2 hover:text-ink"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -83,7 +83,7 @@ export const Modal: FC<ModalProps> = ({
                 )}
               </div>
               {footer && (
-                <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
+                <div className="flex justify-end gap-3 border-t border-line px-6 py-4">
                   {footer}
                 </div>
               )}
@@ -115,7 +115,7 @@ export const Drawer: FC<DrawerProps> = ({ open, onClose, title, children }) => (
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="fixed inset-0 bg-black/20" />
+        <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm dark:bg-black/60" />
       </Transition.Child>
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
@@ -130,14 +130,14 @@ export const Drawer: FC<DrawerProps> = ({ open, onClose, title, children }) => (
               leaveTo="translate-x-full"
             >
               <Dialog.Panel className="pointer-events-auto w-screen max-w-md">
-                <div className="flex h-full flex-col bg-white shadow-xl">
-                  <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                    <Dialog.Title className="text-base font-semibold text-gray-900">
+                <div className="flex h-full flex-col border-l border-line bg-surface shadow-[var(--shadow-pop)]">
+                  <div className="flex items-center justify-between border-b border-line px-6 py-4">
+                    <Dialog.Title className="text-base font-semibold text-ink">
                       {title}
                     </Dialog.Title>
                     <button
                       onClick={onClose}
-                      className="rounded-md p-1 text-gray-400 transition hover:text-gray-600"
+                      className="rounded-lg p-1 text-ink-muted transition hover:bg-surface-2 hover:text-ink"
                     >
                       <XMarkIcon className="h-5 w-5" />
                     </button>
@@ -169,16 +169,16 @@ export const Header: FC<HeaderProps> = ({
   action,
   breadcrumb,
 }) => (
-  <div className="mb-6 flex items-start justify-between border-b pb-5" style={{ borderColor: "var(--color-surface-border)" }}>
+  <div className="mb-6 flex items-start justify-between gap-4 border-b border-line pb-5">
     <div>
       {breadcrumb && (
-        <p className="mb-0.5 text-xs text-slate-600">{breadcrumb.join(" / ")}</p>
+        <p className="mb-1 text-xs text-ink-muted">{breadcrumb.join(" / ")}</p>
       )}
-      <h1 className="text-xl font-semibold text-slate-100">{title}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>
       {description && (
-        <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+        <p className="mt-1 text-sm text-ink-soft">{description}</p>
       )}
     </div>
-    {action && <div>{action}</div>}
+    {action && <div className="shrink-0">{action}</div>}
   </div>
 );

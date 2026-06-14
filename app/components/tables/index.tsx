@@ -40,27 +40,26 @@ export function TableComponent<T>({
 }: TableComponentProps<T>) {
   return (
     <div
-      className={cn("overflow-hidden rounded-xl border", className)}
-      style={{ background: "var(--color-surface-card)", borderColor: "var(--color-surface-border)" }}
+      className={cn(
+        "overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]",
+        className
+      )}
     >
       {(title || renderFilter) && (
-        <div
-          className="flex items-center justify-between border-b px-4 py-3"
-          style={{ borderColor: "var(--color-surface-border)" }}
-        >
-          {title && <h3 className="text-sm font-semibold text-slate-200">{title}</h3>}
+        <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+          {title && <h3 className="text-sm font-semibold text-ink">{title}</h3>}
           {renderFilter && <div>{renderFilter}</div>}
         </div>
       )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr style={{ background: "var(--color-surface-elevated)" }}>
+            <tr className="bg-surface-2/60">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-slate-500",
+                    "px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-muted",
                     col.width
                   )}
                 >
@@ -86,8 +85,7 @@ export function TableComponent<T>({
               data.map((item, i) => (
                 <tr
                   key={i}
-                  className="border-t transition-colors hover:bg-white/3"
-                  style={{ borderColor: "var(--color-surface-border)" }}
+                  className="border-t border-line transition-colors hover:bg-surface-2/50"
                 >
                   {renderItem(item, i)}
                 </tr>
@@ -96,11 +94,7 @@ export function TableComponent<T>({
           </tbody>
         </table>
       </div>
-      {pagination && (
-        <div className="border-t" style={{ borderColor: "var(--color-surface-border)" }}>
-          {pagination}
-        </div>
-      )}
+      {pagination && <div className="border-t border-line">{pagination}</div>}
     </div>
   );
 }

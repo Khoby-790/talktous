@@ -27,17 +27,17 @@ const CustomersPage: FC = () => (
           <td className="px-4 py-3">
             <div className="flex items-center gap-3">
               <Avatar name={customer.name} size="sm" />
-              <p className="text-sm font-medium text-slate-200">{customer.name}</p>
+              <p className="text-sm font-medium text-ink">{customer.name}</p>
             </div>
           </td>
-          <td className="px-4 py-3 text-sm text-slate-400">
-            {customer.email || <span className="text-slate-600">&mdash;</span>}
+          <td className="px-4 py-3 text-sm text-ink-soft">
+            {customer.email || <span className="text-ink-muted">&mdash;</span>}
           </td>
-          <td className="px-4 py-3 text-sm text-slate-400">
-            {customer.phone || <span className="text-slate-600">&mdash;</span>}
+          <td className="px-4 py-3 text-sm text-ink-soft">
+            {customer.phone || <span className="text-ink-muted">&mdash;</span>}
           </td>
-          <td className="px-4 py-3 text-sm font-medium text-slate-300">{customer.conversationCount}</td>
-          <td className="px-4 py-3 text-sm text-slate-500">{formatRelative(customer.lastSeenAt)}</td>
+          <td className="px-4 py-3 text-sm font-medium text-ink-soft">{customer.conversationCount}</td>
+          <td className="px-4 py-3 text-sm text-ink-muted">{formatRelative(customer.lastSeenAt)}</td>
           <td className="px-4 py-3 text-right">
             <ActionButton action="view" tooltip="View customer" />
           </td>

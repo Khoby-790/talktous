@@ -43,7 +43,7 @@ const GeneralSettings: FC = () => {
   return (
     <form onSubmit={form.handleSubmit} className="max-w-xl space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Organization</p>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-muted">Organization</p>
         <div className="mt-3 space-y-4">
           <TextInput
             id="name"
@@ -77,7 +77,7 @@ const GeneralSettings: FC = () => {
       </div>
       <div className="flex items-center gap-3">
         <PrimaryButton type="submit" loading={form.isSubmitting}>Save Changes</PrimaryButton>
-        {saved && <span className="text-sm text-green-600">Saved!</span>}
+        {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved!</span>}
       </div>
     </form>
   );
@@ -89,7 +89,7 @@ const SettingsPage: FC = () => {
   return (
     <div>
       <Header title="Settings" description="Manage your organization settings" />
-      <div className="mb-6 flex gap-1 border-b" style={{ borderColor: "var(--color-surface-border)" }}>
+      <div className="mb-6 flex gap-1 border-b border-line">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -97,8 +97,8 @@ const SettingsPage: FC = () => {
             className={cn(
               "-mb-px border-b-2 px-4 py-2 text-sm font-medium transition",
               activeTab === tab.id
-                ? "border-blue-500 text-blue-400"
-                : "border-transparent text-slate-500 hover:text-slate-300"
+                ? "border-primary-600 text-primary-600 dark:text-primary-400"
+                : "border-transparent text-ink-soft hover:text-ink"
             )}
           >
             {tab.label}
@@ -107,24 +107,18 @@ const SettingsPage: FC = () => {
       </div>
       {activeTab === "general" && <GeneralSettings />}
       {activeTab === "billing" && (
-        <div
-          className="max-w-xl rounded-xl border p-6"
-          style={{ background: "var(--color-surface-card)", borderColor: "var(--color-surface-border)" }}
-        >
-          <p className="text-sm font-semibold text-slate-200">
-            Current Plan: <span className="capitalize text-blue-400">{mockOrg.plan}</span>
+        <div className="max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
+          <p className="text-sm font-semibold text-ink">
+            Current Plan: <span className="capitalize text-primary-600 dark:text-primary-400">{mockOrg.plan}</span>
           </p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-ink-muted">
             Billing management will be available once connected to the backend.
           </p>
         </div>
       )}
       {activeTab === "notifications" && (
-        <div
-          className="max-w-xl rounded-xl border p-6"
-          style={{ background: "var(--color-surface-card)", borderColor: "var(--color-surface-border)" }}
-        >
-          <p className="text-sm text-slate-500">
+        <div className="max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
+          <p className="text-sm text-ink-muted">
             Notification preferences will be available once connected to the backend.
           </p>
         </div>

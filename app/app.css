@@ -1,47 +1,106 @@
 @import "tailwindcss";
 
+/* Toggle dark mode via a `.dark` class on <html> (class strategy, not media). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-display: "Playfair Display", Georgia, serif;
-  /* Primary → blue (matches landing page) */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
 
-  /* Dark surface system (matches landing page palette) */
-  --color-surface-base: #080d1e;
-  --color-surface-card: #0c1220;
-  --color-surface-elevated: #1a2035;
-  --color-surface-sidebar: #080d1e;
-  --color-surface-border: rgba(255, 255, 255, 0.08);
+  /* ── Brand / primary → Coinbase blue ──────────────────────────────────── */
+  --color-primary-50: #eef3ff;
+  --color-primary-100: #d9e4ff;
+  --color-primary-200: #b3c8ff;
+  --color-primary-300: #80a3ff;
+  --color-primary-400: #4d7eff;
+  --color-primary-500: #1a5cff;
+  --color-primary-600: #0052ff;
+  --color-primary-700: #0044d6;
+  --color-primary-800: #0037ad;
+  --color-primary-900: #002b87;
 
-  --color-status-open: #3b82f6;
+  /* ── Semantic surface/text tokens (resolve to runtime vars below) ──────── */
+  --color-app: var(--app);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sidebar: var(--sidebar);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--color-primary-600);
+
+  /* ── Status palette (stable across themes) ─────────────────────────────── */
+  --color-status-open: #1a5cff;
   --color-status-pending: #f59e0b;
   --color-status-resolved: #10b981;
   --color-status-closed: #6b7280;
-  --color-online: #22c55e;
+  --color-online: #16c784;
   --color-busy: #ef4444;
   --color-away: #f59e0b;
   --color-offline: #9ca3af;
+
+  --radius-card: 16px;
+  --shadow-card: 0 1px 2px rgba(10, 11, 13, 0.04), 0 1px 3px rgba(10, 11, 13, 0.06);
+  --shadow-pop: 0 8px 30px rgba(10, 11, 13, 0.12);
+}
+
+/* ── Light theme (default — Coinbase-style: crisp, airy, white surfaces) ─── */
+:root {
+  --app: #f7f9fc;
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;
+  --sidebar: #ffffff;
+  --line: #e7eaf0;
+  --line-strong: #d4d9e3;
+  --ink: #0a0b0d;
+  --ink-soft: #5b616e;
+  --ink-muted: #8a909c;
+  color-scheme: light;
+}
+
+/* ── Dark theme (refined neutral, MetaMask-leaning) ─────────────────────── */
+.dark {
+  --app: #0a0b0d;
+  --surface: #131518;
+  --surface-2: #1c1f24;
+  --sidebar: #0d0f11;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --ink: #f5f6f7;
+  --ink-soft: #9aa0aa;
+  --ink-muted: #6b7280;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-pop: 0 8px 30px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  @apply bg-app text-ink;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
+/* Themed scrollbars so panels feel native in both modes */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* ── Landing page motion (unchanged) ───────────────────────────────────── */
 @keyframes orb-drift-1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33%       { transform: translate(60px, -80px) scale(1.08); }

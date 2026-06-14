@@ -83,7 +83,7 @@ const OnboardingPage: FC = () => {
             <div
               className={cn(
                 "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition",
-                i <= step ? "bg-primary-600 text-white" : "bg-gray-200 text-gray-500"
+                i <= step ? "bg-primary-600 text-white" : "bg-surface-2 text-ink-muted"
               )}
             >
               {i < step ? "\u2713" : i + 1}
@@ -91,22 +91,22 @@ const OnboardingPage: FC = () => {
             <span
               className={cn(
                 "text-sm",
-                i === step ? "font-medium text-gray-900" : "text-gray-400"
+                i === step ? "font-medium text-ink" : "text-ink-muted"
               )}
             >
               {s}
             </span>
-            {i < steps.length - 1 && <div className="h-px w-8 bg-gray-200" />}
+            {i < steps.length - 1 && <div className="h-px w-8 bg-line" />}
           </div>
         ))}
       </div>
 
       {step === 0 && (
         <form onSubmit={orgForm.handleSubmit} className="space-y-4">
-          <h2 className="text-center text-xl font-bold text-gray-900">
+          <h2 className="text-center text-xl font-bold text-ink">
             Tell us about your organization
           </h2>
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-ink-soft">
             We&apos;ll use this to personalize your experience.
           </p>
           <div className="mt-6 space-y-4">
@@ -139,7 +139,7 @@ const OnboardingPage: FC = () => {
 
       {step === 1 && (
         <div className="space-y-4">
-          <h2 className="text-center text-xl font-bold text-gray-900">Choose your plan</h2>
+          <h2 className="text-center text-xl font-bold text-ink">Choose your plan</h2>
           <div className="space-y-3">
             {planOptions.map((plan) => (
               <button
@@ -147,19 +147,19 @@ const OnboardingPage: FC = () => {
                 type="button"
                 onClick={() => setSelectedPlan(plan.id)}
                 className={cn(
-                  "w-full rounded-lg border-2 p-4 text-left transition",
+                  "w-full rounded-2xl border-2 p-4 text-left transition",
                   selectedPlan === plan.id
-                    ? "border-primary-600 bg-primary-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-primary-600 bg-primary-50 dark:bg-primary-500/10"
+                    : "border-line hover:border-line-strong"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold text-gray-900">{plan.label}</p>
-                  <p className="font-bold text-primary-600">{plan.price}</p>
+                  <p className="font-semibold text-ink">{plan.label}</p>
+                  <p className="font-bold text-primary-600 dark:text-primary-400">{plan.price}</p>
                 </div>
                 <ul className="mt-2 space-y-1">
                   {plan.features.map((f) => (
-                    <li key={f} className="text-xs text-gray-500">
+                    <li key={f} className="text-xs text-ink-soft">
                       &check; {f}
                     </li>
                   ))}
@@ -180,11 +180,11 @@ const OnboardingPage: FC = () => {
 
       {step === 2 && (
         <div className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-700 dark:text-emerald-300">
             <span className="text-3xl">&#127881;</span>
           </div>
-          <h2 className="text-xl font-bold text-gray-900">You&apos;re all set!</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-xl font-bold text-ink">You&apos;re all set!</h2>
+          <p className="text-sm text-ink-soft">
             Your organization is ready. Let&apos;s get you to the dashboard.
           </p>
           <PrimaryButton className="w-full" loading={completing} onClick={handleComplete}>

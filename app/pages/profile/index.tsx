@@ -25,8 +25,8 @@ const ProfilePage: FC = () => {
         <div className="mb-6 flex items-center gap-4">
           <Avatar name={mockUser.name} src={mockUser.avatar} size="xl" />
           <div>
-            <p className="text-base font-semibold text-slate-100">{mockUser.name}</p>
-            <p className="text-sm capitalize text-slate-500">
+            <p className="text-base font-semibold text-ink">{mockUser.name}</p>
+            <p className="text-sm capitalize text-ink-muted">
               {mockUser.role} &middot; {mockUser.status}
             </p>
           </div>
@@ -53,7 +53,7 @@ const ProfilePage: FC = () => {
           />
           <div className="flex items-center gap-3">
             <PrimaryButton type="submit" loading={form.isSubmitting}>Save Changes</PrimaryButton>
-            {saved && <span className="text-sm text-green-600">Saved!</span>}
+            {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved!</span>}
           </div>
         </form>
       </div>

@@ -29,8 +29,8 @@ const SignInPage: FC = () => {
   return (
     <form onSubmit={form.handleSubmit} className="space-y-4">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Sign in</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-xl font-semibold text-ink">Sign in</h2>
+        <p className="mt-1 text-sm text-ink-soft">
           Enter your credentials to access the dashboard.
         </p>
       </div>
@@ -59,7 +59,7 @@ const SignInPage: FC = () => {
       <PrimaryButton type="submit" loading={form.isSubmitting} className="w-full">
         Sign in
       </PrimaryButton>
-      <p className="text-center text-xs text-gray-400">
+      <p className="text-center text-xs text-ink-muted">
         Mock mode — any credentials work
       </p>
     </form>

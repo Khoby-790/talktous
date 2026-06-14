@@ -13,11 +13,14 @@ import {
   ArrowLeftStartOnRectangleIcon,
   BellIcon,
   MagnifyingGlassIcon,
+  SunIcon,
+  MoonIcon,
 } from "@heroicons/react/24/outline";
 import { cn } from "~/lib/utils";
 import { clearAuth, currentUserVar, currentOrgVar } from "~/_graphql/cache/auth";
 import { useReactiveVar } from "@apollo/client/react";
 import { Avatar, StatusDot } from "~/components/core";
+import { useTheme } from "~/hooks/ui/use-theme";
 
 const navSections = [
   {
@@ -52,59 +55,69 @@ const navSections = [
   },
 ];
 
+const ThemeToggle: FC = () => {
+  const { isDark, toggle } = useTheme();
+  return (
+    <button
+      onClick={toggle}
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label="Toggle theme"
+      className="flex h-9 w-9 items-center justify-center rounded-full text-ink-soft transition hover:bg-surface-2 hover:text-ink"
+    >
+      {isDark ? <SunIcon className="h-4.5 w-4.5" /> : <MoonIcon className="h-4.5 w-4.5" />}
+    </button>
+  );
+};
+
 const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const currentUser = useReactiveVar(currentUserVar);
   const currentOrg = useReactiveVar(currentOrgVar);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "var(--color-surface-base)" }}>
-
+    <div className="flex h-screen overflow-hidden bg-app">
       {/* ── Sidebar ── */}
-      <aside
-        className="flex w-60 shrink-0 flex-col border-r"
-        style={{ background: "var(--color-surface-sidebar)", borderColor: "var(--color-surface-border)" }}
-      >
+      <aside className="flex w-64 shrink-0 flex-col border-r border-line bg-sidebar">
         {/* Logo */}
-        <div className="flex items-center gap-3 border-b px-5 py-4.5" style={{ borderColor: "var(--color-surface-border)" }}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 shadow-lg shadow-blue-900/40">
-            <span className="text-xs font-bold text-white">TU</span>
+        <div className="flex items-center gap-3 px-5 py-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-600 shadow-sm shadow-primary-600/30">
+            <span className="text-sm font-bold text-white">TU</span>
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-100">{currentOrg?.name || "Talk To Us"}</p>
-            <p className="text-[10px] capitalize text-slate-500">{currentOrg?.plan || "starter"} plan</p>
+            <p className="truncate text-sm font-bold text-ink">{currentOrg?.name || "Talk To Us"}</p>
+            <p className="text-[11px] capitalize text-ink-muted">{currentOrg?.plan || "starter"} plan</p>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-3">
           {navSections.map((section) => (
             <div key={section.label}>
-              <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-ink-muted">
                 {section.label}
               </p>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {section.items.map(({ label, path, icon: Icon, badge }: any) => (
                   <NavLink
                     key={path}
                     to={path}
                     className={({ isActive }) =>
                       cn(
-                        "group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all",
+                        "group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
                         isActive
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30"
-                          : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                          ? "bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300"
+                          : "text-ink-soft hover:bg-surface-2 hover:text-ink"
                       )
                     }
                   >
                     {({ isActive }) => (
                       <>
-                        <div className="flex items-center gap-2.5">
-                          <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300")} />
+                        <div className="flex items-center gap-3">
+                          <Icon className={cn("h-[18px] w-[18px] shrink-0", isActive ? "text-primary-600 dark:text-primary-400" : "text-ink-muted group-hover:text-ink-soft")} />
                           {label}
                         </div>
                         {badge && (
-                          <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums", isActive ? "bg-white/20 text-white" : "bg-blue-500/15 text-blue-400")}>
+                          <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums", isActive ? "bg-primary-600 text-white" : "bg-surface-2 text-ink-soft")}>
                             {badge}
                           </span>
                         )}
@@ -118,20 +131,20 @@ const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
         </nav>
 
         {/* User */}
-        <div className="border-t px-3 py-4" style={{ borderColor: "var(--color-surface-border)" }}>
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+        <div className="border-t border-line p-3">
+          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
             <div className="relative shrink-0">
               <Avatar name={currentUser?.name || "User"} src={currentUser?.avatar} size="sm" />
-              <StatusDot status={currentUser?.status || "online"} className="absolute -bottom-0.5 -right-0.5 ring-2 ring-surface-sidebar" />
+              <StatusDot status={currentUser?.status || "online"} className="absolute -bottom-0.5 -right-0.5 ring-2 ring-sidebar" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-slate-200">{currentUser?.name}</p>
-              <p className="text-[10px] capitalize text-slate-500">{currentUser?.role}</p>
+              <p className="truncate text-xs font-semibold text-ink">{currentUser?.name}</p>
+              <p className="text-[11px] capitalize text-ink-muted">{currentUser?.role}</p>
             </div>
             <button
               onClick={() => { clearAuth(); navigate("/sign-in"); }}
               title="Sign out"
-              className="rounded-md p-1 text-slate-600 transition hover:bg-white/5 hover:text-slate-400"
+              className="rounded-lg p-1.5 text-ink-muted transition hover:bg-surface-2 hover:text-ink"
             >
               <ArrowLeftStartOnRectangleIcon className="h-4 w-4" />
             </button>
@@ -141,36 +154,28 @@ const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
 
       {/* ── Main ── */}
       <div className="flex flex-1 flex-col overflow-hidden">
-
         {/* Topbar */}
-        <header
-          className="flex h-14 shrink-0 items-center justify-between border-b px-6"
-          style={{ background: "var(--color-surface-sidebar)", borderColor: "var(--color-surface-border)" }}
-        >
-          <div
-            className="flex h-8 w-60 items-center gap-2 rounded-lg border px-3"
-            style={{ background: "var(--color-surface-card)", borderColor: "var(--color-surface-border)" }}
-          >
-            <MagnifyingGlassIcon className="h-3.5 w-3.5 text-slate-600" />
-            <span className="text-xs text-slate-600">Search conversations, agents…</span>
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-line bg-sidebar px-6">
+          <div className="flex h-10 w-72 items-center gap-2.5 rounded-full border border-line bg-app px-4 text-ink-muted transition focus-within:border-primary-400">
+            <MagnifyingGlassIcon className="h-4 w-4" />
+            <span className="text-sm">Search conversations, agents…</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/5 hover:text-slate-300">
-              <BellIcon className="h-4 w-4" />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <button className="relative flex h-9 w-9 items-center justify-center rounded-full text-ink-soft transition hover:bg-surface-2 hover:text-ink">
+              <BellIcon className="h-4.5 w-4.5" />
+              <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary-600" />
             </button>
-            <div className="relative ml-1">
+            <div className="relative ml-2">
               <Avatar name={currentUser?.name || "User"} src={currentUser?.avatar} size="sm" />
-              <StatusDot status={currentUser?.status || "online"} className="absolute -bottom-0.5 -right-0.5 ring-2 ring-surface-sidebar" />
+              <StatusDot status={currentUser?.status || "online"} className="absolute -bottom-0.5 -right-0.5 ring-2 ring-sidebar" />
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main
-          className="flex-1 overflow-y-auto px-6 py-7"
-          style={{ background: "var(--color-surface-base)" }}
-        >
-          {children}
+        <main className="flex-1 overflow-y-auto bg-app px-6 py-7 lg:px-8">
+          <div className="mx-auto max-w-7xl">{children}</div>
         </main>
       </div>
     </div>

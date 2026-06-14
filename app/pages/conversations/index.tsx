@@ -40,11 +40,11 @@ const ConversationsPage: FC = () => {
           return (
             <>
               <td className="px-4 py-3">
-                <p className="text-sm font-medium text-slate-200">{customer?.name || "Unknown"}</p>
-                <p className="text-xs text-slate-500">{customer?.email}</p>
+                <p className="text-sm font-medium text-ink">{customer?.name || "Unknown"}</p>
+                <p className="text-xs text-ink-muted">{customer?.email}</p>
               </td>
               <td className="max-w-xs px-4 py-3">
-                <p className="truncate text-sm text-slate-500">{lastMsg?.content}</p>
+                <p className="truncate text-sm text-ink-muted">{lastMsg?.content}</p>
               </td>
               <td className="px-4 py-3">
                 <Badge status={conv.status} />
@@ -52,11 +52,11 @@ const ConversationsPage: FC = () => {
               <td className="px-4 py-3">
                 <Badge status={conv.priority as "open"} />
               </td>
-              <td className="px-4 py-3 text-sm capitalize text-slate-400">{channelLabels[conv.channel]}</td>
-              <td className="px-4 py-3 text-sm text-slate-400">
-                {agent?.name || <span className="text-slate-600">Unassigned</span>}
+              <td className="px-4 py-3 text-sm capitalize text-ink-soft">{channelLabels[conv.channel]}</td>
+              <td className="px-4 py-3 text-sm text-ink-soft">
+                {agent?.name || <span className="text-ink-muted">Unassigned</span>}
               </td>
-              <td className="px-4 py-3 text-sm text-slate-500">{formatRelative(conv.updatedAt)}</td>
+              <td className="px-4 py-3 text-sm text-ink-muted">{formatRelative(conv.updatedAt)}</td>
             </>
           );
         }}

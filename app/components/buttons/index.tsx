@@ -8,25 +8,25 @@ import { cn } from "~/lib/utils";
 import { Spinner } from "~/components/core";
 
 const primaryButtonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition focus:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
         primary:
-          "bg-blue-600 text-white hover:bg-blue-500 focus:ring-blue-500 shadow-lg shadow-blue-900/30",
+          "bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500/25 active:bg-primary-800",
         secondary:
-          "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-slate-100 focus:ring-blue-500",
+          "border border-line bg-surface text-ink hover:bg-surface-2 focus-visible:ring-primary-500/15",
         danger:
-          "bg-red-600 text-white hover:bg-red-500 focus:ring-red-500",
+          "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500/25",
         ghost:
-          "text-slate-400 hover:bg-white/5 hover:text-slate-200 focus:ring-slate-500",
+          "text-ink-soft hover:bg-surface-2 hover:text-ink focus-visible:ring-primary-500/15",
         success:
-          "bg-green-600 text-white hover:bg-green-500 focus:ring-green-500",
+          "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-500/25",
       },
       size: {
-        sm: "h-8 px-3 text-xs",
-        md: "h-9 px-4",
-        lg: "h-11 px-6 text-base",
+        sm: "h-8 px-3.5 text-xs",
+        md: "h-10 px-5 text-sm",
+        lg: "h-12 px-7 text-base",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },
@@ -83,13 +83,13 @@ const actionIcons: Record<ActionType, string> = {
 };
 
 const actionColors: Record<ActionType, string> = {
-  invite: "text-blue-400 hover:text-blue-300 hover:bg-blue-500/10",
-  edit: "text-slate-400 hover:text-slate-200 hover:bg-white/5",
-  view: "text-slate-400 hover:text-slate-200 hover:bg-white/5",
-  remove: "text-red-400 hover:text-red-300 hover:bg-red-500/10",
-  assign: "text-blue-400 hover:text-blue-300 hover:bg-blue-500/10",
-  copy: "text-slate-400 hover:text-slate-200 hover:bg-white/5",
-  resend: "text-slate-400 hover:text-slate-200 hover:bg-white/5",
+  invite: "text-primary-600 hover:text-primary-700 hover:bg-primary-500/10 dark:text-primary-400",
+  edit: "text-ink-muted hover:text-ink hover:bg-surface-2",
+  view: "text-ink-muted hover:text-ink hover:bg-surface-2",
+  remove: "text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400",
+  assign: "text-primary-600 hover:text-primary-700 hover:bg-primary-500/10 dark:text-primary-400",
+  copy: "text-ink-muted hover:text-ink hover:bg-surface-2",
+  resend: "text-ink-muted hover:text-ink hover:bg-surface-2",
 };
 
 interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

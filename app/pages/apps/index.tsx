@@ -122,23 +122,20 @@ const AppsPage: FC = () => {
         renderItem={(app) => (
           <>
             <td className="px-4 py-3">
-              <p className="text-sm font-medium text-slate-200">{app.name}</p>
+              <p className="text-sm font-medium text-ink">{app.name}</p>
             </td>
             <td className="px-4 py-3">
-              <span className="text-sm text-slate-400">{typeLabels[app.type] || app.type}</span>
+              <span className="text-sm text-ink-soft">{typeLabels[app.type] || app.type}</span>
             </td>
             <td className="px-4 py-3">
               <Badge status={app.status} />
             </td>
             <td className="px-4 py-3">
-              <code
-                className="rounded px-2 py-0.5 text-xs text-slate-400"
-                style={{ background: "var(--color-surface-elevated)" }}
-              >
+              <code className="rounded-xl bg-surface-2 px-2 py-0.5 text-xs text-ink-soft">
                 {app.apiKey.slice(0, 16)}&hellip;
               </code>
             </td>
-            <td className="px-4 py-3 text-sm text-slate-500">{formatDate(app.createdAt)}</td>
+            <td className="px-4 py-3 text-sm text-ink-muted">{formatDate(app.createdAt)}</td>
             <td className="px-4 py-3 text-right">
               <div className="flex items-center justify-end gap-1">
                 <ActionButton action="view" tooltip="View app" />

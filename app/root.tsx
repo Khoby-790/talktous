@@ -10,6 +10,7 @@ import { ApolloProvider } from "@apollo/client/react";
 import { client } from "~/_graphql";
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
+import { themeInitScript } from "~/hooks/ui/use-theme";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -31,6 +32,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Meta />
         <Links />
       </head>

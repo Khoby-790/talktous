@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5174/sign-in)",
+      "Bash(curl -s http://localhost:5174/sign-in)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(echo \"---exit:$?---\")",
+      "Bash(grep -on 'blue-[0-9]\\\\{2,3\\\\}' app/pages/landing/index.tsx)"
+    ]
+  }
+}

@@ -22,47 +22,57 @@ interface SelectInputProps {
   handleBlur?: React.FocusEventHandler;
 }
 
-const darkStyles: StylesConfig<Option, boolean> = {
+/* Driven by CSS variables so the control flips with the active theme. */
+const selectStyles: StylesConfig<Option, boolean> = {
   control: (base, state) => ({
     ...base,
-    background: "var(--color-surface-elevated)",
-    borderColor: state.isFocused ? "#2563eb" : "rgba(255,255,255,0.1)",
-    boxShadow: state.isFocused ? "0 0 0 1px #2563eb" : "none",
-    minHeight: "38px",
+    background: "var(--surface)",
+    borderColor: state.isFocused ? "var(--color-primary-500)" : "var(--line)",
+    borderRadius: "0.75rem",
+    boxShadow: state.isFocused ? "0 0 0 4px color-mix(in srgb, var(--color-primary-500) 15%, transparent)" : "none",
+    minHeight: "42px",
     fontSize: "0.875rem",
-    "&:hover": { borderColor: state.isFocused ? "#2563eb" : "rgba(255,255,255,0.2)" },
+    transition: "border-color .15s, box-shadow .15s",
+    "&:hover": { borderColor: state.isFocused ? "var(--color-primary-500)" : "var(--line-strong)" },
   }),
   menu: (base) => ({
     ...base,
-    background: "var(--color-surface-elevated)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+    background: "var(--surface)",
+    border: "1px solid var(--line)",
+    borderRadius: "0.75rem",
+    overflow: "hidden",
+    boxShadow: "var(--shadow-pop)",
   }),
   option: (base, state) => ({
     ...base,
     background: state.isSelected
-      ? "rgba(124,58,237,0.25)"
+      ? "color-mix(in srgb, var(--color-primary-500) 18%, transparent)"
       : state.isFocused
-      ? "rgba(255,255,255,0.05)"
+      ? "var(--surface-2)"
       : "transparent",
-    color: state.isSelected ? "#c4b5fd" : "#cbd5e1",
+    color: state.isSelected ? "var(--color-primary-700)" : "var(--ink)",
     fontSize: "0.875rem",
     cursor: "pointer",
-    "&:active": { background: "rgba(124,58,237,0.35)" },
+    "&:active": { background: "color-mix(in srgb, var(--color-primary-500) 25%, transparent)" },
   }),
-  singleValue: (base) => ({ ...base, color: "#e2e8f0" }),
-  multiValue: (base) => ({ ...base, background: "rgba(124,58,237,0.2)" }),
-  multiValueLabel: (base) => ({ ...base, color: "#c4b5fd", fontSize: "0.75rem" }),
+  singleValue: (base) => ({ ...base, color: "var(--ink)" }),
+  multiValue: (base) => ({
+    ...base,
+    background: "color-mix(in srgb, var(--color-primary-500) 14%, transparent)",
+    borderRadius: "0.5rem",
+  }),
+  multiValueLabel: (base) => ({ ...base, color: "var(--color-primary-700)", fontSize: "0.75rem" }),
   multiValueRemove: (base) => ({
     ...base,
-    color: "#8b7cf8",
-    "&:hover": { background: "rgba(124,58,237,0.4)", color: "#ede9fe" },
+    color: "var(--color-primary-600)",
+    borderRadius: "0 0.5rem 0.5rem 0",
+    "&:hover": { background: "color-mix(in srgb, var(--color-primary-500) 30%, transparent)", color: "var(--color-primary-800)" },
   }),
-  placeholder: (base) => ({ ...base, color: "#475569", fontSize: "0.875rem" }),
-  input: (base) => ({ ...base, color: "#e2e8f0" }),
-  indicatorSeparator: (base) => ({ ...base, background: "rgba(255,255,255,0.1)" }),
-  dropdownIndicator: (base) => ({ ...base, color: "#475569", "&:hover": { color: "#94a3b8" } }),
-  clearIndicator: (base) => ({ ...base, color: "#475569", "&:hover": { color: "#94a3b8" } }),
+  placeholder: (base) => ({ ...base, color: "var(--ink-muted)", fontSize: "0.875rem" }),
+  input: (base) => ({ ...base, color: "var(--ink)" }),
+  indicatorSeparator: (base) => ({ ...base, background: "var(--line)" }),
+  dropdownIndicator: (base) => ({ ...base, color: "var(--ink-muted)", "&:hover": { color: "var(--ink-soft)" } }),
+  clearIndicator: (base) => ({ ...base, color: "var(--ink-muted)", "&:hover": { color: "var(--ink-soft)" } }),
 };
 
 const SelectInput: FC<SelectInputProps> = ({
@@ -86,8 +96,8 @@ const SelectInput: FC<SelectInputProps> = ({
     : options.find((o) => o.value === values[id]) || null;
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      <label className="text-sm font-medium text-slate-400">{label}</label>
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <label className="text-sm font-medium text-ink-soft">{label}</label>
       <ReactSelect
         inputId={id}
         options={options}
@@ -103,7 +113,7 @@ const SelectInput: FC<SelectInputProps> = ({
           }
         }}
         onBlur={handleBlur}
-        styles={darkStyles}
+        styles={selectStyles}
         classNamePrefix="react-select"
       />
       {!!hasError && <p className="text-xs text-red-400">{String(errors[id])}</p>}
