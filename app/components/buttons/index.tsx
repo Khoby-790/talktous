@@ -8,7 +8,7 @@ import { cn } from "~/lib/utils";
 import { Spinner } from "~/components/core";
 
 const primaryButtonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition focus:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition focus:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -22,6 +22,12 @@ const primaryButtonVariants = cva(
           "text-ink-soft hover:bg-surface-2 hover:text-ink focus-visible:ring-primary-500/15",
         success:
           "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-500/25",
+        // Signature CTA — the aurora sweep. One per screen, at most.
+        aurora:
+          "bg-aurora uppercase tracking-[0.08em] text-[#222222] hover:brightness-105 focus-visible:ring-primary-200/40",
+        // Auros "filled action": kelp lift with platinum text.
+        kelp:
+          "bg-kelp text-white hover:bg-[#0a4642] focus-visible:ring-primary-500/25",
       },
       size: {
         sm: "h-8 px-3.5 text-xs",

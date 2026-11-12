@@ -3,85 +3,130 @@
 /* Toggle dark mode via a `.dark` class on <html> (class strategy, not media). */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-display: "Playfair Display", Georgia, serif;
+/* ════════════════════════════════════════════════════════════════════════════
+   Auros — abyssal terminal with bioluminescent data orbs.
+   Depth comes from the teal surface stack (deep → abyss → kelp), never from
+   shadows. Weights are 400/500 only. Radii: 16px cards, 6px everything small.
+   ════════════════════════════════════════════════════════════════════════════ */
 
-  /* ── Brand / primary → Coinbase blue ──────────────────────────────────── */
-  --color-primary-50: #eef3ff;
-  --color-primary-100: #d9e4ff;
-  --color-primary-200: #b3c8ff;
-  --color-primary-300: #80a3ff;
-  --color-primary-400: #4d7eff;
-  --color-primary-500: #1a5cff;
-  --color-primary-600: #0052ff;
-  --color-primary-700: #0044d6;
-  --color-primary-800: #0037ad;
-  --color-primary-900: #002b87;
+@theme {
+  /* Matter is a commercial face; Inter is the documented substitute. */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-display: var(--font-sans);
+
+  /* ── Raw Auros palette (theme-independent, used by the marketing site) ── */
+  --color-abyss: #012624;
+  --color-deep: #011d1c;
+  --color-kelp: #003734;
+  --color-mist: #edfffe;
+  --color-platinum: #ffffff;
+  --color-silver: #bbc7c6;
+  --color-ash: #f2f2f2;
+  --color-slate-deep: #707777;
+  --color-phosphor: #fde9ff;
+  --color-arrow: rgba(3, 81, 75, 0.5);
+
+  /* ── Brand / primary → bioluminescent teal (centred on #00827c) ───────── */
+  --color-primary-50: #edfffe;
+  --color-primary-100: #cbfffc;
+  --color-primary-200: #9cefe9;
+  --color-primary-300: #5fd8d0;
+  --color-primary-400: #2bbab1;
+  --color-primary-500: #0a9d95;
+  --color-primary-600: #00827c;
+  --color-primary-700: #00675f;
+  --color-primary-800: #004c47;
+  --color-primary-900: #003734;
 
   /* ── Semantic surface/text tokens (resolve to runtime vars below) ──────── */
   --color-app: var(--app);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-sidebar: var(--sidebar);
+  --color-field: var(--field);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-ink-muted: var(--ink-muted);
+  --color-figure: var(--figure);
   --color-accent: var(--color-primary-600);
 
   /* ── Status palette (stable across themes) ─────────────────────────────── */
-  --color-status-open: #1a5cff;
+  --color-status-open: #2bbab1;
   --color-status-pending: #f59e0b;
   --color-status-resolved: #10b981;
-  --color-status-closed: #6b7280;
-  --color-online: #16c784;
+  --color-status-closed: #707777;
+  --color-online: #22c55e;
   --color-busy: #ef4444;
   --color-away: #f59e0b;
   --color-offline: #9ca3af;
 
   --radius-card: 16px;
-  --shadow-card: 0 1px 2px rgba(10, 11, 13, 0.04), 0 1px 3px rgba(10, 11, 13, 0.06);
-  --shadow-pop: 0 8px 30px rgba(10, 11, 13, 0.12);
+  --radius-small: 6px;
+
+  /* No elevation in Auros — kept as tokens so existing usages resolve. */
+  --shadow-card: none;
+  --shadow-pop: none;
+
+  /* Display tracking */
+  --tracking-display: -0.04em;
+  --tracking-label: 0.12em;
 }
 
-/* ── Light theme (default — Coinbase-style: crisp, airy, white surfaces) ─── */
+/* ── Light theme ("Mist" — the same teal stack, inverted for daylight) ──── */
 :root {
-  --app: #f7f9fc;
+  --app: #eef7f6;
   --surface: #ffffff;
-  --surface-2: #f1f4f9;
-  --sidebar: #ffffff;
-  --line: #e7eaf0;
-  --line-strong: #d4d9e3;
-  --ink: #0a0b0d;
-  --ink-soft: #5b616e;
-  --ink-muted: #8a909c;
+  --surface-2: #e2efee;
+  --sidebar: #f7fcfb;
+  --field: #ffffff;
+  --line: #d3e3e1;
+  --line-strong: #b5cbc9;
+  --ink: #012624;
+  --ink-soft: #3d5654;
+  --ink-muted: #687c7a;
+  --figure: #012624;
+  --pop-border: #b5cbc9;
   color-scheme: light;
 }
 
-/* ── Dark theme (refined neutral, MetaMask-leaning) ─────────────────────── */
+/* ── Dark theme (Auros — default) ───────────────────────────────────────── */
 .dark {
-  --app: #0a0b0d;
-  --surface: #131518;
-  --surface-2: #1c1f24;
-  --sidebar: #0d0f11;
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --ink: #f5f6f7;
-  --ink-soft: #9aa0aa;
-  --ink-muted: #6b7280;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-pop: 0 8px 30px rgba(0, 0, 0, 0.5);
+  --app: #012624; /* Liquid Abyss — canvas */
+  --surface: #003734; /* Liquid Kelp — raised cards */
+  --surface-2: #0a4642; /* hover / chips on kelp */
+  --sidebar: #011d1c; /* Liquid Deep — recessed */
+  --field: #011d1c; /* inputs read as sunken wells */
+  --line: rgba(237, 255, 254, 0.08);
+  --line-strong: rgba(237, 255, 254, 0.16);
+  --ink: #ffffff; /* Platinum — headings */
+  --ink-soft: #bbc7c6; /* Silver Mist — body */
+  --ink-muted: #8a9e9c;
+  --figure: #fde9ff; /* Lavender Phosphor — statistics */
+  --pop-border: rgba(237, 255, 254, 0.16);
   color-scheme: dark;
 }
 
 html,
 body {
   @apply bg-app text-ink;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* Medium-only headings: no bold, no light at display sizes.
+   In the base layer so utilities (label-caps, tracking-*) still win. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
 }
 
 /* Themed scrollbars so panels feel native in both modes */
@@ -95,45 +140,85 @@ body {
 }
 *::-webkit-scrollbar-thumb {
   background: var(--line-strong);
-  border-radius: 9999px;
+  border-radius: 6px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 
-/* ── Landing page motion (unchanged) ───────────────────────────────────── */
-@keyframes orb-drift-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(60px, -80px) scale(1.08); }
-  66%       { transform: translate(-40px, 50px) scale(0.95); }
+/* ── Signature utilities ────────────────────────────────────────────────── */
+
+/* Aurora: the one chromatic gesture. Buttons only — never large fills. */
+@utility bg-aurora {
+  background-image: linear-gradient(
+    90deg,
+    rgb(203, 255, 252) 0%,
+    rgb(237, 255, 254) 26.25%,
+    rgb(255, 253, 250) 47.57%,
+    rgb(250, 209, 255) 88.96%
+  );
 }
 
-@keyframes orb-drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(-70px, 60px) scale(1.1); }
-  66%       { transform: translate(50px, -40px) scale(0.92); }
+@utility bg-bioluminescent {
+  background-image: linear-gradient(90deg, rgb(0, 130, 124) 0%, rgb(203, 255, 252) 100%);
 }
 
-@keyframes orb-drift-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%       { transform: translate(40px, 70px) scale(1.06); }
+/* Uppercase instrumentation label (eyebrows, kickers, nav). */
+@utility label-caps {
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
-@keyframes grid-pulse {
-  0%, 100% { opacity: 0.03; }
-  50%       { opacity: 0.07; }
+@utility tracking-display {
+  letter-spacing: -0.04em;
 }
 
+@utility tracking-kinetic {
+  letter-spacing: -0.046em;
+}
+
+/* ── Landing page motion ────────────────────────────────────────────────── */
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.orb-1 { animation: orb-drift-1 18s ease-in-out infinite; }
-.orb-2 { animation: orb-drift-2 22s ease-in-out infinite; }
-.orb-3 { animation: orb-drift-3 26s ease-in-out infinite; }
-.hero-grid { animation: grid-pulse 6s ease-in-out infinite; }
-.fade-up-1 { animation: fade-up 0.7s ease both; animation-delay: 0.1s; opacity: 0; }
-.fade-up-2 { animation: fade-up 0.7s ease both; animation-delay: 0.25s; opacity: 0; }
-.fade-up-3 { animation: fade-up 0.7s ease both; animation-delay: 0.4s; opacity: 0; }
-.fade-up-4 { animation: fade-up 0.7s ease both; animation-delay: 0.55s; opacity: 0; }
-.fade-up-5 { animation: fade-up 0.7s ease both; animation-delay: 0.7s; opacity: 0; }
+@keyframes orb-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.06);
+  }
+}
+
+.orb-glow {
+  animation: orb-breathe 9s ease-in-out infinite;
+}
+.fade-up-1 { animation: fade-up 0.8s ease both; animation-delay: 0.1s; }
+.fade-up-2 { animation: fade-up 0.8s ease both; animation-delay: 0.25s; }
+.fade-up-3 { animation: fade-up 0.8s ease both; animation-delay: 0.4s; }
+.fade-up-4 { animation: fade-up 0.8s ease both; animation-delay: 0.55s; }
+.fade-up-5 { animation: fade-up 0.8s ease both; animation-delay: 0.7s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-glow,
+  .fade-up-1,
+  .fade-up-2,
+  .fade-up-3,
+  .fade-up-4,
+  .fade-up-5 {
+    animation: none;
+  }
+}

@@ -29,7 +29,7 @@ export const Card: FC<{
 }> = ({ className, children, as: Tag = "div" }) => (
   <Tag
     className={cn(
-      "rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]",
+      "rounded-2xl border border-line bg-surface",
       className
     )}
   >
@@ -62,7 +62,7 @@ const badgeStyles: Record<BadgeVariant, string> = {
   away: "bg-amber-500/12 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
   active: "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
   inactive: "bg-slate-500/12 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300",
-  draft: "bg-violet-500/12 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300",
+  draft: "bg-fuchsia-500/10 text-fuchsia-800 dark:bg-phosphor/10 dark:text-phosphor",
 };
 
 export const Badge: FC<{ status: BadgeVariant; className?: string }> = ({
@@ -71,7 +71,7 @@ export const Badge: FC<{ status: BadgeVariant; className?: string }> = ({
 }) => (
   <span
     className={cn(
-      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+      "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium capitalize",
       badgeStyles[status],
       className
     )}
@@ -131,7 +131,7 @@ export const Avatar: FC<{
   ) : (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300",
+        "inline-flex items-center justify-center rounded-full bg-primary-100 font-medium text-primary-700 dark:bg-primary-500/20 dark:text-primary-300",
         sizeMap[size],
         className
       )}
@@ -157,7 +157,7 @@ interface InputProps {
 }
 
 const fieldBase =
-  "w-full rounded-xl border bg-surface px-3.5 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-md border bg-field px-3.5 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 disabled:cursor-not-allowed disabled:opacity-60";
 
 export const TextInput: FC<InputProps> = ({
   id,
@@ -265,13 +265,13 @@ export const Toggle: FC<{
       onClick={() => onChange(!checked)}
       className={cn(
         "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary-500/20",
-        checked ? "bg-primary-600" : "bg-surface-2 dark:bg-white/15",
+        checked ? "bg-primary-600" : "bg-line-strong",
         disabled && "cursor-not-allowed opacity-50"
       )}
     >
       <span
         className={cn(
-          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white ring-0 transition duration-200 ease-in-out",
           checked ? "translate-x-5" : "translate-x-0"
         )}
       />
@@ -305,7 +305,7 @@ export const Paginator: FC<{
         <button
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="rounded-lg px-3 py-1.5 font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent"
+          className="rounded-md px-3 py-1.5 font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent"
         >
           Previous
         </button>
@@ -315,7 +315,7 @@ export const Paginator: FC<{
         <button
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="rounded-lg px-3 py-1.5 font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent"
+          className="rounded-md px-3 py-1.5 font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent"
         >
           Next
         </button>
@@ -342,7 +342,7 @@ export const CopyButton: FC<{ text: string; className?: string }> = ({
       type="button"
       onClick={copy}
       className={cn(
-        "rounded-lg px-2.5 py-1 text-xs font-medium transition",
+        "rounded-md px-2.5 py-1 text-xs font-medium transition",
         copied
           ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
           : "bg-surface-2 text-ink-soft hover:text-ink",
@@ -382,7 +382,7 @@ export const EmptyState: FC<{
         />
       </svg>
     </div>
-    <h3 className="text-sm font-semibold text-ink">{title}</h3>
+    <h3 className="text-sm font-medium text-ink">{title}</h3>
     {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
     {action && <div className="mt-4">{action}</div>}
   </div>

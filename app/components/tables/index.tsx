@@ -41,13 +41,13 @@ export function TableComponent<T>({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]",
+        "overflow-hidden rounded-2xl border border-line bg-surface",
         className
       )}
     >
       {(title || renderFilter) && (
         <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-          {title && <h3 className="text-sm font-semibold text-ink">{title}</h3>}
+          {title && <h3 className="text-sm font-medium text-ink">{title}</h3>}
           {renderFilter && <div>{renderFilter}</div>}
         </div>
       )}
@@ -59,7 +59,7 @@ export function TableComponent<T>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-ink-muted",
+                    "px-5 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-ink-muted",
                     col.width
                   )}
                 >

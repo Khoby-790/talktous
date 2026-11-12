@@ -26,9 +26,9 @@ interface SelectInputProps {
 const selectStyles: StylesConfig<Option, boolean> = {
   control: (base, state) => ({
     ...base,
-    background: "var(--surface)",
+    background: "var(--field)",
     borderColor: state.isFocused ? "var(--color-primary-500)" : "var(--line)",
-    borderRadius: "0.75rem",
+    borderRadius: "6px",
     boxShadow: state.isFocused ? "0 0 0 4px color-mix(in srgb, var(--color-primary-500) 15%, transparent)" : "none",
     minHeight: "42px",
     fontSize: "0.875rem",
@@ -38,8 +38,8 @@ const selectStyles: StylesConfig<Option, boolean> = {
   menu: (base) => ({
     ...base,
     background: "var(--surface)",
-    border: "1px solid var(--line)",
-    borderRadius: "0.75rem",
+    border: "1px solid var(--pop-border)",
+    borderRadius: "6px",
     overflow: "hidden",
     boxShadow: "var(--shadow-pop)",
   }),
@@ -50,7 +50,7 @@ const selectStyles: StylesConfig<Option, boolean> = {
       : state.isFocused
       ? "var(--surface-2)"
       : "transparent",
-    color: state.isSelected ? "var(--color-primary-700)" : "var(--ink)",
+    color: "var(--ink)",
     fontSize: "0.875rem",
     cursor: "pointer",
     "&:active": { background: "color-mix(in srgb, var(--color-primary-500) 25%, transparent)" },
@@ -59,14 +59,14 @@ const selectStyles: StylesConfig<Option, boolean> = {
   multiValue: (base) => ({
     ...base,
     background: "color-mix(in srgb, var(--color-primary-500) 14%, transparent)",
-    borderRadius: "0.5rem",
+    borderRadius: "4px",
   }),
-  multiValueLabel: (base) => ({ ...base, color: "var(--color-primary-700)", fontSize: "0.75rem" }),
+  multiValueLabel: (base) => ({ ...base, color: "var(--ink)", fontSize: "0.75rem" }),
   multiValueRemove: (base) => ({
     ...base,
-    color: "var(--color-primary-600)",
-    borderRadius: "0 0.5rem 0.5rem 0",
-    "&:hover": { background: "color-mix(in srgb, var(--color-primary-500) 30%, transparent)", color: "var(--color-primary-800)" },
+    color: "var(--ink-soft)",
+    borderRadius: "0 4px 4px 0",
+    "&:hover": { background: "color-mix(in srgb, var(--color-primary-500) 30%, transparent)", color: "var(--ink)" },
   }),
   placeholder: (base) => ({ ...base, color: "var(--ink-muted)", fontSize: "0.875rem" }),
   input: (base) => ({ ...base, color: "var(--ink)" }),

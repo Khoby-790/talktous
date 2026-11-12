@@ -29,7 +29,7 @@ const SignInPage: FC = () => {
   return (
     <form onSubmit={form.handleSubmit} className="space-y-4">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-ink">Sign in</h2>
+        <h2 className="text-xl font-medium text-ink">Sign in</h2>
         <p className="mt-1 text-sm text-ink-soft">
           Enter your credentials to access the dashboard.
         </p>

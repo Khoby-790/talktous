@@ -43,7 +43,7 @@ export const Modal: FC<ModalProps> = ({
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60" />
+        <div className="fixed inset-0 bg-deep/50 backdrop-blur-sm dark:bg-deep/80" />
       </Transition.Child>
       <div className="fixed inset-0 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
@@ -58,17 +58,17 @@ export const Modal: FC<ModalProps> = ({
           >
             <Dialog.Panel
               className={cn(
-                "w-full rounded-2xl border border-line bg-surface shadow-[var(--shadow-pop)]",
+                "w-full rounded-2xl border border-[var(--pop-border)] bg-surface",
                 sizeClasses[size]
               )}
             >
               <div className="flex items-center justify-between border-b border-line px-6 py-4">
-                <Dialog.Title className="text-base font-semibold text-ink">
+                <Dialog.Title className="text-xl font-medium tracking-tight text-ink">
                   {title}
                 </Dialog.Title>
                 <button
                   onClick={onClose}
-                  className="rounded-lg p-1 text-ink-muted transition hover:bg-surface-2 hover:text-ink"
+                  className="rounded-md p-1 text-ink-muted transition hover:bg-surface-2 hover:text-ink"
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -115,7 +115,7 @@ export const Drawer: FC<DrawerProps> = ({ open, onClose, title, children }) => (
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
       >
-        <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm dark:bg-black/60" />
+        <div className="fixed inset-0 bg-deep/50 backdrop-blur-sm dark:bg-deep/80" />
       </Transition.Child>
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
@@ -130,14 +130,14 @@ export const Drawer: FC<DrawerProps> = ({ open, onClose, title, children }) => (
               leaveTo="translate-x-full"
             >
               <Dialog.Panel className="pointer-events-auto w-screen max-w-md">
-                <div className="flex h-full flex-col border-l border-line bg-surface shadow-[var(--shadow-pop)]">
+                <div className="flex h-full flex-col border-l border-line bg-surface">
                   <div className="flex items-center justify-between border-b border-line px-6 py-4">
-                    <Dialog.Title className="text-base font-semibold text-ink">
+                    <Dialog.Title className="text-base font-medium text-ink">
                       {title}
                     </Dialog.Title>
                     <button
                       onClick={onClose}
-                      className="rounded-lg p-1 text-ink-muted transition hover:bg-surface-2 hover:text-ink"
+                      className="rounded-md p-1 text-ink-muted transition hover:bg-surface-2 hover:text-ink"
                     >
                       <XMarkIcon className="h-5 w-5" />
                     </button>
@@ -172,11 +172,11 @@ export const Header: FC<HeaderProps> = ({
   <div className="mb-6 flex items-start justify-between gap-4 border-b border-line pb-5">
     <div>
       {breadcrumb && (
-        <p className="mb-1 text-xs text-ink-muted">{breadcrumb.join(" / ")}</p>
+        <p className="label-caps mb-2 text-ink-muted">{breadcrumb.join(" / ")}</p>
       )}
-      <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>
+      <h1 className="text-3xl font-medium leading-none tracking-display text-ink md:text-4xl">{title}</h1>
       {description && (
-        <p className="mt-1 text-sm text-ink-soft">{description}</p>
+        <p className="mt-2 text-sm text-ink-soft">{description}</p>
       )}
     </div>
     {action && <div className="shrink-0">{action}</div>}

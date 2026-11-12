@@ -14,17 +14,17 @@ const StatCard: FC<{
   trend?: "up" | "down";
   accent?: string;
 }> = ({ label, value, delta, trend, accent = "var(--color-primary-600)" }) => (
-  <Card className="p-5">
+  <Card className="p-6">
     <div className="flex items-center justify-between">
-      <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-muted">{label}</p>
-      <span className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}>
+      <p className="label-caps text-ink-soft">{label}</p>
+      <span className="flex h-7 w-7 items-center justify-center rounded-md" style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}>
         <span className="h-2 w-2 rounded-full" style={{ background: accent }} />
       </span>
     </div>
-    <p className="mt-3 text-3xl font-bold tracking-tight text-ink">{value}</p>
+    <p className="mt-4 text-5xl font-medium leading-none tracking-display text-figure tabular-nums">{value}</p>
     {delta && (
-      <div className="mt-1.5 flex items-center gap-1 text-xs">
-        <span className={cn("inline-flex items-center gap-0.5 font-semibold", trend === "down" ? "text-red-500" : "text-emerald-600 dark:text-emerald-400")}>
+      <div className="mt-3 flex items-center gap-1 text-xs">
+        <span className={cn("inline-flex items-center gap-0.5 font-medium", trend === "down" ? "text-red-500" : "text-emerald-600 dark:text-emerald-400")}>
           {trend === "down" ? <ArrowTrendingDownIcon className="h-3.5 w-3.5" /> : <ArrowTrendingUpIcon className="h-3.5 w-3.5" />}
           {delta}
         </span>
@@ -37,8 +37,8 @@ const StatCard: FC<{
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-line bg-surface px-3 py-2 text-xs shadow-[var(--shadow-pop)]">
-      <p className="font-semibold text-ink">{label}</p>
+    <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs">
+      <p className="font-medium text-ink">{label}</p>
       <p className="text-primary-600 dark:text-primary-400">{payload[0].value} conversations</p>
     </div>
   );
@@ -55,18 +55,18 @@ const DashboardPage: FC = () => {
 
       {/* KPI */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Open" value={stats.openConversations} delta="12%" trend="up" accent="#1a5cff" />
+        <StatCard label="Open" value={stats.openConversations} delta="12%" trend="up" accent="#2bbab1" />
         <StatCard label="Pending" value={stats.pendingConversations} delta="4%" trend="down" accent="#f59e0b" />
         <StatCard label="Resolved today" value={stats.resolvedToday} delta="18%" trend="up" accent="#10b981" />
-        <StatCard label="CSAT Score" value={`${stats.csatScore}/5`} delta="0.3" trend="up" accent="#8b5cf6" />
+        <StatCard label="CSAT Score" value={`${stats.csatScore}/5`} delta="0.3" trend="up" accent="#f0b8f7" />
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Chart */}
         <Card className="p-5 lg:col-span-2">
           <div className="mb-5 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-ink">Conversations This Week</h3>
-            <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-medium text-ink-soft">Last 7 days</span>
+            <h3 className="label-caps text-ink-soft">Conversations this week</h3>
+            <span className="rounded-md bg-surface-2 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.15em] text-ink-soft">Last 7 days</span>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={stats.conversationsByDay} barSize={26}>
@@ -81,9 +81,9 @@ const DashboardPage: FC = () => {
 
         {/* Online agents */}
         <Card className="p-5">
-          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-ink">
-            Online Agents
-            <span className="rounded-full bg-emerald-500/12 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+          <h3 className="label-caps mb-5 flex items-center gap-2 text-ink-soft">
+            Online agents
+            <span className="rounded-md bg-emerald-500/12 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
               {onlineAgents.length} live
             </span>
           </h3>
@@ -95,10 +95,10 @@ const DashboardPage: FC = () => {
                   <StatusDot status={agent.status} className="absolute -bottom-0.5 -right-0.5 ring-2 ring-surface" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold text-ink">{agent.name}</p>
+                  <p className="truncate text-xs font-medium text-ink">{agent.name}</p>
                   <p className="text-[11px] capitalize text-ink-muted">{agent.status}</p>
                 </div>
-                <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-medium capitalize text-primary-700 dark:text-primary-300">
+                <span className="rounded-md bg-primary-500/10 px-2 py-0.5 text-[10px] font-medium capitalize text-primary-700 dark:text-primary-300">
                   {agent.role}
                 </span>
               </div>
@@ -110,8 +110,8 @@ const DashboardPage: FC = () => {
       {/* Recent conversations */}
       <Card>
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h3 className="text-sm font-semibold text-ink">Recent Conversations</h3>
-          <a href="/conversations" className="text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400">View all</a>
+          <h3 className="label-caps text-ink-soft">Recent conversations</h3>
+          <a href="/conversations" className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400">View all</a>
         </div>
         {recentConversations.map((conv) => {
           const customer = mockCustomers.find((c) => c.id === conv.customerId);
@@ -123,7 +123,7 @@ const DashboardPage: FC = () => {
             >
               <Avatar name={customer?.name || "?"} size="sm" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-ink">{customer?.name}</p>
+                <p className="text-xs font-medium text-ink">{customer?.name}</p>
                 <p className="truncate text-xs text-ink-soft">{lastMsg?.content}</p>
               </div>
               <Badge status={conv.status} />

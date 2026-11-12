@@ -2,7 +2,7 @@ import { type FC } from "react";
 import { cn } from "~/lib/utils";
 
 export const Shimmer: FC<{ className?: string }> = ({ className }) => (
-  <div className={cn("animate-pulse rounded-lg bg-surface-2", className)} />
+  <div className={cn("animate-pulse rounded-md bg-surface-2", className)} />
 );
 
 export const TableShimmer: FC<{ rows?: number; cols?: number }> = ({ rows = 5, cols = 4 }) => (
@@ -18,7 +18,7 @@ export const TableShimmer: FC<{ rows?: number; cols?: number }> = ({ rows = 5, c
 );
 
 export const CardShimmer: FC = () => (
-  <div className="space-y-3 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)]">
+  <div className="space-y-3 rounded-2xl border border-line bg-surface p-5">
     <Shimmer className="h-4 w-1/3" />
     <Shimmer className="h-8 w-1/2" />
     <Shimmer className="h-3 w-2/3" />

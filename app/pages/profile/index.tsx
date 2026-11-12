@@ -25,7 +25,7 @@ const ProfilePage: FC = () => {
         <div className="mb-6 flex items-center gap-4">
           <Avatar name={mockUser.name} src={mockUser.avatar} size="xl" />
           <div>
-            <p className="text-base font-semibold text-ink">{mockUser.name}</p>
+            <p className="text-base font-medium text-ink">{mockUser.name}</p>
             <p className="text-sm capitalize text-ink-muted">
               {mockUser.role} &middot; {mockUser.status}
             </p>

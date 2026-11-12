@@ -7,7 +7,7 @@ const STORAGE_KEY = "talktous:theme";
 /** Read the current theme from the <html> class (set pre-hydration by the
  *  inline script in root.tsx, so this never causes a flash). */
 function getInitialTheme(): Theme {
-  if (typeof document === "undefined") return "light";
+  if (typeof document === "undefined") return "dark";
   return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
@@ -23,7 +23,7 @@ export function applyTheme(theme: Theme) {
 
 /** Theme state + toggle, synced to <html class="dark"> and localStorage. */
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   // Sync to the real DOM value once mounted (avoids SSR/CSR mismatch).
   useEffect(() => {
@@ -46,7 +46,8 @@ export const themeInitScript = `
 (function () {
   try {
     var t = localStorage.getItem("${STORAGE_KEY}");
-    if (t === "dark") document.documentElement.classList.add("dark");
+    // Auros is dark-first: only opt out when the user explicitly chose light.
+    if (t !== "light") document.documentElement.classList.add("dark");
   } catch (e) {}
 })();
 `;

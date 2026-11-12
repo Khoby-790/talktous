@@ -28,20 +28,20 @@ const IntegrationsPage: FC = () => {
         {integrations.map((integration) => (
           <div
             key={integration.id}
-            className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)]"
+            className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-sm font-bold text-ink-soft">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-surface-2 text-sm font-medium text-ink-soft">
                   {integration.icon}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-ink">{integration.name}</p>
+                  <p className="text-sm font-medium text-ink">{integration.name}</p>
                   <p className="text-xs text-ink-muted">{integration.category}</p>
                 </div>
               </div>
               {integration.status === "connected" && (
-                <span className="rounded-full bg-green-500/12 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">
+                <span className="rounded-md bg-green-500/12 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">
                   Connected
                 </span>
               )}

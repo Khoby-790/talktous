@@ -43,7 +43,7 @@ const GeneralSettings: FC = () => {
   return (
     <form onSubmit={form.handleSubmit} className="max-w-xl space-y-6">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-muted">Organization</p>
+        <p className="text-[11px] font-medium uppercase tracking-widest text-ink-muted">Organization</p>
         <div className="mt-3 space-y-4">
           <TextInput
             id="name"
@@ -107,8 +107,8 @@ const SettingsPage: FC = () => {
       </div>
       {activeTab === "general" && <GeneralSettings />}
       {activeTab === "billing" && (
-        <div className="max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
-          <p className="text-sm font-semibold text-ink">
+        <div className="max-w-xl rounded-2xl border border-line bg-surface p-6">
+          <p className="text-sm font-medium text-ink">
             Current Plan: <span className="capitalize text-primary-600 dark:text-primary-400">{mockOrg.plan}</span>
           </p>
           <p className="mt-2 text-sm text-ink-muted">
@@ -117,7 +117,7 @@ const SettingsPage: FC = () => {
         </div>
       )}
       {activeTab === "notifications" && (
-        <div className="max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
+        <div className="max-w-xl rounded-2xl border border-line bg-surface p-6">
           <p className="text-sm text-ink-muted">
             Notification preferences will be available once connected to the backend.
           </p>

@@ -54,8 +54,8 @@ const InboxPage: FC = () => {
       {/* Conversation List */}
       <div className="flex w-80 shrink-0 flex-col border-r border-line bg-surface">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h2 className="text-[11px] font-semibold uppercase tracking-widest text-ink-muted">Inbox</h2>
-          <span className="rounded-full bg-primary-500/15 px-2 py-0.5 text-xs font-medium text-primary-600 dark:text-primary-400">
+          <h2 className="text-[11px] font-medium uppercase tracking-widest text-ink-muted">Inbox</h2>
+          <span className="rounded-md bg-primary-500/15 px-2 py-0.5 text-xs font-medium text-primary-600 dark:text-primary-400">
             {conversations.length}
           </span>
         </div>
@@ -101,7 +101,7 @@ const InboxPage: FC = () => {
             <div className="flex items-center gap-3">
               <Avatar name={customer.name} size="sm" />
               <div>
-                <p className="text-sm font-semibold text-ink">{customer.name}</p>
+                <p className="text-sm font-medium text-ink">{customer.name}</p>
                 <p className="text-xs text-ink-muted">{customer.email}</p>
               </div>
             </div>
@@ -126,7 +126,7 @@ const InboxPage: FC = () => {
                   <div className={cn("max-w-lg", isAgent && "flex flex-col items-end")}>
                     <div
                       className={cn(
-                        "rounded-xl px-4 py-2.5 text-sm",
+                        "rounded-md px-4 py-2.5 text-sm",
                         isAgent
                           ? "rounded-tr-sm bg-primary-600 text-white"
                           : "rounded-tl-sm border border-line bg-surface-2 text-ink"
@@ -152,7 +152,7 @@ const InboxPage: FC = () => {
                 }}
                 placeholder="Type your reply… (Cmd+Enter to send)"
                 rows={2}
-                className="flex-1 resize-none rounded-xl border border-line bg-surface-2 px-3 py-2 text-sm text-ink placeholder-ink-muted outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                className="flex-1 resize-none rounded-md border border-line bg-field px-3 py-2 text-sm text-ink placeholder-ink-muted outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               />
               <PrimaryButton onClick={handleSend} loading={sending} disabled={!reply.trim()}>
                 Send

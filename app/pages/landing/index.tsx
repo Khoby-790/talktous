@@ -1,176 +1,192 @@
-import { type FC } from "react";
+import { type FC, type ReactNode } from "react";
 import { Link } from "react-router";
+import { ArrowUpRightIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { cn } from "~/lib/utils";
+import { ParticleSphere } from "./particle-sphere";
+import { Molecule } from "./molecule";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const navLinks = ["Features", "Solutions", "Pricing", "Testimonials"];
+const navLinks = [
+  { label: "Product", href: "#explore" },
+  { label: "How it works", href: "#how" },
+  { label: "Pricing", href: "#pricing" },
+  { label: "Customers", href: "#customers" },
+];
 
-const logos = [
-  { name: "Slack", letter: "S" },
-  { name: "Notion", letter: "N" },
-  { name: "Intercom", letter: "I" },
-  { name: "Stripe", letter: "St" },
-  { name: "HubSpot", letter: "H" },
+const stats = [
+  { value: "4×", label: "Faster first response" },
+  { value: "4.8", label: "Average CSAT" },
+  { value: "10k+", label: "Teams onboard" },
+  { value: "99.9%", label: "Uptime SLA" },
+];
+
+const explore = [
+  {
+    title: "Unified inbox",
+    body: "Web chat, email, WhatsApp and API messages land in one live queue. Filter by status, priority or channel — reply with ⌘ Enter.",
+    href: "/sign-in",
+  },
+  {
+    title: "Team & routing",
+    body: "Invite agents, set roles, and assign conversations in one click. Supervisors see everything; agents see their own queue.",
+    href: "/sign-in",
+  },
+  {
+    title: "Analytics & CSAT",
+    body: "Live KPIs for open volume, response time and satisfaction. Spot the bottleneck before your customers feel it.",
+    href: "/sign-in",
+  },
 ];
 
 const steps = [
-  {
-    step: "Step 1",
-    title: "Connect Your Apps",
-    description:
-      "Set up web chat, email, or WhatsApp in minutes. No engineering required — just copy a snippet and you're live.",
-    visual: ["Web Widget", "Email", "WhatsApp", "API"],
-  },
-  {
-    step: "Step 2",
-    title: "Invite Your Team",
-    description:
-      'Add agents, assign roles, and configure who handles what. Supervisors see everything; agents see their queue.',
-    visual: ["Admin", "Supervisor", "Agent"],
-  },
-  {
-    step: "Step 3",
-    title: "Start Resolving",
-    description:
-      "Your inbox is live. Assign conversations, reply in real-time, and track CSAT — all in one place.",
-    visual: ["Assign", "Reply", "Resolve"],
-  },
+  { n: "01", title: "Connect a channel", body: "Drop a widget snippet on your site, forward an inbox, or link WhatsApp. Live in minutes, no engineering." },
+  { n: "02", title: "Invite your team", body: "Add admins, supervisors and agents. Each role sees exactly what it needs — nothing more." },
+  { n: "03", title: "Start resolving", body: "Assign, reply in real time, and close the loop. CSAT and response times track themselves." },
 ];
 
-const reasons = [
-  { icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z", title: "Unified Inbox", desc: "All channels in one view — no more switching between tools." },
-  { icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", title: "Role-based Access", desc: "Admins, supervisors, and agents each see exactly what they need." },
-  { icon: "M13 10V3L4 14h7v7l9-11h-7z", title: "Real-time Updates", desc: "Live conversation events and agent status via Pusher — zero delay." },
-  { icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", title: "CSAT Analytics", desc: "Track satisfaction scores, response times, and volume trends." },
-  { icon: "M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z", title: "60+ Integrations", desc: "Slack, Stripe, HubSpot and more — context right in the conversation." },
-  { icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z", title: "Enterprise Security", desc: "Role-based access, audit logs, and SSO — built-in from day one." },
+const capabilities = [
+  { title: "Real-time by default", body: "Conversation and agent-status events stream live — no refresh, no polling lag." },
+  { title: "Role-based access", body: "Admin, supervisor, agent. Permissions at the route and component level." },
+  { title: "60+ integrations", body: "Slack, Stripe, HubSpot and more — customer context inside the thread." },
+  { title: "Canned responses", body: "A rich-text library of answers your team can drop in and personalise." },
+  { title: "Customer profiles", body: "Every conversation, attribute and touchpoint for a customer in one place." },
+  { title: "Enterprise security", body: "SSO, audit logs and scoped API keys from day one." },
 ];
 
 const testimonials = [
   {
-    quote: "Talk To Us cut our average response time from 18 minutes to under 4. Our CSAT went from 3.9 to 4.8 in the first month.",
+    quote: "Talk To Us cut our average response time from 18 minutes to under 4. CSAT went from 3.9 to 4.8 in the first month.",
     name: "Sarah K.",
-    role: "Head of Support, Fintech startup",
-    avatar: "SK",
+    role: "Head of Support · Fintech",
   },
   {
-    quote: "Finally — an inbox where my whole team can work together without stepping on each other. The assignment flow is exactly what we needed.",
+    quote: "Finally an inbox where the whole team can work without stepping on each other. The assignment flow is exactly what we needed.",
     name: "Marcus O.",
-    role: "Customer Success Manager, SaaS",
-    avatar: "MO",
+    role: "Customer Success · SaaS",
   },
 ];
 
-const stats = [
-  { label: "Faster responses", value: "4×" },
-  { label: "Avg. CSAT score", value: "4.8" },
-  { label: "Teams onboard", value: "10k+" },
-  { label: "Uptime SLA", value: "99.9%" },
+const plans = [
+  { name: "Starter", price: "Free", cadence: "", features: ["1 app", "3 agents", "1,000 conversations / mo", "Web chat", "Email support"], cta: "Get started", highlight: false },
+  { name: "Growth", price: "$49", cadence: "/ mo", features: ["5 apps", "15 agents", "10,000 conversations / mo", "All channels", "Analytics", "Priority support"], cta: "Start free trial", highlight: true },
+  { name: "Enterprise", price: "$199", cadence: "/ mo", features: ["Unlimited apps", "Unlimited agents", "Unlimited conversations", "All channels", "SSO & audit logs", "Dedicated support"], cta: "Contact sales", highlight: false },
 ];
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
+// ─── Primitives ───────────────────────────────────────────────────────────────
 
-const Icon: FC<{ path: string; className?: string }> = ({ path, className }) => (
-  <svg className={cn("h-5 w-5", className)} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d={path} />
-  </svg>
+const Eyebrow: FC<{ children: ReactNode; className?: string }> = ({ children, className }) => (
+  <p className={cn("label-caps text-silver", className)}>{children}</p>
 );
 
-const PlayIcon: FC<{ className?: string }> = ({ className }) => (
-  <svg className={cn("h-4 w-4", className)} fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-  </svg>
+/** Signature aurora CTA — the only place the gradient appears. */
+const AuroraLink: FC<{ to: string; children: ReactNode; size?: "md" | "lg"; className?: string }> = ({
+  to,
+  children,
+  size = "md",
+  className,
+}) => (
+  <Link
+    to={to}
+    className={cn(
+      "bg-aurora inline-flex items-center justify-center gap-2 rounded-md text-[14px] uppercase tracking-[0.08em] text-[#222222] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-200/30",
+      size === "lg" ? "px-[22px] py-5" : "px-[18px] py-3",
+      className
+    )}
+  >
+    {children}
+  </Link>
 );
 
-// Browser frame wrapping a mock inbox UI
-const InboxMockup: FC = () => (
-  <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0f1113] shadow-2xl shadow-black/60 ring-1 ring-white/5">
-    {/* Browser chrome */}
-    <div className="flex items-center gap-2 border-b border-white/5 bg-[#16181c] px-4 py-3">
-      <div className="flex gap-1.5">
-        <div className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
-        <div className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
-        <div className="h-2.5 w-2.5 rounded-full bg-green-500/80" />
-      </div>
-      <div className="mx-3 flex flex-1 items-center justify-center rounded-lg bg-black/40 px-3 py-1">
-        <span className="text-xs text-slate-500">app.talktous.io/inbox</span>
-      </div>
+const GhostLink: FC<{ to: string; children: ReactNode; className?: string }> = ({ to, children, className }) => (
+  <Link
+    to={to}
+    className={cn("label-caps inline-flex items-center gap-2 text-silver transition hover:text-white", className)}
+  >
+    {children}
+  </Link>
+);
+
+const ArrowButton: FC<{ to: string; label: string }> = ({ to, label }) => (
+  <Link
+    to={to}
+    aria-label={label}
+    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-arrow text-white transition group-hover:bg-kelp"
+  >
+    <ArrowUpRightIcon className="h-4 w-4" strokeWidth={1.5} />
+  </Link>
+);
+
+const Wordmark: FC = () => (
+  <Link to="/" className="flex items-center gap-3">
+    <span className="bg-aurora flex h-8 w-8 items-center justify-center rounded-md text-[11px] font-medium tracking-[0.08em] text-[#222222]">
+      TU
+    </span>
+    <span className="label-caps text-white">Talk To Us</span>
+  </Link>
+);
+
+// ─── Inbox preview (product shot, rendered in the Auros surface stack) ─────────
+
+const conversations = [
+  { name: "David Miller", msg: "Charged twice this month…", status: "open", time: "2m", active: true },
+  { name: "Lisa Chen", msg: "Need help with API setup", status: "pending", time: "14m" },
+  { name: "Ahmed Hassan", msg: "Can I change my email?", status: "open", time: "1h" },
+  { name: "Carlos Rivera", msg: "Integration is down!", status: "urgent", time: "2h" },
+];
+
+const InboxPreview: FC = () => (
+  <div className="overflow-hidden rounded-2xl bg-deep">
+    <div className="flex items-center justify-between border-b border-white/5 px-5 py-3">
+      <span className="label-caps text-silver">app.talktous.io / inbox</span>
+      <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-silver">
+        <span className="h-1.5 w-1.5 rounded-full bg-online" /> Live
+      </span>
     </div>
-    {/* App */}
-    <div className="flex bg-white" style={{ height: 380 }}>
-      {/* Sidebar */}
-      <div className="flex w-44 shrink-0 flex-col gap-0.5 bg-[#0d0f11] p-2.5">
-        <div className="mb-3 flex items-center gap-2 px-2 py-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary-600">
-            <span className="text-[10px] font-bold text-white">TU</span>
-          </div>
-          <span className="text-xs font-semibold text-white">Talk To Us</span>
-        </div>
-        {["Dashboard", "Inbox", "Conversations", "Customers", "Apps", "Agents", "Settings"].map((item, i) => (
-          <div key={item} className={cn("flex items-center rounded-lg px-2.5 py-1.5 text-xs", i === 1 ? "bg-primary-500/15 font-medium text-primary-300" : "text-slate-500")}>
-            {item}
-            {i === 1 && <span className="ml-1.5 rounded-full bg-primary-600 px-1.5 py-0.5 text-[10px] text-white">4</span>}
-          </div>
-        ))}
-      </div>
-      {/* Conv list */}
-      <div className="flex w-52 shrink-0 flex-col border-r border-gray-100">
-        <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2.5">
-          <span className="text-xs font-semibold text-gray-900">Inbox</span>
-          <span className="rounded-full bg-primary-50 px-1.5 text-[10px] font-medium text-primary-700">4</span>
-        </div>
-        {[
-          { name: "David Miller", msg: "Charged twice this month...", dot: "bg-primary-500", active: true },
-          { name: "Lisa Chen", msg: "Need help with API setup", dot: "bg-amber-400", active: false },
-          { name: "Ahmed Hassan", msg: "Can I change my email?", dot: "bg-primary-500", active: false },
-          { name: "Carlos Rivera", msg: "Integration is DOWN!", dot: "bg-red-500", active: false },
-        ].map((c) => (
-          <div key={c.name} className={cn("border-b border-gray-50 px-3 py-2.5 cursor-pointer", c.active ? "bg-primary-50" : "hover:bg-gray-50")}>
+    <div className="grid min-h-[380px] grid-cols-1 md:grid-cols-[260px_1fr]">
+      {/* List */}
+      <div className="hidden border-r border-white/5 md:block">
+        {conversations.map((c) => (
+          <div key={c.name} className={cn("border-b border-white/5 px-5 py-4", c.active && "bg-kelp")}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-800">{c.name}</span>
-              <div className={cn("h-2 w-2 rounded-full shrink-0", c.dot)} />
+              <span className="text-[13px] text-white">{c.name}</span>
+              <span className="text-[11px] text-silver/70">{c.time}</span>
             </div>
-            <p className="mt-0.5 truncate text-[11px] text-gray-400">{c.msg}</p>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <p className="truncate text-[12px] text-silver">{c.msg}</p>
+              <span
+                className={cn(
+                  "shrink-0 rounded-[4px] px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em]",
+                  c.status === "open" && "bg-primary-500/20 text-primary-200",
+                  c.status === "pending" && "bg-amber-400/15 text-amber-200",
+                  c.status === "urgent" && "bg-phosphor text-abyss"
+                )}
+              >
+                {c.status}
+              </span>
+            </div>
           </div>
         ))}
       </div>
       {/* Thread */}
-      <div className="flex flex-1 flex-col bg-gray-50">
-        <div className="flex items-center justify-between border-b border-gray-100 bg-white px-4 py-2.5">
+      <div className="flex flex-col">
+        <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
           <div>
-            <p className="text-xs font-semibold text-gray-900">David Miller</p>
-            <p className="text-[11px] text-gray-400">david.miller@email.com</p>
+            <p className="text-[14px] text-white">David Miller</p>
+            <p className="text-[12px] text-silver">Billing · Web widget</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-600">High</span>
-            <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] font-semibold text-white">Resolve</span>
-          </div>
+          <span className="rounded-md bg-primary-600 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-white">Resolve</span>
         </div>
-        <div className="flex flex-1 flex-col gap-3 overflow-hidden p-4">
-          <div className="flex gap-2">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-600">DM</div>
-            <div className="max-w-[200px] rounded-2xl rounded-tl-sm border border-gray-100 bg-white px-3 py-2 text-[11px] text-gray-700 shadow-sm">
-              Hi, I think I was charged twice this month?
-            </div>
-          </div>
-          <div className="flex flex-row-reverse gap-2">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700">AJ</div>
-            <div className="max-w-[200px] rounded-2xl rounded-tr-sm bg-primary-600 px-3 py-2 text-[11px] text-white">
-              Hi David! Let me check your account right away.
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-600">DM</div>
-            <div className="max-w-[200px] rounded-2xl rounded-tl-sm border border-gray-100 bg-white px-3 py-2 text-[11px] text-gray-700 shadow-sm">
-              The amount was $149 — twice in April.
-            </div>
-          </div>
+        <div className="flex flex-1 flex-col gap-3 p-6 text-[13px] leading-[1.45]">
+          <p className="max-w-[300px] rounded-xl rounded-tl-[4px] bg-kelp px-4 py-2.5 text-mist">Hi — I think I was charged twice this month?</p>
+          <p className="ml-auto max-w-[300px] rounded-xl rounded-tr-[4px] bg-primary-600 px-4 py-2.5 text-white">Hi David! Checking your account now.</p>
+          <p className="max-w-[300px] rounded-xl rounded-tl-[4px] bg-kelp px-4 py-2.5 text-mist">$149, twice in April.</p>
+          <p className="ml-auto max-w-[300px] rounded-xl rounded-tr-[4px] bg-primary-600 px-4 py-2.5 text-white">Found it — the duplicate is refunded. You'll see it in 3–5 days.</p>
         </div>
-        <div className="border-t border-gray-100 bg-white px-4 py-3">
-          <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2">
-            <span className="flex-1 text-[11px] text-gray-400">Type your reply…</span>
-            <div className="rounded-lg bg-primary-600 px-2.5 py-1 text-[10px] font-semibold text-white">Send</div>
+        <div className="border-t border-white/5 px-6 py-4">
+          <div className="flex items-center gap-3 rounded-md bg-abyss px-4 py-2.5">
+            <span className="flex-1 text-[12px] text-silver/70">Type your reply…</span>
+            <span className="text-[10px] uppercase tracking-[0.15em] text-silver">⌘ ↵ Send</span>
           </div>
         </div>
       </div>
@@ -178,464 +194,293 @@ const InboxMockup: FC = () => (
   </div>
 );
 
-// ─── Main Component ────────────────────────────────────────────────────────────
+// ─── Page ──────────────────────────────────────────────────────────────────────
+
+const Section: FC<{ id?: string; className?: string; children: ReactNode }> = ({ id, className, children }) => (
+  <section id={id} className={cn("px-6 py-24 md:px-10 md:py-[140px]", className)}>
+    <div className="mx-auto max-w-[1280px]">{children}</div>
+  </section>
+);
 
 const LandingPage: FC = () => (
-  <div className="bg-white text-gray-900 antialiased">
-
+  <div className="min-h-screen bg-abyss font-sans text-silver antialiased selection:bg-phosphor selection:text-abyss">
     {/* ── Nav ── */}
-    <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0b0d]/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-600/30">
-            <span className="text-xs font-bold text-white">TU</span>
-          </div>
-          <span className="text-base font-bold tracking-tight text-white">Talk To Us</span>
-        </div>
+    <header className="absolute inset-x-0 top-0 z-50">
+      <nav className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-6 md:px-10">
+        <Wordmark />
         <div className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <a key={link} href={`#${link.toLowerCase()}`} className="text-sm font-medium text-slate-400 transition hover:text-white">
-              {link}
+          {navLinks.map((l) => (
+            <a key={l.label} href={l.href} className="label-caps font-normal text-silver transition hover:text-white">
+              {l.label}
             </a>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <Link to="/sign-in" className="hidden rounded-full px-4 py-2 text-sm font-semibold text-slate-300 transition hover:text-white sm:block">
+        <div className="flex items-center gap-6">
+          <Link to="/sign-in" className="label-caps hidden font-normal text-silver transition hover:text-white sm:block">
             Sign in
           </Link>
-          <Link
-            to="/onboarding"
-            className="flex items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-semibold text-gray-900 transition hover:bg-slate-100"
-          >
-            Start free
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </Link>
+          <AuroraLink to="/onboarding">Start free</AuroraLink>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
 
     {/* ── Hero ── */}
-    <section className="relative flex min-h-screen flex-col overflow-hidden bg-[#0a0b0d]">
+    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-6 pb-24 pt-32">
+      {/* Bioluminescent orb */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[min(118vw,880px)] -translate-x-1/2 -translate-y-1/2">
+        <div className="orb-glow absolute inset-[18%] rounded-full bg-primary-600/25 blur-[90px]" />
+        <ParticleSphere className="absolute inset-0" />
+      </div>
+      {/* Keep copy legible over the orb */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_52%_34%_at_50%_54%,rgba(1,38,36,0.9),rgba(1,38,36,0.55)_55%,transparent_85%)] md:bg-[radial-gradient(ellipse_40%_34%_at_50%_54%,rgba(1,38,36,0.88),transparent_80%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-abyss" />
 
-      {/* Animated orbs */}
-      <div className="orb-1 pointer-events-none absolute left-[10%] top-[15%] h-[500px] w-[500px] rounded-full bg-primary-600/20 blur-[120px]" />
-      <div className="orb-2 pointer-events-none absolute right-[8%] top-[25%] h-[420px] w-[420px] rounded-full bg-indigo-500/15 blur-[100px]" />
-      <div className="orb-3 pointer-events-none absolute bottom-[10%] left-[30%] h-[380px] w-[380px] rounded-full bg-violet-600/10 blur-[110px]" />
+      <div className="relative z-10 mx-auto flex max-w-[960px] flex-col items-center text-center">
+        <Eyebrow className="fade-up-1 text-mist">Customer support platform</Eyebrow>
+        <h1 className="fade-up-2 mt-8 text-[clamp(2.75rem,8vw,6rem)] leading-none tracking-display text-white">
+          Every conversation.
+          <br />
+          One current.
+        </h1>
+        <p className="fade-up-3 mt-8 max-w-[560px] text-base leading-[1.5] text-silver md:text-lg">
+          Bring web chat, email, WhatsApp and API messages into a single real-time inbox. Assign, reply and resolve — with the whole team in sync.
+        </p>
+        <div className="fade-up-4 mt-12 flex flex-col items-center gap-6 sm:flex-row sm:gap-10">
+          <AuroraLink to="/onboarding" size="lg">
+            Get started free
+            <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
+          </AuroraLink>
+          <GhostLink to="/sign-in">
+            Sign in to dashboard
+            <ArrowUpRightIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
+          </GhostLink>
+        </div>
+      </div>
 
-      {/* Dot grid */}
-      <div
-        className="hero-grid pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-        }}
-      />
+      <div className="fade-up-5 absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.15em] text-silver/60">
+        Scroll to explore
+      </div>
+    </section>
 
-      {/* Radial vignette to keep edges dark */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,transparent_40%,#0a0b0d_100%)]" />
+    {/* ── Statistics ── */}
+    <section className="px-6 pb-24 md:px-10 md:pb-[120px]">
+      <div className="mx-auto grid max-w-[1280px] grid-cols-2 gap-x-6 gap-y-14 border-t border-white/10 pt-14 lg:grid-cols-4">
+        {stats.map((s) => (
+          <div key={s.label}>
+            <p className="text-[clamp(3.25rem,7vw,5.375rem)] font-medium leading-none tracking-kinetic text-phosphor tabular-nums">
+              {s.value}
+            </p>
+            <p className="mt-4 text-[13px] uppercase tracking-[0.055em] text-mist">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
 
-      {/* Content — vertically centered */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-8 pb-20 pt-16 text-center">
-
-        {/* Badge */}
-        <div className="fade-up-1 mb-8 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 backdrop-blur-sm">
-          <div className="flex -space-x-1.5">
-            {["AJ", "MS", "JO"].map((i) => (
-              <div key={i} className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[9px] font-bold text-white ring-2 ring-[#0a0b0d]">{i}</div>
+    {/* ── Explore ── */}
+    <Section id="explore" className="bg-abyss">
+      <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1.1fr_1fr] lg:gap-24">
+        <div>
+          <Eyebrow>Explore</Eyebrow>
+          <h2 className="mt-6 max-w-[620px] text-[clamp(2.1rem,4.6vw,3.8rem)] leading-none tracking-display text-white">
+            One inbox, every channel, the whole team.
+          </h2>
+          <div className="mt-14 divide-y divide-white/10 border-y border-white/10">
+            {explore.map((f) => (
+              <div key={f.title} className="group rounded-2xl px-0 py-12 transition hover:bg-kelp/50 md:px-9">
+                <div className="flex items-start justify-between gap-6">
+                  <h3 className="text-[clamp(1.75rem,3vw,2.25rem)] leading-none text-white">{f.title}</h3>
+                  <ArrowButton to={f.href} label={`Explore ${f.title}`} />
+                </div>
+                <p className="mt-5 max-w-[520px] text-base leading-[1.45] text-silver">{f.body}</p>
+              </div>
             ))}
           </div>
-          <span className="text-xs font-medium text-slate-300">Your support team's favorite platform</span>
         </div>
+        <div className="relative flex items-center lg:sticky lg:top-24 lg:self-start">
+          <Molecule className="mx-auto max-w-[520px]" />
+        </div>
+      </div>
+    </Section>
 
-        {/* Headline */}
-        <h1 className="fade-up-2 max-w-4xl text-5xl font-bold leading-[1.05] tracking-tight text-white md:text-7xl">
-          Support faster,{" "}
-          <span className="bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-            resolve better
-          </span>{" "}
-          with Talk To Us
-        </h1>
-
-        <p className="fade-up-3 mx-auto mt-7 max-w-2xl text-lg leading-relaxed text-slate-400">
-          Bring web chat, email, and WhatsApp into one beautiful inbox. Manage conversations, assign agents, and delight customers — without the complexity.
+    {/* ── Product shot ── */}
+    <Section className="bg-deep">
+      <div className="mb-14 flex flex-col justify-between gap-8 md:flex-row md:items-end">
+        <div>
+          <Eyebrow>The inbox</Eyebrow>
+          <h2 className="mt-6 max-w-[640px] text-[clamp(2.1rem,4.6vw,3.8rem)] leading-none tracking-display text-white">
+            Calm on the surface. Real-time underneath.
+          </h2>
+        </div>
+        <p className="max-w-[380px] text-base leading-[1.45] text-silver">
+          New conversations, assignments and replies stream in live. Nobody refreshes, nobody double-answers.
         </p>
-
-        {/* CTAs */}
-        <div className="fade-up-4 mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-          <Link
-            to="/onboarding"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-primary-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary-900/50 transition hover:bg-primary-500 sm:w-auto"
-          >
-            <PlayIcon />
-            Get started free
-          </Link>
-          <Link
-            to="/sign-in"
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/10 sm:w-auto"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-            Contact us
-          </Link>
-        </div>
-
-        {/* Scroll hint */}
-        <div className="fade-up-5 mt-16 flex flex-col items-center gap-1.5 text-slate-600">
-          <span className="text-xs uppercase tracking-widest">Scroll to explore</span>
-          <svg className="h-4 w-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
       </div>
-
-      {/* Mockup — peeking up from the bottom */}
-      <div className="relative z-10 mx-auto w-full max-w-5xl px-8 pb-0">
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-16 bg-gradient-to-b from-[#0a0b0d] to-transparent" />
-        <InboxMockup />
-      </div>
-
-      {/* Bottom fade into next section */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent" />
-    </section>
-
-    {/* ── Logo Strip ── */}
-    <section className="border-b border-gray-100 bg-white py-10">
-      <p className="mb-6 text-center text-xs font-semibold uppercase tracking-widest text-gray-400">
-        Trusted by teams using
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 opacity-60 grayscale">
-        {logos.map((l) => (
-          <div key={l.name} className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-200 text-xs font-bold text-gray-600">{l.letter}</div>
-            <span className="text-sm font-semibold text-gray-700">{l.name}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    {/* ── Stats band ── */}
-    <section className="bg-white px-8 pt-20">
-      <div className="mx-auto grid max-w-5xl grid-cols-2 gap-px overflow-hidden rounded-3xl border border-gray-200 bg-gray-200 md:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-white px-6 py-8 text-center">
-            <p className="text-4xl font-bold tracking-tight text-gray-900">{s.value}</p>
-            <p className="mt-1.5 text-sm text-gray-500">{s.label}</p>
-          </div>
-        ))}
-      </div>
-    </section>
+      <InboxPreview />
+    </Section>
 
     {/* ── How it works ── */}
-    <section id="features" className="bg-white px-8 py-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-4 text-xs font-semibold uppercase tracking-widest text-primary-600">How it works</div>
-        <div className="mb-16 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end md:gap-12">
-          <h2 className="max-w-md text-4xl font-bold leading-tight tracking-tight text-gray-900">
-            Up and running in under 10 minutes.
+    <Section id="how">
+      <Eyebrow>How it works</Eyebrow>
+      <h2 className="mt-6 max-w-[620px] text-[clamp(2.1rem,4.6vw,3.8rem)] leading-none tracking-display text-white">
+        Live in under ten minutes.
+      </h2>
+      <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-3">
+        {steps.map((s) => (
+          <div key={s.n} className="flex flex-col rounded-2xl bg-kelp p-9">
+            <span className="label-caps text-silver">Step {s.n}</span>
+            <h3 className="mt-16 text-[clamp(1.75rem,2.6vw,2.25rem)] leading-none text-white">{s.title}</h3>
+            <p className="mt-5 text-base leading-[1.45] text-silver">{s.body}</p>
+          </div>
+        ))}
+      </div>
+    </Section>
+
+    {/* ── Capabilities ── */}
+    <Section className="bg-deep">
+      <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1fr_2fr]">
+        <div>
+          <Eyebrow>Capabilities</Eyebrow>
+          <h2 className="mt-6 text-[clamp(2.1rem,4vw,3rem)] leading-none tracking-display text-white">
+            Built like an instrument, not a toy.
           </h2>
-          <p className="max-w-sm text-base leading-relaxed text-gray-500">
-            Talk To Us is built to get your team productive fast — no lengthy onboarding, no professional services, no surprises.
-          </p>
         </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {steps.map((s) => (
-            <div key={s.step} className="rounded-3xl border border-gray-200 bg-white p-7 transition hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/60">
-              <div className="mb-5 text-xs font-semibold uppercase tracking-widest text-primary-600">{s.step}</div>
-              <h3 className="mb-3 text-lg font-bold tracking-tight text-gray-900">{s.title}</h3>
-              <p className="mb-6 text-sm leading-relaxed text-gray-500">{s.description}</p>
-              <div className="flex flex-wrap gap-2">
-                {s.visual.map((v) => (
-                  <span key={v} className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">
-                    {v}
-                  </span>
-                ))}
-              </div>
+        <div className="grid grid-cols-1 border-t border-white/10 sm:grid-cols-2">
+          {capabilities.map((c) => (
+            <div key={c.title} className="border-b border-white/10 py-9 sm:odd:pr-10 sm:even:border-l sm:even:pl-10">
+              <h3 className="text-2xl leading-[1.3] tracking-[-0.02em] text-white">{c.title}</h3>
+              <p className="mt-3 text-base leading-[1.45] text-silver">{c.body}</p>
             </div>
           ))}
         </div>
       </div>
-    </section>
-
-    {/* ── Feature Block 1 — light ── */}
-    <section className="bg-[#f7f9fc] px-8 py-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
-          <div>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary-600">Smart Inbox</div>
-            <h2 className="text-4xl font-bold leading-tight tracking-tight text-gray-900">
-              Every conversation,<br />one place.
-            </h2>
-            <p className="mt-5 text-base leading-relaxed text-gray-500">
-              Web chat, email, and WhatsApp — unified into a single, fast inbox. No tab switching, no missed messages. Your team sees what matters, when it matters.
-            </p>
-            <ul className="mt-6 space-y-3">
-              {["Assign conversations with one click", "Filter by status, priority, or channel", "Cmd+Enter to send replies instantly"].map((item) => (
-                <li key={item} className="flex items-center gap-2.5 text-sm text-gray-600">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/12">
-                    <svg className="h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link to="/onboarding" className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700">
-              Get started free
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </div>
-          {/* Mini inbox preview */}
-          <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl shadow-gray-200/60">
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3.5">
-              <span className="text-sm font-semibold text-gray-900">Inbox <span className="ml-1 text-primary-600">4</span></span>
-              <div className="flex gap-2">
-                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">All</span>
-                <span className="rounded-full bg-primary-600 px-2.5 py-1 text-xs text-white">Open</span>
-                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">Pending</span>
-              </div>
-            </div>
-            {[
-              { name: "David Miller", channel: "Web", msg: "Charged twice this month...", status: "open", time: "2m ago" },
-              { name: "Lisa Chen", channel: "Email", msg: "Need help with API setup", status: "pending", time: "14m ago" },
-              { name: "Ahmed Hassan", channel: "Web", msg: "Can I change my email?", status: "open", time: "1h ago" },
-              { name: "Carlos Rivera", channel: "Email", msg: "Integration is DOWN!", status: "open", time: "2h ago" },
-            ].map((c, i) => (
-              <div key={c.name} className={cn("flex items-center gap-3 border-b border-gray-50 px-4 py-3.5 last:border-0", i === 0 && "bg-primary-50")}>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-600">
-                  {c.name.split(" ").map((n) => n[0]).join("")}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-gray-900">{c.name}</p>
-                    <span className="text-[11px] text-gray-400">{c.time}</span>
-                  </div>
-                  <p className="truncate text-[11px] text-gray-500">{c.msg}</p>
-                </div>
-                <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize", c.status === "open" ? "bg-primary-100 text-primary-700" : "bg-amber-100 text-amber-700")}>
-                  {c.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-
-    {/* ── Feature Block 2 — dark ── */}
-    <section className="bg-[#0a0b0d] px-8 py-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
-          {/* Analytics cards */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "Open Conversations", value: "24", color: "text-primary-400" },
-                { label: "Avg Response Time", value: "4.2m", color: "text-emerald-400" },
-                { label: "CSAT Score", value: "4.8/5", color: "text-violet-400" },
-                { label: "Resolved Today", value: "38", color: "text-amber-400" },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">{stat.label}</p>
-                  <p className={cn("mt-2 text-3xl font-bold tracking-tight", stat.color)}>{stat.value}</p>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Conversations this week</p>
-              <div className="flex h-16 items-end gap-2">
-                {[4, 7, 3, 9, 6, 2, 5].map((h, i) => (
-                  <div key={i} className="flex-1 rounded-md bg-primary-600/50 transition hover:bg-primary-500" style={{ height: `${(h / 9) * 100}%` }} />
-                ))}
-              </div>
-              <div className="mt-2 flex justify-between">
-                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-                  <span key={d} className="text-[10px] text-slate-600">{d}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary-400">Analytics &amp; CSAT</div>
-            <h2 className="text-4xl font-bold leading-tight tracking-tight text-white">
-              Know exactly where<br />
-              <span className="bg-gradient-to-r from-primary-300 to-primary-500 bg-clip-text text-transparent">your team stands.</span>
-            </h2>
-            <p className="mt-5 text-base leading-relaxed text-slate-400">
-              Real-time dashboards show open tickets, response times, and satisfaction scores. Spot bottlenecks before your customers do.
-            </p>
-            <ul className="mt-6 space-y-3">
-              {["Live KPI cards updated in real-time", "Weekly conversation volume charts", "Per-agent performance tracking"].map((item) => (
-                <li key={item} className="flex items-center gap-2.5 text-sm text-slate-400">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-500/15">
-                    <svg className="h-3 w-3 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    {/* ── 6 Reasons ── */}
-    <section id="solutions" className="bg-[#0d0f11] px-8 py-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-16 text-center">
-          <div className="mb-4 text-xs font-semibold uppercase tracking-widest text-primary-400">Why Talk To Us</div>
-          <h2 className="text-4xl font-bold tracking-tight text-white">
-            Everything support teams need<br />to move faster
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {reasons.map((r) => (
-            <div key={r.title} className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition hover:border-white/20 hover:bg-white/[0.06]">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-primary-500/10 transition group-hover:bg-primary-500/20">
-                <Icon path={r.icon} className="text-primary-400" />
-              </div>
-              <h3 className="mb-2 text-sm font-semibold text-white">{r.title}</h3>
-              <p className="text-sm leading-relaxed text-slate-400">{r.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+    </Section>
 
     {/* ── Testimonials ── */}
-    <section id="testimonials" className="bg-white px-8 py-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-16 text-center">
-          <div className="mb-4 text-xs font-semibold uppercase tracking-widest text-primary-600">Loved by teams</div>
-          <h2 className="text-4xl font-bold tracking-tight text-gray-900">
-            Support teams around the world<br />rely on Talk To Us
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {testimonials.map((t) => (
-            <div key={t.name} className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
-              <svg className="mb-4 h-7 w-7 text-primary-200" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-              </svg>
-              <p className="text-lg leading-relaxed text-gray-700">"{t.quote}"</p>
-              <div className="mt-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
-                  {t.avatar}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{t.name}</p>
-                  <p className="text-xs text-gray-400">{t.role}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+    <Section id="customers">
+      <Eyebrow>From support teams</Eyebrow>
+      <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2">
+        {testimonials.map((t) => (
+          <figure key={t.name} className="flex flex-col justify-between rounded-2xl bg-kelp p-9 md:p-12">
+            <blockquote className="text-[clamp(1.35rem,2vw,1.6rem)] leading-[1.3] tracking-[-0.02em] text-ash">
+              “{t.quote}”
+            </blockquote>
+            <figcaption className="mt-12 flex items-center justify-between gap-4">
+              <span className="text-base text-white">{t.name}</span>
+              <span className="text-[10px] uppercase tracking-[0.15em] text-silver">{t.role}</span>
+            </figcaption>
+          </figure>
+        ))}
       </div>
-    </section>
+    </Section>
 
     {/* ── Pricing ── */}
-    <section id="pricing" className="bg-[#f7f9fc] px-8 py-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-16 text-center">
-          <div className="mb-4 text-xs font-semibold uppercase tracking-widest text-primary-600">Pricing</div>
-          <h2 className="text-4xl font-bold tracking-tight text-gray-900">Simple, transparent pricing</h2>
-          <p className="mt-4 text-base text-gray-500">Start free. Scale as you grow. No hidden fees.</p>
+    <Section id="pricing" className="bg-deep">
+      <div className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
+        <div>
+          <Eyebrow>Pricing</Eyebrow>
+          <h2 className="mt-6 text-[clamp(2.1rem,4.6vw,3.8rem)] leading-none tracking-display text-white">Start free. Scale as you grow.</h2>
         </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {[
-            { name: "Starter", price: "Free", features: ["1 App", "3 Agents", "1,000 conversations/mo", "Web chat only", "Email support"], highlight: false, cta: "Get started free" },
-            { name: "Growth", price: "$49/mo", features: ["5 Apps", "15 Agents", "10,000 conversations/mo", "All channels", "Priority support", "Analytics"], highlight: true, cta: "Start free trial" },
-            { name: "Enterprise", price: "$199/mo", features: ["Unlimited Apps", "Unlimited Agents", "Unlimited conversations", "All channels", "Dedicated support", "SSO"], highlight: false, cta: "Contact sales" },
-          ].map((plan) => (
-            <div key={plan.name} className={cn("relative flex flex-col rounded-3xl p-8", plan.highlight ? "bg-[#0a0b0d] text-white shadow-2xl shadow-primary-900/30 ring-1 ring-primary-500/30" : "border border-gray-200 bg-white")}>
-              {plan.highlight && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary-600 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">Most popular</span>
-              )}
-              <p className={cn("text-xs font-semibold uppercase tracking-widest", plan.highlight ? "text-primary-400" : "text-gray-400")}>{plan.name}</p>
-              <p className={cn("mt-3 text-4xl font-bold tracking-tight", plan.highlight ? "text-white" : "text-gray-900")}>{plan.price}</p>
-              <ul className="my-8 flex-1 space-y-3">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm">
-                    <svg className={cn("h-4 w-4 shrink-0", plan.highlight ? "text-primary-400" : "text-emerald-500")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className={plan.highlight ? "text-slate-300" : "text-gray-600"}>{f}</span>
-                  </li>
-                ))}
-              </ul>
+        <p className="max-w-[340px] text-base leading-[1.45] text-silver">No setup fees, no per-seat surprises. Change plans any time.</p>
+      </div>
+      <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-3">
+        {plans.map((p) => (
+          <div
+            key={p.name}
+            className={cn(
+              "flex flex-col rounded-2xl p-9",
+              p.highlight ? "bg-kelp outline outline-1 -outline-offset-1 outline-primary-300/30" : "bg-abyss"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="label-caps text-mist">{p.name}</span>
+              {p.highlight && <span className="text-[10px] uppercase tracking-[0.15em] text-phosphor">Most popular</span>}
+            </div>
+            <p className="mt-10 flex items-baseline gap-2">
+              <span className={cn("text-[61px] font-medium leading-none tracking-display", p.highlight ? "text-phosphor" : "text-white")}>
+                {p.price}
+              </span>
+              {p.cadence && <span className="text-sm text-silver">{p.cadence}</span>}
+            </p>
+            <ul className="mb-10 mt-10 flex-1 space-y-3.5">
+              {p.features.map((f) => (
+                <li key={f} className="flex items-center gap-3 text-[15px] text-silver">
+                  <CheckIcon className="h-4 w-4 shrink-0 text-primary-300" strokeWidth={1.5} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            {p.highlight ? (
+              <AuroraLink to="/onboarding" className="w-full">
+                {p.cta}
+              </AuroraLink>
+            ) : (
               <Link
                 to="/onboarding"
-                className={cn(
-                  "block rounded-full py-3 text-center text-sm font-semibold transition",
-                  plan.highlight ? "bg-primary-600 text-white hover:bg-primary-500" : "border border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50"
-                )}
+                className="inline-flex w-full items-center justify-center rounded-md bg-kelp px-[18px] py-3 text-[14px] uppercase tracking-[0.08em] text-white transition hover:bg-[#0a4642]"
               >
-                {plan.cta}
+                {p.cta}
               </Link>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        ))}
       </div>
-    </section>
+    </Section>
 
-    {/* ── Final CTA ── */}
-    <section className="bg-white px-8 py-24">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-[#0a0b0d] px-8 py-20 text-center">
-        {/* Glow */}
-        <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-primary-600/25 blur-[120px]" />
+    {/* ── Final CTA — recessed well ── */}
+    <section className="px-6 py-24 md:px-10">
+      <div className="relative mx-auto max-w-[1280px] overflow-hidden rounded-2xl bg-deep px-6 py-[120px] text-center">
+        <div className="pointer-events-none absolute -bottom-[45%] left-1/2 aspect-square w-[min(110vw,760px)] -translate-x-1/2 opacity-70">
+          <ParticleSphere density={900} />
+        </div>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_40%,rgba(1,29,28,0.92),transparent_80%)]" />
         <div className="relative">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-primary-400">Take back control of your inbox — in minutes</p>
-          <h2 className="mx-auto max-w-3xl text-4xl font-bold leading-tight tracking-tight text-white md:text-5xl">
-            Join thousands of teams delivering faster,{" "}
-            <span className="bg-gradient-to-r from-primary-300 to-primary-500 bg-clip-text text-transparent">better support.</span>
+          <Eyebrow className="text-mist">Take back your inbox</Eyebrow>
+          <h2 className="mx-auto mt-6 max-w-[760px] text-[clamp(2.1rem,5vw,3.8rem)] leading-none tracking-display text-white">
+            Your customers are already talking. Be there when they do.
           </h2>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-            <Link
-              to="/onboarding"
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary-900/50 transition hover:bg-primary-500 sm:w-auto"
-            >
-              <PlayIcon />
+          <div className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10">
+            <AuroraLink to="/onboarding" size="lg">
               Get started free
-            </Link>
-            <Link
-              to="/sign-in"
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-              Contact us
-            </Link>
+              <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
+            </AuroraLink>
+            <GhostLink to="/sign-in">
+              Talk to sales
+              <ArrowUpRightIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </GhostLink>
           </div>
         </div>
       </div>
     </section>
 
     {/* ── Footer ── */}
-    <footer className="border-t border-gray-100 bg-white px-8 py-8">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-600">
-            <span className="text-[10px] font-bold text-white">TU</span>
+    <footer className="overflow-hidden bg-deep px-6 pt-[120px] md:px-10">
+      <div className="mx-auto max-w-[1280px]">
+        <div className="flex flex-col justify-between gap-10 md:flex-row">
+          <div className="max-w-[320px]">
+            <Wordmark />
+            <p className="mt-6 text-sm leading-[1.5] text-silver">Multi-channel customer support for teams that care about the reply.</p>
           </div>
-          <span className="text-sm font-bold text-gray-900">Talk To Us</span>
+          <div className="grid grid-cols-2 gap-x-16 gap-y-3 sm:grid-cols-3">
+            {["Product", "Pricing", "Integrations", "Changelog", "Privacy", "Terms", "Security", "Status", "Support"].map((l) => (
+              <a key={l} href="#" className="text-[10px] uppercase tracking-[0.15em] text-silver transition hover:text-white">
+                {l}
+              </a>
+            ))}
+          </div>
         </div>
-        <p className="text-xs text-gray-400">© 2026 Talk To Us. All rights reserved.</p>
-        <div className="flex gap-6">
-          {["Privacy", "Terms", "Support"].map((l) => (
-            <a key={l} href="#" className="text-xs text-gray-400 transition hover:text-gray-600">{l}</a>
-          ))}
+        <div className="mt-20 flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-[12px] text-silver/70 sm:flex-row">
+          <span>© 2026 Talk To Us</span>
+          <span>Made for support teams everywhere</span>
         </div>
       </div>
+      {/* Oversized kinetic wordmark sinking into the floor */}
+      <p
+        aria-hidden
+        className="mx-auto -mb-[0.22em] mt-10 max-w-[1440px] select-none whitespace-nowrap text-center text-[clamp(4rem,17vw,18.4rem)] font-medium leading-none tracking-kinetic text-kelp"
+      >
+        Talk To Us
+      </p>
     </footer>
-
   </div>
 );
 

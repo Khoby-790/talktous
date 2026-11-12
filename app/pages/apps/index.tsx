@@ -131,7 +131,7 @@ const AppsPage: FC = () => {
               <Badge status={app.status} />
             </td>
             <td className="px-4 py-3">
-              <code className="rounded-xl bg-surface-2 px-2 py-0.5 text-xs text-ink-soft">
+              <code className="rounded-md bg-surface-2 px-2 py-0.5 text-xs text-ink-soft">
                 {app.apiKey.slice(0, 16)}&hellip;
               </code>
             </td>
