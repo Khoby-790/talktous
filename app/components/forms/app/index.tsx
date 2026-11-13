@@ -142,10 +142,7 @@ export const valuesToInput = (values: AppFormValues, type: AppType): AppInput =>
       launcherText: values.launcherText,
       requireEmail: values.requireEmail,
       showAgentAvatars: values.showAgentAvatars,
-      allowedOrigins: values.allowedOrigins
-        .split(/[\n,]/)
-        .map((o) => o.trim())
-        .filter(Boolean),
+      allowedOrigins: splitWebsites(values.allowedOrigins),
     };
   }
   if (type === "email") {
@@ -179,7 +176,42 @@ export const appValidationSchema = (type: AppType) =>
         : Yup.string(),
     supportEmail: type === "email" ? Yup.string().email("Enter a valid email") : Yup.string(),
     callbackUrl: type === "api" ? Yup.string().url("Enter a full URL, e.g. https://…") : Yup.string(),
+    allowedOrigins:
+      type === "web_widget"
+        ? Yup.string().test("websites", function (value) {
+            const lines = splitWebsites(value ?? "");
+            if (lines.length > 20) return this.createError({ message: "List at most 20 websites" });
+            const bad = lines.find((line) => !toWebsiteOrigin(line));
+            return bad ? this.createError({ message: `"${bad}" is not a website address` }) : true;
+          })
+        : Yup.string(),
   });
+
+const splitWebsites = (value: string) =>
+  value
+    .split(/[\n,]/)
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+/**
+ * Mirrors the API: bare domains are fine ("example.com" → https://example.com,
+ * "localhost:3000" → http://localhost:3000); paths are dropped.
+ */
+const toWebsiteOrigin = (raw: string): string | null => {
+  const value = raw.trim().replace(/\/+$/, "");
+  if (!value) return null;
+  const local = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i.test(value);
+  const withScheme = /^[a-z][a-z\d+.-]*:\/\//i.test(value) ? value : `${local ? "http" : "https"}://${value}`;
+  try {
+    const url = new URL(withScheme);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    const host = url.hostname;
+    if (!host.includes(".") && host !== "localhost" && !host.startsWith("[")) return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+};
 
 const statusOptions = [
   { label: "Active", value: "active" },
@@ -265,13 +297,14 @@ export const AppForm: FC<AppFormProps> = ({
           <TextArea
             id="allowedOrigins"
             label="Allowed websites (optional)"
-            rows={2}
-            placeholder={"https://www.example.com\nhttps://app.example.com"}
+            rows={3}
+            placeholder={"example.com\napp.example.com\nlocalhost:3000"}
             className="sm:col-span-2"
             {...form}
           />
           <p className="-mt-2 text-xs text-ink-muted sm:col-span-2">
-            One per line. Leave empty to allow the widget on any site.
+            One domain per line, up to 20. Each subdomain and local port needs its own line (www.example.com and
+            example.com are different sites). Leave empty to allow the widget on any site.
           </p>
         </Section>
       </>

@@ -538,7 +538,7 @@ const widgetSteps = (app: SupportApp, appUrl: string): GuideStep[] => {
       body: (
         <p>
           Change the colour, greeting and position on the <TabLink app={app} tab="settings">Settings tab</TabLink>. To stop
-          other sites from using your chat, list your domains under <strong>Allowed origins</strong>.
+          other sites from using your chat, list your domains under <strong>Allowed websites</strong>.
         </p>
       ),
     },
