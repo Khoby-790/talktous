@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { FormError, TextInput } from "~/components/core";
 import { PrimaryButton } from "~/components/buttons";
+import { Voice } from "~/components/fluid";
 import { AuthFooter, AuthHeading, authLinkClass } from "~/components/forms/auth";
 import { useResetPassword } from "~/hooks/data";
 import { toast } from "~/hooks/ui/use-toast";
@@ -60,8 +61,16 @@ const ResetPasswordPage: FC = () => {
   }
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-4" noValidate>
-      <AuthHeading title="Choose a new password" subtitle="Pick something you haven't used here before." />
+    <form onSubmit={form.handleSubmit} className="space-y-5" noValidate>
+      <AuthHeading
+        eyebrow="Password reset"
+        title={
+          <>
+            A fresh <Voice>start.</Voice>
+          </>
+        }
+        subtitle="Choose a new password, something you haven't used here before."
+      />
       <FormError message={error} />
       {error?.includes("expired") && (
         <p className="text-sm">
@@ -72,7 +81,7 @@ const ResetPasswordPage: FC = () => {
       )}
       <TextInput id="password" label="New password" type="password" autoComplete="new-password" autoFocus {...form} />
       <TextInput id="confirm" label="Confirm new password" type="password" autoComplete="new-password" {...form} />
-      <PrimaryButton type="submit" loading={form.isSubmitting} className="w-full">
+      <PrimaryButton type="submit" variant="ember" size="lg" loading={form.isSubmitting} className="w-full !mt-8">
         Update password
       </PrimaryButton>
     </form>

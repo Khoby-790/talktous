@@ -4,7 +4,7 @@ import { cn } from "~/lib/utils";
 /**
  * Bioluminescent data orb — a slowly rotating Fibonacci sphere of particles.
  * Near particles glow pale aqua, far ones sink into canvas teal, and the
- * upper-right rim picks up the lavender-phosphor accent.
+ * upper-right rim warms to brand ember, the orange at the heart of the logo.
  *
  * Plain 2D canvas: ~1.5k arcs per frame, paused when off-screen, and drawn
  * once (static) when the user prefers reduced motion.
@@ -14,7 +14,7 @@ type Point = { x: number; y: number; z: number; seed: number };
 
 const TEAL = [0, 130, 124];
 const AQUA = [203, 255, 252];
-const PINK = [250, 209, 255];
+const EMBER = [255, 138, 51];
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -89,12 +89,12 @@ export const ParticleSphere: FC<{ className?: string; density?: number }> = ({
         const sx = cx + x1 * R * wobble * persp;
         const sy = cy + y2 * R * wobble * persp;
 
-        // Teal → aqua by depth, then lavender on the upper-right rim.
+        // Teal → aqua by depth, then ember on the upper-right rim.
         const rim = Math.max(0, x1 * 0.8 - y2 * 0.6);
-        const pink = Math.min(1, rim * rim * 1.8) * (0.5 + depth * 0.5);
-        const r = lerp(lerp(TEAL[0], AQUA[0], depth), PINK[0], pink);
-        const g = lerp(lerp(TEAL[1], AQUA[1], depth), PINK[1], pink);
-        const b = lerp(lerp(TEAL[2], AQUA[2], depth), PINK[2], pink);
+        const warm = Math.min(1, rim * rim * 1.8) * (0.5 + depth * 0.5);
+        const r = lerp(lerp(TEAL[0], AQUA[0], depth), EMBER[0], warm);
+        const g = lerp(lerp(TEAL[1], AQUA[1], depth), EMBER[1], warm);
+        const b = lerp(lerp(TEAL[2], AQUA[2], depth), EMBER[2], warm);
         const alpha = 0.12 + depth * 0.78;
         const size = 0.45 + depth * 1.35;
 

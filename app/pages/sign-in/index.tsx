@@ -1,9 +1,10 @@
-import { type FC, useState } from "react";
+import { type FC, useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { FormError, TextInput } from "~/components/core";
 import { PrimaryButton } from "~/components/buttons";
+import { Voice, playEnterTransition } from "~/components/fluid";
 import { AuthFooter, AuthHeading, authLinkClass } from "~/components/forms/auth";
 import { useSignIn } from "~/hooks/data";
 import { applyFormErrors } from "~/lib/errors";
@@ -23,6 +24,7 @@ const SignInPage: FC = () => {
   const [params] = useSearchParams();
   const { signIn } = useSignIn();
   const [error, setError] = useState<string | null>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
 
   const form = useFormik({
     initialValues: { email: "", password: "" },
@@ -33,6 +35,7 @@ const SignInPage: FC = () => {
         resetSession();
         const payload = await signIn({ email: values.email.trim(), password: values.password });
         if (payload) {
+          await playEnterTransition(submitRef.current);
           navigate(postSignInPath({ user: payload.user, org: payload.organization }, params.get("next")), {
             replace: true,
           });
@@ -44,8 +47,16 @@ const SignInPage: FC = () => {
   });
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-4" noValidate>
-      <AuthHeading title="Sign in" subtitle="Welcome back. Sign in to your support workspace." />
+    <form onSubmit={form.handleSubmit} className="space-y-5" noValidate>
+      <AuthHeading
+        eyebrow="Sign in"
+        title={
+          <>
+            Welcome <Voice>back.</Voice>
+          </>
+        }
+        subtitle="Your customers have been talking. Let's pick up where your team left off."
+      />
       {params.get("expired") && !error && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-sm text-amber-700 dark:text-amber-300">
           Your session expired. Please sign in again.
@@ -61,7 +72,7 @@ const SignInPage: FC = () => {
           </Link>
         </div>
       </div>
-      <PrimaryButton type="submit" loading={form.isSubmitting} className="w-full">
+      <PrimaryButton ref={submitRef} type="submit" variant="ember" size="lg" loading={form.isSubmitting} className="w-full !mt-8">
         Sign in
       </PrimaryButton>
       <AuthFooter>

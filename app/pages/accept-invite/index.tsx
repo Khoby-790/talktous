@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { FormError, TextInput } from "~/components/core";
 import { Shimmer } from "~/components/shimmer";
 import { PrimaryButton } from "~/components/buttons";
+import { Voice } from "~/components/fluid";
 import { AuthFooter, AuthHeading, authLinkClass } from "~/components/forms/auth";
 import { useAcceptInvite, useInvitation } from "~/hooks/data";
 import { toast } from "~/hooks/ui/use-toast";
@@ -17,8 +18,10 @@ export function meta() {
 
 const InvalidInvite: FC = () => (
   <div className="text-center">
-    <h2 className="text-xl font-medium text-ink">This invitation can&apos;t be used</h2>
-    <p className="mt-2 text-sm text-ink-soft">
+    <h2 className="text-[clamp(2rem,4vw,2.6rem)] leading-none tracking-display text-white">
+      This invitation <Voice>has expired.</Voice>
+    </h2>
+    <p className="mt-4 text-[15px] leading-[1.6] text-silver">
       It may have expired or already been accepted. Ask your admin to send a new invitation.
     </p>
     <AuthFooter>
@@ -82,25 +85,31 @@ const AcceptInvitePage: FC = () => {
   if (loadError || !invitation) return <InvalidInvite />;
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-4" noValidate>
+    <form onSubmit={form.handleSubmit} className="space-y-5" noValidate>
       <AuthHeading
-        title={`Join ${invitation.organizationName}`}
+        eyebrow="You're invited"
+        title={
+          <>
+            Your team is <Voice>waiting for you.</Voice>
+          </>
+        }
         subtitle={
           <>
             {invitation.invitedByName ?? "Your team"} invited you to join{" "}
-            <span className="font-medium text-ink">{invitation.organizationName}</span> as{" "}
-            {invitation.role === "supervisor" ? "a" : "an"} <span className="font-medium text-ink">{invitation.role}</span>.
+            <span className="font-medium text-white">{invitation.organizationName}</span> as{" "}
+            {invitation.role === "supervisor" ? "a" : "an"} <span className="font-medium text-white">{invitation.role}</span>.
           </>
         }
       />
       <FormError message={error} />
-      <div className="rounded-md border border-line bg-surface-2/50 px-3.5 py-2.5 text-sm text-ink-soft">
-        Signing in as <span className="font-medium text-ink">{invitation.email}</span>
+      <div className="flex items-center gap-3 rounded-[14px] bg-white/[0.04] px-4 py-3 text-sm text-silver ring-1 ring-white/10">
+        <span className="live-dot h-2 w-2 shrink-0 rounded-full bg-online" />
+        Joining as <span className="font-medium text-white">{invitation.email}</span>
       </div>
       <TextInput id="name" label="Your name" autoComplete="name" {...form} />
       <TextInput id="password" label="Choose a password" type="password" autoComplete="new-password" {...form} />
       <TextInput id="confirm" label="Confirm password" type="password" autoComplete="new-password" {...form} />
-      <PrimaryButton type="submit" loading={form.isSubmitting} className="w-full">
+      <PrimaryButton type="submit" variant="ember" size="lg" loading={form.isSubmitting} className="w-full !mt-8">
         Join team
       </PrimaryButton>
     </form>

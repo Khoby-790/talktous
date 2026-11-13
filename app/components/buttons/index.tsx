@@ -2,6 +2,7 @@ import {
   type FC,
   type ReactNode,
   type ButtonHTMLAttributes,
+  type Ref,
 } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "~/lib/utils";
@@ -25,6 +26,9 @@ export const primaryButtonVariants = cva(
         // Signature CTA — the aurora sweep. One per screen, at most.
         aurora:
           "bg-aurora uppercase tracking-[0.08em] text-[#222222] hover:brightness-105 focus-visible:ring-primary-200/40",
+        // Brand ember with a warm glow — the human accent (auth, onboarding, marketing).
+        ember:
+          "rounded-full bg-ember text-white shadow-[0_0_36px_-8px_rgba(255,122,26,0.75)] hover:-translate-y-px hover:bg-[#ff8a33] hover:shadow-[0_0_52px_-6px_rgba(255,122,26,0.85)] focus-visible:ring-ember/30",
         // Auros "filled action": kelp lift with platinum text.
         kelp:
           "bg-kelp text-white hover:bg-[#0a4642] focus-visible:ring-primary-500/25",
@@ -44,6 +48,7 @@ interface PrimaryButtonProps
     VariantProps<typeof primaryButtonVariants> {
   loading?: boolean;
   children: ReactNode;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 export const PrimaryButton: FC<PrimaryButtonProps> = ({

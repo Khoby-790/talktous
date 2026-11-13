@@ -19,7 +19,7 @@ import { MessageCircle } from "lucide-react";
 import { BrandLogo } from "~/components/brand";
 import { cn } from "~/lib/utils";
 import { formatPlanPrice, usePricing } from "~/hooks/data";
-import { ParticleSphere } from "./particle-sphere";
+import { FluidBackdrop, IMG, ParticleSphere, Voice } from "~/components/fluid";
 import { Molecule } from "./molecule";
 
 /*
@@ -37,13 +37,7 @@ import { Molecule } from "./molecule";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const IMG = {
-  customer: "/landing/customer.jpg",
-  customerFace: "/landing/customer-face.jpg",
-  kwame: "/landing/kwame.jpg",
-  mei: "/landing/mei.jpg",
-  rafael: "/landing/rafael.jpg",
-};
+
 
 const navLinks = [
   { label: "Product", href: "#product" },
@@ -158,53 +152,25 @@ const Reveal: FC<{ children: ReactNode; className?: string; delay?: number }> = 
   );
 };
 
-/** Slow aurora blobs drifting and morphing behind a section. */
-const FluidBackdrop: FC<{ className?: string; intensity?: "soft" | "full" }> = ({ className, intensity = "full" }) => (
-  <div aria-hidden className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}>
-    <div
-      className={cn(
-        "blob absolute -left-[12%] top-[8%] aspect-square w-[48vw] max-w-[640px] blur-[100px]",
-        intensity === "full" ? "bg-primary-600/35" : "bg-primary-600/20"
-      )}
-    />
-    <div
-      className={cn(
-        "blob absolute -right-[10%] -top-[12%] aspect-square w-[42vw] max-w-[560px] blur-[110px]",
-        intensity === "full" ? "bg-[#fad1ff]/[0.13]" : "bg-[#fad1ff]/[0.07]"
-      )}
-      style={{ animationDelay: "-8s, -5s" }}
-    />
-    <div
-      className={cn(
-        "blob absolute -bottom-[18%] left-[34%] aspect-square w-[40vw] max-w-[540px] blur-[120px]",
-        intensity === "full" ? "bg-primary-300/20" : "bg-primary-300/10"
-      )}
-      style={{ animationDelay: "-15s, -11s" }}
-    />
-  </div>
-);
-
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
-/** The human voice: serif italic in flowing aurora. */
-const Voice: FC<{ children: ReactNode; className?: string }> = ({ children, className }) => (
-  <em className={cn("text-aurora aurora-flow pr-[0.08em] font-serif font-normal italic tracking-normal", className)}>{children}</em>
-);
-
 const Eyebrow: FC<{ children: ReactNode; className?: string }> = ({ children, className }) => (
-  <p className={cn("label-caps text-silver", className)}>{children}</p>
+  <p className={cn("label-caps flex items-center gap-2.5 text-silver", className)}>
+    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ember shadow-[0_0_10px_rgba(255,122,26,0.8)]" />
+    {children}
+  </p>
 );
 
 const H2: FC<{ children: ReactNode; className?: string }> = ({ children, className }) => (
   <h2 className={cn("text-[clamp(2.2rem,4.8vw,4rem)] leading-[1.02] tracking-display text-white", className)}>{children}</h2>
 );
 
-/** Signature aurora CTA. */
+/** Signature CTA: brand ember with a warm glow. */
 const AuroraLink: FC<{ to: string; children: ReactNode; size?: "md" | "lg"; className?: string }> = ({ to, children, size = "md", className }) => (
   <Link
     to={to}
     className={cn(
-      "bg-aurora aurora-flow inline-flex items-center justify-center gap-2 rounded-full text-[13px] uppercase tracking-[0.08em] text-[#1b1b1b] shadow-[0_0_40px_-8px_rgba(203,255,252,0.45)] transition hover:shadow-[0_0_60px_-6px_rgba(250,209,255,0.6)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-200/30",
+      "inline-flex items-center justify-center gap-2 rounded-full bg-ember text-[13px] font-medium uppercase tracking-[0.08em] text-white shadow-[0_0_40px_-8px_rgba(255,122,26,0.75)] transition duration-300 hover:-translate-y-px hover:bg-[#ff8a33] hover:shadow-[0_0_60px_-4px_rgba(255,122,26,0.85)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ember/30",
       size === "lg" ? "px-7 py-4" : "px-5 py-2.5",
       className
     )}
@@ -234,7 +200,7 @@ const Initials: FC<{ name: string; className?: string }> = ({ name, className })
 );
 
 const Stars: FC<{ className?: string }> = ({ className }) => (
-  <span className={cn("flex text-phosphor", className)} aria-label="5 out of 5">
+  <span className={cn("flex text-ember", className)} aria-label="5 out of 5">
     {Array.from({ length: 5 }).map((_, i) => (
       <StarIcon key={i} className="h-4 w-4" />
     ))}
@@ -244,7 +210,7 @@ const Stars: FC<{ className?: string }> = ({ className }) => (
 /** A portrait inside a slowly morphing liquid mask. */
 const LiquidPortrait: FC<{ src: string; alt: string; className?: string; delay?: string }> = ({ src, alt, className, delay }) => (
   <div className={cn("relative", className)}>
-    <div className="liquid absolute -inset-3 bg-gradient-to-br from-primary-300/30 via-transparent to-[#fad1ff]/25 blur-xl" style={{ animationDelay: delay }} />
+    <div className="liquid absolute -inset-3 bg-gradient-to-br from-primary-300/30 via-transparent to-ember/30 blur-xl" style={{ animationDelay: delay }} />
     <div className="liquid relative overflow-hidden ring-1 ring-white/10" style={{ animationDelay: delay }}>
       <img src={src} alt={alt} loading="lazy" className="aspect-square w-full scale-105 object-cover" />
     </div>
@@ -256,7 +222,7 @@ const InlinePhoto: FC<{ src: string; alt: string }> = ({ src, alt }) => (
   <img
     src={src}
     alt={alt}
-    className="mx-[0.12em] inline-block h-[0.82em] w-[1.6em] rounded-full object-cover align-[-0.08em] ring-1 ring-white/15"
+    className="mx-[0.12em] inline-block h-[0.82em] w-[1.6em] rounded-full object-cover align-[-0.08em] ring-2 ring-ember/40"
   />
 );
 
@@ -342,7 +308,7 @@ const LiveConversation: FC = () => {
         <div
           className={cn(
             "rounded-[24px] rounded-br-md border px-6 py-5 transition-all duration-700",
-            sent ? "border-primary-300/25 bg-kelp shadow-[0_0_60px_-20px_rgba(43,186,177,0.6)]" : "border-dashed border-white/20 bg-white/[0.02]"
+            sent ? "border-ember/30 bg-kelp shadow-[0_0_60px_-18px_rgba(255,122,26,0.55)]" : "border-dashed border-white/20 bg-white/[0.02]"
           )}
         >
           <p className="min-h-[3.75em] text-[clamp(1.2rem,2.2vw,1.75rem)] leading-[1.25] tracking-[-0.02em]">
@@ -355,7 +321,7 @@ const LiveConversation: FC = () => {
         <div className="mt-3 flex min-h-[20px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1">
           {status ? (
             <span key={status.text} className="soft-in flex items-center gap-2 text-[12px] text-silver">
-              <status.icon className={cn("h-4 w-4", sent ? "text-online" : "text-primary-300")} strokeWidth={2} />
+              <status.icon className={cn("h-4 w-4", sent ? "text-online" : status.icon === PencilIcon ? "text-ember" : "text-primary-300")} strokeWidth={2} />
               {status.text}
             </span>
           ) : (
@@ -407,6 +373,10 @@ const Hero: FC = () => {
         style={{ background: "radial-gradient(520px circle at var(--mx) var(--my), rgba(203,255,252,0.07), transparent 60%)" }}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-abyss" />
+      {/* Ember sparks, from the brand banner */}
+      <span className="float-a pointer-events-none absolute right-[6%] top-[14%] h-3.5 w-3.5 rounded-full bg-ember shadow-[0_0_24px_rgba(255,122,26,0.9)]" />
+      <span className="float-b pointer-events-none absolute bottom-[22%] left-[3%] h-2.5 w-2.5 rounded-full bg-ember/80 shadow-[0_0_18px_rgba(255,122,26,0.8)]" />
+      <span className="float-c pointer-events-none absolute right-[30%] top-[62%] h-2 w-2 rounded-full bg-ember/60" />
 
       {/* Nav */}
       <header className="relative z-20">
@@ -443,7 +413,7 @@ const Hero: FC = () => {
                 <span className="text-white">Ama</span> · Kumasi
               </figcaption>
             </figure>
-            <span className="h-14 w-px bg-gradient-to-b from-transparent via-primary-300/60 to-transparent" />
+            <span className="h-14 w-px bg-gradient-to-b from-primary-300/60 via-ember/70 to-transparent" />
             <figure className="w-[190px] text-center">
               <LiquidPortrait src={IMG.kwame} alt="Kwame, the support agent" />
               <figcaption className="mt-4 text-[12px] text-silver">
@@ -550,7 +520,7 @@ const ToneDial: FC = () => {
             className={cn(
               "rounded-full px-4 py-2 text-[13px] transition",
               tone.id === t.id
-                ? "bg-aurora text-[#1b1b1b] shadow-[0_0_30px_-8px_rgba(203,255,252,0.6)]"
+                ? "bg-ember text-white shadow-[0_0_30px_-6px_rgba(255,122,26,0.7)]"
                 : "bg-white/[0.04] text-silver ring-1 ring-white/10 hover:bg-white/[0.08] hover:text-white"
             )}
           >
@@ -564,7 +534,7 @@ const ToneDial: FC = () => {
           <Face src={IMG.mei} className="h-8 w-8" /> Mei reviews, then sends
         </span>
         <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-primary-200">
-          <ShieldCheckIcon className="h-4 w-4" strokeWidth={1.75} /> A human always sends
+          <ShieldCheckIcon className="h-4 w-4 text-ember" strokeWidth={1.75} /> A human always sends
         </span>
       </div>
     </div>
@@ -598,7 +568,7 @@ const InboxPreview: FC = () => (
     <div className="grid min-h-[400px] grid-cols-1 md:grid-cols-[290px_1fr]">
       <div className="hidden border-r border-white/5 md:block">
         {conversations.map((c) => (
-          <div key={c.name} className={cn("flex gap-3 border-b border-white/5 px-5 py-4", c.active && "bg-kelp")}>
+          <div key={c.name} className={cn("flex gap-3 border-b border-l-2 border-white/5 border-l-transparent px-5 py-4", c.active && "border-l-ember bg-kelp")}>
             {c.face ? <Face src={c.face} className="h-9 w-9" /> : <Initials name={c.name} className="h-9 w-9" />}
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
@@ -610,7 +580,7 @@ const InboxPreview: FC = () => (
                 <span
                   className={cn(
                     "shrink-0 rounded-[4px] px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em]",
-                    c.urgent ? "bg-phosphor text-abyss" : "bg-primary-500/20 text-primary-200"
+                    c.urgent ? "bg-ember text-white" : "bg-primary-500/20 text-primary-200"
                   )}
                 >
                   {c.urgent ? "urgent" : c.ch}
@@ -666,7 +636,7 @@ const PlanPrice: FC<{ id: string; highlight: boolean }> = ({ id, highlight }) =>
     <p className="mt-10 flex min-h-[61px] items-baseline gap-2">
       {price && (
         <>
-          <span className={cn("text-[61px] font-medium leading-none tracking-display", highlight ? "text-phosphor" : "text-white")}>{price.amount}</span>
+          <span className={cn("text-[61px] font-medium leading-none tracking-display", highlight ? "text-ember" : "text-white")}>{price.amount}</span>
           {price.per && <span className="text-sm text-silver">/ {price.per}</span>}
         </>
       )}
@@ -684,7 +654,7 @@ const Section: FC<{ id?: string; className?: string; fluid?: boolean; children: 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 const LandingPage: FC = () => (
-  <div className="min-h-screen overflow-x-clip bg-abyss font-sans text-silver antialiased selection:bg-phosphor selection:text-abyss">
+  <div className="min-h-screen overflow-x-clip bg-abyss font-sans text-silver antialiased selection:bg-ember selection:text-white">
     <Hero />
     <Marquee />
 
@@ -808,7 +778,7 @@ const LandingPage: FC = () => (
           <div className="mt-14 grid grid-cols-3 gap-6 border-t border-white/10 pt-10">
             {stats.map((s) => (
               <div key={s.label}>
-                <p className="text-[clamp(2.4rem,4.6vw,4rem)] font-medium leading-none tracking-kinetic text-phosphor tabular-nums">{s.value}</p>
+                <p className="text-[clamp(2.4rem,4.6vw,4rem)] font-medium leading-none tracking-kinetic text-warm tabular-nums">{s.value}</p>
                 <p className="mt-4 text-[12px] uppercase tracking-[0.055em] text-mist">{s.label}</p>
               </div>
             ))}
@@ -856,18 +826,18 @@ const LandingPage: FC = () => (
             <div
               className={cn(
                 "flex h-full flex-col rounded-[28px] p-9",
-                p.highlight ? "bg-kelp shadow-[0_0_80px_-30px_rgba(203,255,252,0.35)] ring-1 ring-primary-300/30" : "bg-abyss ring-1 ring-white/[0.04]"
+                p.highlight ? "bg-kelp shadow-[0_0_80px_-30px_rgba(255,122,26,0.45)] ring-1 ring-ember/35" : "bg-abyss ring-1 ring-white/[0.04]"
               )}
             >
               <div className="flex items-center justify-between">
                 <span className="label-caps text-mist">{p.name}</span>
-                {p.highlight && <span className="text-[10px] uppercase tracking-[0.15em] text-phosphor">Most popular</span>}
+                {p.highlight && <span className="rounded-full bg-ember px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] text-white">Most popular</span>}
               </div>
               <PlanPrice id={p.id} highlight={p.highlight} />
               <ul className="mb-10 mt-10 flex-1 space-y-3.5">
                 {p.features.map((f) => (
                   <li key={f} className="flex items-center gap-3 text-[15px] text-silver">
-                    <CheckIcon className="h-4 w-4 shrink-0 text-primary-300" strokeWidth={1.5} />
+                    <CheckIcon className={cn("h-4 w-4 shrink-0", p.highlight ? "text-ember" : "text-primary-300")} strokeWidth={1.75} />
                     {f}
                   </li>
                 ))}
@@ -952,7 +922,7 @@ const LandingPage: FC = () => (
         aria-hidden
         className="mx-auto -mb-[0.22em] mt-10 max-w-[1440px] select-none whitespace-nowrap text-center text-[clamp(4rem,17vw,18.4rem)] font-medium leading-none tracking-kinetic text-kelp"
       >
-        Asotie
+        Asotie<span className="text-ember">.</span>
       </p>
     </footer>
   </div>

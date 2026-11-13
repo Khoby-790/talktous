@@ -1,9 +1,10 @@
-import { type FC, useState } from "react";
+import { type FC, useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link, useNavigate } from "react-router";
 import { FormError, TextInput } from "~/components/core";
 import { PrimaryButton } from "~/components/buttons";
+import { Voice, playEnterTransition } from "~/components/fluid";
 import { AuthFooter, AuthHeading, authLinkClass } from "~/components/forms/auth";
 import { useSignUp } from "~/hooks/data";
 import { applyFormErrors } from "~/lib/errors";
@@ -24,6 +25,7 @@ const SignUpPage: FC = () => {
   const navigate = useNavigate();
   const { signUp } = useSignUp();
   const [error, setError] = useState<string | null>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
 
   const form = useFormik({
     initialValues: { name: "", email: "", password: "", organizationName: "" },
@@ -38,7 +40,10 @@ const SignUpPage: FC = () => {
           password: values.password,
           organizationName: values.organizationName.trim(),
         });
-        if (payload) navigate("/onboarding", { replace: true });
+        if (payload) {
+          await playEnterTransition(submitRef.current);
+          navigate("/onboarding", { replace: true });
+        }
       } catch (err) {
         setError(applyFormErrors(err, helpers));
       }
@@ -46,15 +51,23 @@ const SignUpPage: FC = () => {
   });
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-4" noValidate>
-      <AuthHeading title="Create your account" subtitle="Start your 30-day free trial — set up your support workspace in minutes." />
+    <form onSubmit={form.handleSubmit} className="space-y-5" noValidate>
+      <AuthHeading
+        eyebrow="Your 30-day free trial"
+        title={
+          <>
+            Start answering <Voice>like people do.</Voice>
+          </>
+        }
+        subtitle="Create your workspace in a minute. Your team and your AI assist will be ready when you are."
+      />
       <FormError message={error} />
       <TextInput id="name" label="Your name" placeholder="Ada Lovelace" autoComplete="name" autoFocus {...form} />
       <TextInput id="email" label="Work email" type="email" placeholder="you@company.com" autoComplete="email" {...form} />
       <TextInput id="password" label="Password" type="password" placeholder="At least 8 characters" autoComplete="new-password" {...form} />
       <TextInput id="organizationName" label="Organization name" placeholder="Acme Corp" autoComplete="organization" {...form} />
-      <PrimaryButton type="submit" loading={form.isSubmitting} className="w-full">
-        Create account
+      <PrimaryButton ref={submitRef} type="submit" variant="ember" size="lg" loading={form.isSubmitting} className="w-full !mt-8">
+        Create my workspace
       </PrimaryButton>
       <AuthFooter>
         Already have an account?{" "}
