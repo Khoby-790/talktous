@@ -10,3 +10,4 @@ export * from "./use-billing";
 export * from "./use-setup";
 export * from "./use-ai";
 export * from "./use-knowledge";
+export * from "./use-insights";

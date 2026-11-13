@@ -429,3 +429,38 @@ export const SEARCH_KNOWLEDGE = gql`
   }
   ${KNOWLEDGE_PASSAGE_FIELDS}
 `;
+
+/* ── Insights ───────────────────────────────────────────────────────── */
+export const INSIGHTS = gql`
+  query Insights($rangeDays: Int) {
+    insights(rangeDays: $rangeDays) {
+      rangeDays
+      conversations
+      previousConversations
+      triaged
+      negative
+      answeredByAi
+      handedOffByAi
+      topics {
+        tag
+        count
+        previous
+        negative
+        examples
+      }
+      languages {
+        language
+        count
+      }
+      gapCount
+      gaps {
+        conversationId
+        customerName
+        question
+        intent
+        source
+        at
+      }
+    }
+  }
+`;
