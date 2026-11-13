@@ -8,10 +8,14 @@ import {
   REMOVE_AI_PROVIDER,
   SAVE_AI_PROVIDER,
   SET_AI_ENABLED,
+  SET_AI_TRIAGE,
+  SET_AI_AUTO_REPLY,
+  STOP_AI_AUTO_REPLY,
   TEST_AI_PROVIDER,
 } from "~/_graphql/mutations";
 import { AI_PROVIDERS, AI_STATUS } from "~/_graphql/queries";
 import type {
+  AiAutoReplySettings,
   AiDraft,
   AiProviderId,
   AiProviderInfo,
@@ -96,4 +100,35 @@ export const useAiModels = () => {
   const loadModels = async (input: { provider: AiProviderId; apiKey?: string | null; baseUrl?: string | null }) =>
     (await mutate({ variables: { input } })).data?.aiModels ?? [];
   return { loadModels, ...rest };
+};
+
+/** Turn automatic triage of new conversations on/off (admins). */
+export const useSetAiTriage = () => {
+  const [mutate, rest] = useMutation<{ setAiTriage: Organization }>(SET_AI_TRIAGE);
+  const setAiTriage = async (input: { enabled: boolean; setPriority?: boolean; addTags?: boolean }) => {
+    const org = (await mutate({ variables: { input } })).data?.setAiTriage;
+    if (org) setCurrentOrg(org);
+    return org;
+  };
+  return { setAiTriage, ...rest };
+};
+
+/** AI first response settings (admins). */
+export const useSetAiAutoReply = () => {
+  const [mutate, rest] = useMutation<{ setAiAutoReply: Organization }>(SET_AI_AUTO_REPLY);
+  const setAiAutoReply = async (input: AiAutoReplySettings) => {
+    const org = (await mutate({ variables: { input } })).data?.setAiAutoReply;
+    if (org) setCurrentOrg(org);
+    return org;
+  };
+  return { setAiAutoReply, ...rest };
+};
+
+/** Stop the AI assistant in one conversation; the team takes over. */
+export const useStopAiAutoReply = () => {
+  const [mutate, rest] = useMutation(STOP_AI_AUTO_REPLY);
+  const stop = async (conversationId: string) => {
+    await mutate({ variables: { conversationId } });
+  };
+  return { stop, ...rest };
 };

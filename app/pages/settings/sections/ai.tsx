@@ -1,5 +1,8 @@
 import { type FC, useEffect, useMemo, useState } from "react";
-import { BoltIcon, CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router";
+import { useReactiveVar } from "@apollo/client/react";
+import { BookOpenIcon, BoltIcon, CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { currentOrgVar } from "~/_graphql/cache/auth";
 import { Toggle } from "~/components/core";
 import { PrimaryButton } from "~/components/buttons";
 import { SettingsCard } from "~/components/forms/settings";
@@ -13,13 +16,16 @@ import {
   useRemoveAiProvider,
   useSaveAiProvider,
   useSetAiEnabled,
+  useKnowledgeSources,
+  useSetAiAutoReply,
+  useSetAiTriage,
   useTestAiProvider,
 } from "~/hooks/data";
 import { toast } from "~/hooks/ui/use-toast";
 import { getErrorMessage, getFieldErrors } from "~/lib/errors";
 import { cn } from "~/lib/utils";
 import { formatRelative } from "~/utils/date";
-import type { AiProviderId, AiStatus } from "~/utils/types";
+import type { AiAutoReplySettings, AiProviderId, AiStatus, ConversationChannel } from "~/utils/types";
 
 /** Popular OpenAI-compatible services, so "Other" is one click for most people. */
 const COMPATIBLE_PRESETS = [
@@ -242,6 +248,217 @@ const ProviderForm: FC<{ status: AiStatus }> = ({ status }) => {
   );
 };
 
+/** Automatic triage of new conversations: classify, and optionally set priority and tags. */
+const TriageCard: FC<{ available: boolean }> = ({ available }) => {
+  const org = useReactiveVar(currentOrgVar);
+  const { setAiTriage, loading } = useSetAiTriage();
+  const settings = org?.settings.aiTriage ?? { enabled: false, setPriority: true, addTags: true };
+
+  const save = async (next: Partial<typeof settings>, message?: string) => {
+    try {
+      // Explicit fields: the cached object also carries Apollo's __typename.
+      const merged = { ...settings, ...next };
+      await setAiTriage({ enabled: merged.enabled, setPriority: merged.setPriority, addTags: merged.addTags });
+      if (message) toast.success(message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  return (
+    <SettingsCard
+      title="Auto-triage"
+      description="When a conversation starts, your AI reads the first message and labels it — so urgent and upset customers stand out in the inbox."
+    >
+      <div className="space-y-5">
+        {!available && <Callout tone="info">Turn AI assist on above to use auto-triage.</Callout>}
+        <Toggle
+          id="aiTriage"
+          label="Triage new conversations automatically"
+          checked={settings.enabled}
+          disabled={!available || loading}
+          onChange={(value) =>
+            void save({ enabled: value }, value ? "New conversations will be triaged" : "Auto-triage is off")
+          }
+        />
+        <ul className="space-y-2.5 text-sm text-ink-soft">
+          <li className="flex gap-2.5">
+            <SparklesIcon className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-600 dark:text-phosphor" />
+            <span>
+              Shows the customer&apos;s <strong className="text-ink">language</strong>, whether they&apos;re{" "}
+              <strong className="text-ink">upset</strong>, and what they want in a few words.
+            </span>
+          </li>
+        </ul>
+        <div className={cn("space-y-3 border-t border-line pt-4", !settings.enabled && "opacity-50")}>
+          <Toggle
+            id="aiTriagePriority"
+            label="Set priority (high or urgent problems go to the top; only while priority is still Normal)"
+            checked={settings.setPriority}
+            disabled={!available || !settings.enabled || loading}
+            onChange={(value) => void save({ setPriority: value })}
+          />
+          <Toggle
+            id="aiTriageTags"
+            label="Add topic tags (reusing your existing tags where they fit)"
+            checked={settings.addTags}
+            disabled={!available || !settings.enabled || loading}
+            onChange={(value) => void save({ addTags: value })}
+          />
+        </div>
+        <p className="text-xs text-ink-muted">
+          Each new conversation uses one short AI request on your provider. Agents can always change what triage set.
+        </p>
+      </div>
+    </SettingsCard>
+  );
+};
+
+const CHANNEL_OPTIONS: { id: ConversationChannel; label: string }[] = [
+  { id: "web", label: "Web chat" },
+  { id: "whatsapp", label: "WhatsApp" },
+  { id: "email", label: "Email" },
+  { id: "api", label: "In-app (API)" },
+];
+
+const DEFAULT_AUTO_REPLY: AiAutoReplySettings = {
+  enabled: false,
+  channels: ["web", "whatsapp"],
+  onlyWhenOffline: false,
+  handoffMessage: "Thanks for your message! A member of our team will get back to you shortly.",
+};
+
+/** The AI assistant that answers customers from the knowledge base and hands the rest to the team. */
+const AutoReplyCard: FC<{ available: boolean }> = ({ available }) => {
+  const org = useReactiveVar(currentOrgVar);
+  const { sources } = useKnowledgeSources();
+  const { setAiAutoReply, loading } = useSetAiAutoReply();
+  const saved = org?.settings.aiAutoReply ?? DEFAULT_AUTO_REPLY;
+  const [handoff, setHandoff] = useState(saved.handoffMessage);
+  useEffect(() => setHandoff(saved.handoffMessage), [saved.handoffMessage]);
+  const knowledge = sources.filter((s) => s.enabled).length;
+
+  const save = async (next: Partial<AiAutoReplySettings>, message?: string) => {
+    const merged = { ...saved, ...next };
+    try {
+      // Explicit fields: the cached object also carries Apollo's __typename.
+      await setAiAutoReply({
+        enabled: merged.enabled,
+        channels: merged.channels,
+        onlyWhenOffline: merged.onlyWhenOffline,
+        handoffMessage: merged.handoffMessage,
+      });
+      if (message) toast.success(message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const toggleChannel = (channel: ConversationChannel, on: boolean) => {
+    const channels = on ? [...new Set([...saved.channels, channel])] : saved.channels.filter((c) => c !== channel);
+    if (!channels.length) {
+      toast.error("Keep at least one channel, or turn the AI first response off.");
+      return;
+    }
+    void save({ channels });
+  };
+
+  const off = !saved.enabled;
+
+  return (
+    <SettingsCard
+      title="AI first response"
+      description="Let your AI answer customers straight away — only with what your knowledge base says — and hand everything else to your team."
+    >
+      <div className="space-y-5">
+        {!available && <Callout tone="info">Turn AI assist on above to use the AI first response.</Callout>}
+        {available && knowledge === 0 && (
+          <Callout tone="warning">
+            Your knowledge base is empty, so the assistant could only hand every conversation to your team.{" "}
+            <Link to="/knowledge" className="font-medium underline underline-offset-2">
+              Add knowledge first
+            </Link>
+            .
+          </Callout>
+        )}
+        <Toggle
+          id="aiAutoReply"
+          label="Answer customers with AI when the knowledge base covers their question"
+          checked={saved.enabled}
+          disabled={!available || loading}
+          onChange={(value) =>
+            void save({ enabled: value }, value ? "The AI assistant is now answering customers" : "The AI assistant is off")
+          }
+        />
+        <ul className="space-y-2 text-sm text-ink-soft">
+          {[
+            <>Answers <strong className="text-ink">only from your knowledge base</strong>, in the customer&apos;s language. It never promises refunds, discounts or anything it can&apos;t see.</>,
+            <>Hands over — with your message below — when it isn&apos;t covered, the customer asks for a person, is upset, or needs something looked up.</>,
+            <>Stops the moment an agent replies, and after {3} answers at most. Customers always see it&apos;s the <strong className="text-ink">AI assistant</strong>.</>,
+          ].map((item, i) => (
+            <li key={i} className="flex gap-2.5">
+              <SparklesIcon className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-600 dark:text-phosphor" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+        <div className={cn("space-y-4 border-t border-line pt-4", off && "opacity-50")}>
+          <div>
+            <p className="text-sm font-medium text-ink-soft">Answer on</p>
+            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+              {CHANNEL_OPTIONS.map((c) => (
+                <label key={c.id} className="flex items-center gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    checked={saved.channels.includes(c.id)}
+                    disabled={!available || off || loading}
+                    onChange={(e) => toggleChannel(c.id, e.target.checked)}
+                    className="h-4 w-4 rounded border-line accent-primary-600"
+                  />
+                  {c.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <Toggle
+            id="aiAutoReplyOffline"
+            label="Only when no agent is online (evenings, weekends)"
+            checked={saved.onlyWhenOffline}
+            disabled={!available || off || loading}
+            onChange={(value) => void save({ onlyWhenOffline: value })}
+          />
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="handoffMessage" className="text-sm font-medium text-ink-soft">
+              Message when handing over to your team
+            </label>
+            <textarea
+              id="handoffMessage"
+              rows={2}
+              maxLength={500}
+              value={handoff}
+              disabled={!available || off}
+              onChange={(e) => setHandoff(e.target.value)}
+              className="w-full rounded-md border border-line bg-field px-3 py-2 text-sm text-ink outline-none focus:border-primary-500 disabled:opacity-60"
+            />
+            {handoff.trim() !== saved.handoffMessage && (
+              <div className="flex justify-end">
+                <PrimaryButton
+                  size="sm"
+                  loading={loading}
+                  disabled={handoff.trim().length < 5}
+                  onClick={() => void save({ handoffMessage: handoff.trim() }, "Handover message saved")}
+                >
+                  Save message
+                </PrimaryButton>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </SettingsCard>
+  );
+};
+
 /** Settings → AI: bring your own AI provider, turn AI assist on, see usage and draft quality. */
 export const AiSection: FC = () => {
   const { aiStatus: s, loading } = useAiStatus();
@@ -378,20 +595,48 @@ export const AiSection: FC = () => {
                 it up.
               </span>
             </li>
+            <li className="flex gap-2.5">
+              <BookOpenIcon className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-600 dark:text-phosphor" />
+              <span>
+                <strong className="text-ink">Knowledge base</strong> — drafts quote your own FAQs, policies and help pages, and
+                show their sources.{" "}
+                <Link to="/knowledge" className="font-medium text-primary-700 hover:underline dark:text-primary-300">
+                  Add knowledge
+                </Link>
+              </span>
+            </li>
           </ul>
         </div>
       </SettingsCard>
 
+      <AutoReplyCard available={s.available} />
+
+      <TriageCard available={s.available} />
+
       <SettingsCard title="This month">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
-            { label: "AI requests", value: String(s.usedThisMonth), hint: "Drafts, rewrites and summaries" },
+            { label: "AI requests", value: String(s.usedThisMonth), hint: "Everything AI did for your team and customers" },
             { label: "Drafts written", value: String(s.draftsGenerated), hint: `${sent} sent by agents` },
             {
               label: "Sent without edits",
               value: unchangedRate === null ? "—" : `${unchangedRate}%`,
               hint: "How often agents send a draft exactly as written",
             },
+            ...(s.autoRepliesSent || s.autoReplyHandoffs
+              ? [
+                  {
+                    label: "Answered by AI",
+                    value: String(s.autoRepliesSent),
+                    hint: "Customer questions the AI first response answered",
+                  },
+                  {
+                    label: "Handed to your team",
+                    value: String(s.autoReplyHandoffs),
+                    hint: "Conversations it passed on (not covered, needed a person)",
+                  },
+                ]
+              : []),
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border border-line p-4">
               <p className="label-caps text-ink-muted">{stat.label}</p>

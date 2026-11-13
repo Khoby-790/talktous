@@ -516,3 +516,35 @@ export const ASK_KNOWLEDGE = gql`
   }
   ${KNOWLEDGE_PASSAGE_FIELDS}
 `;
+
+export const SET_AI_TRIAGE = gql`
+  mutation SetAiTriage($input: AiTriageSettingsInput!) {
+    setAiTriage(input: $input) {
+      ...OrganizationFields
+    }
+  }
+  ${ORGANIZATION_FIELDS}
+`;
+
+export const SET_AI_AUTO_REPLY = gql`
+  mutation SetAiAutoReply($input: AiAutoReplySettingsInput!) {
+    setAiAutoReply(input: $input) {
+      ...OrganizationFields
+    }
+  }
+  ${ORGANIZATION_FIELDS}
+`;
+
+export const STOP_AI_AUTO_REPLY = gql`
+  mutation StopAiAutoReply($conversationId: ID!) {
+    stopAiAutoReply(conversationId: $conversationId) {
+      id
+      aiAutoReply {
+        replies
+        handedOff
+        reason
+        at
+      }
+    }
+  }
+`;
