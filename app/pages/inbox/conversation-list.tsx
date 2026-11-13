@@ -1,5 +1,5 @@
 import { type FC, useState } from "react";
-import { TriageBadges } from "~/components/conversations/triage";
+import { AutoReplyBadge, TriageBadges } from "~/components/conversations/triage";
 import { Avatar, ChannelBadge, EmptyState, PriorityBadge } from "~/components/core";
 import { Shimmer } from "~/components/shimmer";
 import { SearchInput } from "~/components/conversations/search-input";
@@ -42,7 +42,8 @@ const ListItem: FC<{ conversation: ConversationSummary; active: boolean; onSelec
 }) => {
   const unread = c.unreadCount > 0;
   const preview =
-    (c.lastMessageSenderType === "agent" ? "You: " : "") + (c.lastMessagePreview ?? c.subject ?? "No messages yet");
+    (c.lastMessageSenderType === "agent" ? "You: " : c.lastMessageSenderType === "bot" ? "AI: " : "") +
+    (c.lastMessagePreview ?? c.subject ?? "No messages yet");
   return (
     <button
       onClick={onSelect}
@@ -64,6 +65,7 @@ const ListItem: FC<{ conversation: ConversationSummary; active: boolean; onSelec
         <div className="mt-1.5 flex items-center gap-2">
           <ChannelBadge channel={c.channel} className="px-1.5 py-0 text-[10px]" />
           {(c.priority === "high" || c.priority === "urgent") && <PriorityBadge priority={c.priority} className="text-[10px]" />}
+          <AutoReplyBadge autoReply={c.aiAutoReply} />
           <TriageBadges triage={c.aiTriage} />
           <span className="flex-1" />
           {c.assignedAgent && (

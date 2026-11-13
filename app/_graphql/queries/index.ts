@@ -383,6 +383,8 @@ export const AI_STATUS = gql`
       draftsGenerated
       draftsSentUnchanged
       draftsSentEdited
+      autoRepliesSent
+      autoReplyHandoffs
     }
   }
 `;

@@ -15,7 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useReactiveVar } from "@apollo/client/react";
 import { currentTokenVar } from "~/_graphql/cache/auth";
-import { TriageLine } from "~/components/conversations/triage";
+import { AutoReplyNotice, TriageLine } from "~/components/conversations/triage";
 import { AiComposerTools, AiDraftSources, type DraftGrounding } from "~/components/conversations/ai-assist";
 import { AttachmentList, PendingAttachments } from "~/components/conversations/attachments";
 import { Avatar, Badge, ChannelBadge, EmptyState, Spinner } from "~/components/core";
@@ -31,6 +31,7 @@ import {
   useConversation,
   useMarkConversationRead,
   useSendMessage,
+  useStopAiAutoReply,
   useUpdateConversation,
 } from "~/hooks/data";
 import { useLiveRefetch } from "~/hooks/ui/use-conversation-subscription";
@@ -73,8 +74,9 @@ const MessageBubble: FC<{ message: Message; customerName: string }> = ({ message
     );
   }
 
-  const outgoing = message.senderType === "agent" || message.senderType === "bot";
-  const name = message.sender?.name ?? (outgoing ? "Agent" : customerName);
+  const isBot = message.senderType === "bot";
+  const outgoing = message.senderType === "agent" || isBot;
+  const name = isBot ? "AI assistant" : (message.sender?.name ?? (outgoing ? "Agent" : customerName));
 
   if (message.isInternal) {
     return (
@@ -102,15 +104,17 @@ const MessageBubble: FC<{ message: Message; customerName: string }> = ({ message
         <div
           className={cn(
             "rounded-2xl px-4 py-2.5 text-sm",
-            outgoing
-              ? "rounded-br-md bg-primary-600 text-white"
-              : "rounded-bl-md border border-line bg-surface text-ink",
+            isBot
+              ? "rounded-br-md border border-fuchsia-500/30 bg-fuchsia-500/10 text-ink"
+              : outgoing
+                ? "rounded-br-md bg-primary-600 text-white"
+                : "rounded-bl-md border border-line bg-surface text-ink",
           )}
         >
           {message.content && <p className="whitespace-pre-wrap break-words">{message.content}</p>}
           <AttachmentList
             attachments={message.attachments}
-            tone={outgoing ? "dark" : "light"}
+            tone={outgoing && !isBot ? "dark" : "light"}
             className={cn(message.content && "mt-2")}
           />
         </div>
@@ -208,6 +212,7 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
   // Set while the box holds an AI draft, so we can learn whether drafts are sent as-is.
   const [draftId, setDraftId] = useState<string | null>(null);
   const [grounding, setGrounding] = useState<DraftGrounding | null>(null);
+  const { stop, loading: stopping } = useStopAiAutoReply();
   const fileInput = useRef<HTMLInputElement>(null);
   const token = useReactiveVar(currentTokenVar);
   const { sendMessage, loading } = useSendMessage();
@@ -307,6 +312,12 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
           {note ? "Only your team can see notes" : channelHint} · ⌘/Ctrl+Enter to send
         </span>
       </div>
+      <AutoReplyNotice
+        autoReply={conversation.aiAutoReply}
+        answeredByTeam={Boolean(conversation.firstResponseAt)}
+        stopping={stopping}
+        onStop={() => void stop(conversation.id).catch((e: unknown) => toast.error(getErrorMessage(e)))}
+      />
       <AiDraftSources grounding={grounding} />
       <PendingAttachments items={files} onRemove={(key) => setFiles((current) => current.filter((f) => f.key !== key))} />
       <div

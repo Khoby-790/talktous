@@ -31,6 +31,30 @@ export type OrganizationSettings = {
   aiEnabled: boolean;
   /** Automatic AI triage of new conversations. */
   aiTriage: { enabled: boolean; setPriority: boolean; addTags: boolean };
+  /** AI first response to customers, from the knowledge base. */
+  aiAutoReply: AiAutoReplySettings;
+};
+
+export type AiAutoReplySettings = {
+  enabled: boolean;
+  channels: ConversationChannel[];
+  onlyWhenOffline: boolean;
+  handoffMessage: string;
+};
+
+export type AutoReplyHandoff =
+  | "asked_for_person"
+  | "not_covered"
+  | "needs_person"
+  | "limit_reached"
+  | "agent_took_over";
+
+/** The AI assistant's part in a conversation. */
+export type ConversationAutoReply = {
+  replies: number;
+  handedOff: boolean;
+  reason: AutoReplyHandoff | null;
+  at: string;
 };
 
 /** What AI triage made of a conversation when it started. */
@@ -243,6 +267,8 @@ export type ConversationSummary = {
   id: string;
   /** Null until triaged. */
   aiTriage: ConversationTriage | null;
+  /** Null when the AI assistant never took part. */
+  aiAutoReply: ConversationAutoReply | null;
   status: ConversationStatus;
   channel: ConversationChannel;
   priority: ConversationPriority;
@@ -296,6 +322,8 @@ export type AiStatus = {
   draftsGenerated: number;
   draftsSentUnchanged: number;
   draftsSentEdited: number;
+  autoRepliesSent: number;
+  autoReplyHandoffs: number;
 };
 
 export type AiRewriteStyle = "friendlier" | "shorter" | "formal" | "fix" | "translate";

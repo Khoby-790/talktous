@@ -31,6 +31,12 @@ export const ORGANIZATION_FIELDS = gql`
         setPriority
         addTags
       }
+      aiAutoReply {
+        enabled
+        channels
+        onlyWhenOffline
+        handoffMessage
+      }
     }
   }
 `;
@@ -179,6 +185,12 @@ export const CONVERSATION_SUMMARY_FIELDS = gql`
     resolvedAt
     csatScore
     csatComment
+    aiAutoReply {
+      replies
+      handedOff
+      reason
+      at
+    }
     aiTriage {
       language
       sentiment

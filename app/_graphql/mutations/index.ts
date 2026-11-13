@@ -525,3 +525,26 @@ export const SET_AI_TRIAGE = gql`
   }
   ${ORGANIZATION_FIELDS}
 `;
+
+export const SET_AI_AUTO_REPLY = gql`
+  mutation SetAiAutoReply($input: AiAutoReplySettingsInput!) {
+    setAiAutoReply(input: $input) {
+      ...OrganizationFields
+    }
+  }
+  ${ORGANIZATION_FIELDS}
+`;
+
+export const STOP_AI_AUTO_REPLY = gql`
+  mutation StopAiAutoReply($conversationId: ID!) {
+    stopAiAutoReply(conversationId: $conversationId) {
+      id
+      aiAutoReply {
+        replies
+        handedOff
+        reason
+        at
+      }
+    }
+  }
+`;
