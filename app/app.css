@@ -27,6 +27,16 @@
   --color-phosphor: #fde9ff;
   --color-arrow: rgba(3, 81, 75, 0.5);
 
+  /* ── Warm "human" palette (marketing site) ───────────────────────────── */
+  --font-serif: "Instrument Serif", ui-serif, Georgia, Cambria, serif;
+  --color-cream: #fbf7f1;
+  --color-sand: #f3ebdf;
+  --color-ember: #ff7a1a;
+  --color-ember-deep: #e5620a;
+  --color-ember-soft: #ffeadb;
+  --color-pine: #0b3b37;
+  --color-pine-ink: #10302d;
+
   /* ── Brand / primary → bioluminescent teal (centred on #00827c) ───────── */
   --color-primary-50: #edfffe;
   --color-primary-100: #cbfffc;
@@ -158,6 +168,14 @@ body {
   );
 }
 
+/* Aurora as type — the human voice on the marketing site. */
+@utility text-aurora {
+  background-image: linear-gradient(90deg, #cbfffc 0%, #edfffe 28%, #fad1ff 62%, #9cefe9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 @utility bg-bioluminescent {
   background-image: linear-gradient(90deg, rgb(0, 130, 124) 0%, rgb(203, 255, 252) 100%);
 }
@@ -212,7 +230,137 @@ body {
 .fade-up-4 { animation: fade-up 0.8s ease both; animation-delay: 0.55s; }
 .fade-up-5 { animation: fade-up 0.8s ease both; animation-delay: 0.7s; }
 
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes soft-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+/* ── Fluid: liquid shapes, flowing aurora text, scroll reveals ───────────── */
+@keyframes morph {
+  0%,
+  100% {
+    border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%;
+  }
+  33% {
+    border-radius: 63% 37% 45% 55% / 55% 62% 38% 45%;
+  }
+  66% {
+    border-radius: 38% 62% 35% 65% / 62% 38% 62% 38%;
+  }
+}
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(7%, -9%) scale(1.08);
+  }
+  66% {
+    transform: translate(-8%, 6%) scale(0.94);
+  }
+}
+@keyframes aurora-flow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+}
+.liquid { border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%; animation: morph 14s ease-in-out infinite; }
+.blob { animation: drift 24s ease-in-out infinite, morph 18s ease-in-out infinite; }
+.aurora-flow { background-size: 200% 100%; animation: aurora-flow 7s ease-in-out infinite; }
+.live-dot { animation: pulse-ring 1.8s ease-out infinite; }
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  filter: blur(10px);
+  transition:
+    opacity 1s ease,
+    transform 1.1s cubic-bezier(0.2, 0.7, 0.2, 1),
+    filter 1s ease;
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.marquee { animation: marquee 70s linear infinite; }
+.marquee-rev { animation: marquee 80s linear infinite reverse; }
+.marquee-row:hover .marquee,
+.marquee-row:hover .marquee-rev { animation-play-state: paused; }
+.soft-in { animation: soft-in 0.55s ease both; }
+.float-a { animation: float-y 6s ease-in-out infinite; }
+.float-b { animation: float-y 7.5s ease-in-out infinite; animation-delay: -2.5s; }
+.float-c { animation: float-y 8.5s ease-in-out infinite; animation-delay: -4s; }
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: currentColor;
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+/* Hero: deep pine gradient with a warm ember glow, echoing the brand banner. */
+.hero-pine {
+  background:
+    radial-gradient(60% 70% at 0% 100%, rgba(255, 122, 26, 0.16), transparent 60%),
+    radial-gradient(70% 80% at 85% 10%, rgba(43, 186, 177, 0.22), transparent 60%),
+    linear-gradient(135deg, #012b28 0%, #01403b 50%, #0a5d55 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .liquid,
+  .blob,
+  .aurora-flow,
+  .live-dot,
+  .marquee,
+  .marquee-rev,
+  .soft-in,
+  .float-a,
+  .float-b,
+  .float-c,
+  .caret::after,
   .orb-glow,
   .fade-up-1,
   .fade-up-2,
@@ -220,5 +368,10 @@ body {
   .fade-up-4,
   .fade-up-5 {
     animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }

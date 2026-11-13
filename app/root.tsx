@@ -23,7 +23,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..500&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..600&family=Instrument+Serif:ital@0;1&display=swap",
   },
   { rel: "stylesheet", href: stylesheet },
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
