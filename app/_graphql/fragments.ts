@@ -26,6 +26,11 @@ export const ORGANIZATION_FIELDS = gql`
       passwordMinLength
       sessionHours
       aiEnabled
+      aiTriage {
+        enabled
+        setPriority
+        addTags
+      }
     }
   }
 `;
@@ -174,6 +179,16 @@ export const CONVERSATION_SUMMARY_FIELDS = gql`
     resolvedAt
     csatScore
     csatComment
+    aiTriage {
+      language
+      sentiment
+      urgency
+      intent
+      tags
+      appliedPriority
+      appliedTags
+      at
+    }
     createdAt
     updatedAt
     appId

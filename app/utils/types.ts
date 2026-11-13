@@ -29,6 +29,20 @@ export type OrganizationSettings = {
   passwordMinLength: number;
   sessionHours: number;
   aiEnabled: boolean;
+  /** Automatic AI triage of new conversations. */
+  aiTriage: { enabled: boolean; setPriority: boolean; addTags: boolean };
+};
+
+/** What AI triage made of a conversation when it started. */
+export type ConversationTriage = {
+  language: string;
+  sentiment: "positive" | "neutral" | "negative";
+  urgency: ConversationPriority;
+  intent: string;
+  tags: string[];
+  appliedPriority: boolean;
+  appliedTags: string[];
+  at: string;
 };
 
 export type Organization = {
@@ -227,6 +241,8 @@ export type Message = {
 
 export type ConversationSummary = {
   id: string;
+  /** Null until triaged. */
+  aiTriage: ConversationTriage | null;
   status: ConversationStatus;
   channel: ConversationChannel;
   priority: ConversationPriority;

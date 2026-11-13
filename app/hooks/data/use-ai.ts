@@ -8,6 +8,7 @@ import {
   REMOVE_AI_PROVIDER,
   SAVE_AI_PROVIDER,
   SET_AI_ENABLED,
+  SET_AI_TRIAGE,
   TEST_AI_PROVIDER,
 } from "~/_graphql/mutations";
 import { AI_PROVIDERS, AI_STATUS } from "~/_graphql/queries";
@@ -96,4 +97,15 @@ export const useAiModels = () => {
   const loadModels = async (input: { provider: AiProviderId; apiKey?: string | null; baseUrl?: string | null }) =>
     (await mutate({ variables: { input } })).data?.aiModels ?? [];
   return { loadModels, ...rest };
+};
+
+/** Turn automatic triage of new conversations on/off (admins). */
+export const useSetAiTriage = () => {
+  const [mutate, rest] = useMutation<{ setAiTriage: Organization }>(SET_AI_TRIAGE);
+  const setAiTriage = async (input: { enabled: boolean; setPriority?: boolean; addTags?: boolean }) => {
+    const org = (await mutate({ variables: { input } })).data?.setAiTriage;
+    if (org) setCurrentOrg(org);
+    return org;
+  };
+  return { setAiTriage, ...rest };
 };

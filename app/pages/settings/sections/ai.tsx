@@ -1,5 +1,8 @@
 import { type FC, useEffect, useMemo, useState } from "react";
-import { BoltIcon, CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router";
+import { useReactiveVar } from "@apollo/client/react";
+import { BookOpenIcon, BoltIcon, CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { currentOrgVar } from "~/_graphql/cache/auth";
 import { Toggle } from "~/components/core";
 import { PrimaryButton } from "~/components/buttons";
 import { SettingsCard } from "~/components/forms/settings";
@@ -13,6 +16,7 @@ import {
   useRemoveAiProvider,
   useSaveAiProvider,
   useSetAiEnabled,
+  useSetAiTriage,
   useTestAiProvider,
 } from "~/hooks/data";
 import { toast } from "~/hooks/ui/use-toast";
@@ -242,6 +246,72 @@ const ProviderForm: FC<{ status: AiStatus }> = ({ status }) => {
   );
 };
 
+/** Automatic triage of new conversations: classify, and optionally set priority and tags. */
+const TriageCard: FC<{ available: boolean }> = ({ available }) => {
+  const org = useReactiveVar(currentOrgVar);
+  const { setAiTriage, loading } = useSetAiTriage();
+  const settings = org?.settings.aiTriage ?? { enabled: false, setPriority: true, addTags: true };
+
+  const save = async (next: Partial<typeof settings>, message?: string) => {
+    try {
+      // Explicit fields: the cached object also carries Apollo's __typename.
+      const merged = { ...settings, ...next };
+      await setAiTriage({ enabled: merged.enabled, setPriority: merged.setPriority, addTags: merged.addTags });
+      if (message) toast.success(message);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  return (
+    <SettingsCard
+      title="Auto-triage"
+      description="When a conversation starts, your AI reads the first message and labels it — so urgent and upset customers stand out in the inbox."
+    >
+      <div className="space-y-5">
+        {!available && <Callout tone="info">Turn AI assist on above to use auto-triage.</Callout>}
+        <Toggle
+          id="aiTriage"
+          label="Triage new conversations automatically"
+          checked={settings.enabled}
+          disabled={!available || loading}
+          onChange={(value) =>
+            void save({ enabled: value }, value ? "New conversations will be triaged" : "Auto-triage is off")
+          }
+        />
+        <ul className="space-y-2.5 text-sm text-ink-soft">
+          <li className="flex gap-2.5">
+            <SparklesIcon className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-600 dark:text-phosphor" />
+            <span>
+              Shows the customer&apos;s <strong className="text-ink">language</strong>, whether they&apos;re{" "}
+              <strong className="text-ink">upset</strong>, and what they want in a few words.
+            </span>
+          </li>
+        </ul>
+        <div className={cn("space-y-3 border-t border-line pt-4", !settings.enabled && "opacity-50")}>
+          <Toggle
+            id="aiTriagePriority"
+            label="Set priority (high or urgent problems go to the top; only while priority is still Normal)"
+            checked={settings.setPriority}
+            disabled={!available || !settings.enabled || loading}
+            onChange={(value) => void save({ setPriority: value })}
+          />
+          <Toggle
+            id="aiTriageTags"
+            label="Add topic tags (reusing your existing tags where they fit)"
+            checked={settings.addTags}
+            disabled={!available || !settings.enabled || loading}
+            onChange={(value) => void save({ addTags: value })}
+          />
+        </div>
+        <p className="text-xs text-ink-muted">
+          Each new conversation uses one short AI request on your provider. Agents can always change what triage set.
+        </p>
+      </div>
+    </SettingsCard>
+  );
+};
+
 /** Settings → AI: bring your own AI provider, turn AI assist on, see usage and draft quality. */
 export const AiSection: FC = () => {
   const { aiStatus: s, loading } = useAiStatus();
@@ -378,9 +448,21 @@ export const AiSection: FC = () => {
                 it up.
               </span>
             </li>
+            <li className="flex gap-2.5">
+              <BookOpenIcon className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-600 dark:text-phosphor" />
+              <span>
+                <strong className="text-ink">Knowledge base</strong> — drafts quote your own FAQs, policies and help pages, and
+                show their sources.{" "}
+                <Link to="/knowledge" className="font-medium text-primary-700 hover:underline dark:text-primary-300">
+                  Add knowledge
+                </Link>
+              </span>
+            </li>
           </ul>
         </div>
       </SettingsCard>
+
+      <TriageCard available={s.available} />
 
       <SettingsCard title="This month">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -15,6 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useReactiveVar } from "@apollo/client/react";
 import { currentTokenVar } from "~/_graphql/cache/auth";
+import { TriageLine } from "~/components/conversations/triage";
 import { AiComposerTools, AiDraftSources, type DraftGrounding } from "~/components/conversations/ai-assist";
 import { AttachmentList, PendingAttachments } from "~/components/conversations/attachments";
 import { Avatar, Badge, ChannelBadge, EmptyState, Spinner } from "~/components/core";
@@ -500,6 +501,7 @@ const ConversationThread: FC<ConversationThreadProps> = ({
               {conversation.subject ? `${conversation.subject} · ` : ""}
               {conversation.app?.name ?? "Unknown app"} · started {formatShort(conversation.createdAt)}
             </p>
+            <TriageLine triage={conversation.aiTriage} />
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {headerExtra}

@@ -1,4 +1,5 @@
 import { type FC, useState } from "react";
+import { TriageBadges } from "~/components/conversations/triage";
 import { Avatar, ChannelBadge, EmptyState, PriorityBadge } from "~/components/core";
 import { Shimmer } from "~/components/shimmer";
 import { SearchInput } from "~/components/conversations/search-input";
@@ -63,6 +64,7 @@ const ListItem: FC<{ conversation: ConversationSummary; active: boolean; onSelec
         <div className="mt-1.5 flex items-center gap-2">
           <ChannelBadge channel={c.channel} className="px-1.5 py-0 text-[10px]" />
           {(c.priority === "high" || c.priority === "urgent") && <PriorityBadge priority={c.priority} className="text-[10px]" />}
+          <TriageBadges triage={c.aiTriage} />
           <span className="flex-1" />
           {c.assignedAgent && (
             <Avatar name={c.assignedAgent.name} src={c.assignedAgent.avatarUrl} size="sm" className="h-5 w-5 text-[9px]" />

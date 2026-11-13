@@ -516,3 +516,12 @@ export const ASK_KNOWLEDGE = gql`
   }
   ${KNOWLEDGE_PASSAGE_FIELDS}
 `;
+
+export const SET_AI_TRIAGE = gql`
+  mutation SetAiTriage($input: AiTriageSettingsInput!) {
+    setAiTriage(input: $input) {
+      ...OrganizationFields
+    }
+  }
+  ${ORGANIZATION_FIELDS}
+`;
