@@ -12,6 +12,7 @@ import {
 } from "~/_graphql/mutations";
 import { AI_PROVIDERS, AI_STATUS } from "~/_graphql/queries";
 import type {
+  AiDraft,
   AiProviderId,
   AiProviderInfo,
   AiRewriteStyle,
@@ -29,7 +30,7 @@ export const useAiStatus = () => {
 const refetchStatus = { refetchQueries: ["AiStatus"] };
 
 export const useAiDraftReply = () => {
-  const [mutate, rest] = useMutation<{ aiDraftReply: { text: string; draftId: string } }>(AI_DRAFT_REPLY, refetchStatus);
+  const [mutate, rest] = useMutation<{ aiDraftReply: AiDraft }>(AI_DRAFT_REPLY, refetchStatus);
   const draftReply = async (conversationId: string, instruction?: string | null) =>
     (await mutate({ variables: { conversationId, instruction: instruction || null } })).data?.aiDraftReply;
   return { draftReply, ...rest };

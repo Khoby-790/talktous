@@ -445,3 +445,51 @@ export type AppConfig = {
   dateFormat: string;
   pollInterval: number;
 };
+
+/* ── Knowledge base ─────────────────────────────────────────────────── */
+export type KnowledgeSourceType = "article" | "url" | "file";
+
+export type KnowledgeSource = {
+  id: string;
+  type: KnowledgeSourceType;
+  title: string;
+  url: string | null;
+  fileName: string | null;
+  /** Only on the single-source query. */
+  content?: string | null;
+  enabled: boolean;
+  charCount: number;
+  chunkCount: number;
+  lastError: string | null;
+  lastSyncedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type KnowledgePassage = {
+  sourceId: string;
+  title: string;
+  url: string | null;
+  heading: string | null;
+  content: string;
+  score: number;
+};
+
+export type KnowledgeSourceRef = { id: string; title: string; url: string | null };
+
+export type KnowledgeAnswer = {
+  answer: string | null;
+  covered: boolean;
+  sources: KnowledgeSourceRef[];
+  passages: KnowledgePassage[];
+};
+
+/** How an AI draft used the knowledge base; null when the AI didn't say. */
+export type AiKnowledgeUse = "used" | "not_covered" | "empty" | null;
+
+export type AiDraft = {
+  text: string;
+  draftId: string;
+  knowledge: AiKnowledgeUse;
+  sources: KnowledgeSourceRef[];
+};

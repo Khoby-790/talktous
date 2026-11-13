@@ -34,6 +34,7 @@ export default [
     route("apps", "pages/apps/index.tsx"),
     route("apps/:id", "pages/view-app/index.tsx"),
     route("integrations", "pages/integrations/index.tsx"),
+    route("knowledge", "pages/knowledge/index.tsx"),
     route("agents", "pages/agents/index.tsx"),
     route("agents/:id", "pages/agents/view.tsx"),
     route("settings/:section?", "pages/settings/index.tsx"),

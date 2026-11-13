@@ -15,7 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useReactiveVar } from "@apollo/client/react";
 import { currentTokenVar } from "~/_graphql/cache/auth";
-import { AiComposerTools } from "~/components/conversations/ai-assist";
+import { AiComposerTools, AiDraftSources, type DraftGrounding } from "~/components/conversations/ai-assist";
 import { AttachmentList, PendingAttachments } from "~/components/conversations/attachments";
 import { Avatar, Badge, ChannelBadge, EmptyState, Spinner } from "~/components/core";
 import { ACCEPTED_FILE_TYPES, uploadFile } from "~/lib/uploads";
@@ -206,6 +206,7 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
   const [files, setFiles] = useState<PendingFile[]>([]);
   // Set while the box holds an AI draft, so we can learn whether drafts are sent as-is.
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [grounding, setGrounding] = useState<DraftGrounding | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const token = useReactiveVar(currentTokenVar);
   const { sendMessage, loading } = useSendMessage();
@@ -298,12 +299,14 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
             setText={setText}
             onDraft={setDraftId}
             note={note}
+            onGrounding={setGrounding}
           />
         </div>
         <span className="ml-auto hidden text-[11px] text-ink-muted 2xl:inline">
           {note ? "Only your team can see notes" : channelHint} · ⌘/Ctrl+Enter to send
         </span>
       </div>
+      <AiDraftSources grounding={grounding} />
       <PendingAttachments items={files} onRemove={(key) => setFiles((current) => current.filter((f) => f.key !== key))} />
       <div
         className={cn(

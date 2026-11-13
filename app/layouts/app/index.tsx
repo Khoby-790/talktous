@@ -13,6 +13,7 @@ import {
   MagnifyingGlassIcon,
   MoonIcon,
   PuzzlePieceIcon,
+  BookOpenIcon,
   RectangleStackIcon,
   SunIcon,
   UserCircleIcon,
@@ -57,6 +58,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
     label: "Configuration",
     items: [
       { label: "Apps", path: "/apps", icon: RectangleStackIcon },
+      { label: "Knowledge", path: "/knowledge", icon: BookOpenIcon },
       { label: "Integrations", path: "/integrations", icon: PuzzlePieceIcon, roles: ["admin"] },
     ],
   },

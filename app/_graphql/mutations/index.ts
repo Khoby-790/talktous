@@ -6,6 +6,8 @@ import {
   CURRENT_USER_FIELDS,
   CUSTOMER_FIELDS,
   INTEGRATION_FIELDS,
+  KNOWLEDGE_PASSAGE_FIELDS,
+  KNOWLEDGE_SOURCE_FIELDS,
   MESSAGE_FIELDS,
   ORGANIZATION_FIELDS,
 } from "../fragments";
@@ -348,6 +350,12 @@ export const AI_DRAFT_REPLY = gql`
     aiDraftReply(conversationId: $conversationId, instruction: $instruction) {
       text
       draftId
+      knowledge
+      sources {
+        id
+        title
+        url
+      }
     }
   }
 `;
@@ -428,4 +436,75 @@ export const AI_MODELS = gql`
       name
     }
   }
+`;
+
+/* ── Knowledge base ─────────────────────────────────────────────────── */
+export const CREATE_KNOWLEDGE_ARTICLE = gql`
+  mutation CreateKnowledgeArticle($input: KnowledgeArticleInput!) {
+    createKnowledgeArticle(input: $input) {
+      ...KnowledgeSourceFields
+    }
+  }
+  ${KNOWLEDGE_SOURCE_FIELDS}
+`;
+
+export const UPDATE_KNOWLEDGE_ARTICLE = gql`
+  mutation UpdateKnowledgeArticle($id: ID!, $input: KnowledgeArticleInput!) {
+    updateKnowledgeArticle(id: $id, input: $input) {
+      ...KnowledgeSourceFields
+      content
+    }
+  }
+  ${KNOWLEDGE_SOURCE_FIELDS}
+`;
+
+export const ADD_KNOWLEDGE_URL = gql`
+  mutation AddKnowledgeUrl($url: String!) {
+    addKnowledgeUrl(url: $url) {
+      ...KnowledgeSourceFields
+    }
+  }
+  ${KNOWLEDGE_SOURCE_FIELDS}
+`;
+
+export const RESYNC_KNOWLEDGE_SOURCE = gql`
+  mutation ResyncKnowledgeSource($id: ID!) {
+    resyncKnowledgeSource(id: $id) {
+      ...KnowledgeSourceFields
+    }
+  }
+  ${KNOWLEDGE_SOURCE_FIELDS}
+`;
+
+export const SET_KNOWLEDGE_SOURCE_ENABLED = gql`
+  mutation SetKnowledgeSourceEnabled($id: ID!, $enabled: Boolean!) {
+    setKnowledgeSourceEnabled(id: $id, enabled: $enabled) {
+      ...KnowledgeSourceFields
+    }
+  }
+  ${KNOWLEDGE_SOURCE_FIELDS}
+`;
+
+export const DELETE_KNOWLEDGE_SOURCE = gql`
+  mutation DeleteKnowledgeSource($id: ID!) {
+    deleteKnowledgeSource(id: $id)
+  }
+`;
+
+export const ASK_KNOWLEDGE = gql`
+  mutation AskKnowledge($question: String!) {
+    askKnowledge(question: $question) {
+      answer
+      covered
+      sources {
+        id
+        title
+        url
+      }
+      passages {
+        ...KnowledgePassageFields
+      }
+    }
+  }
+  ${KNOWLEDGE_PASSAGE_FIELDS}
 `;

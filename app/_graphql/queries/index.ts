@@ -7,6 +7,8 @@ import {
   CURRENT_USER_FIELDS,
   CUSTOMER_FIELDS,
   INTEGRATION_FIELDS,
+  KNOWLEDGE_PASSAGE_FIELDS,
+  KNOWLEDGE_SOURCE_FIELDS,
   MESSAGE_FIELDS,
   ORGANIZATION_FIELDS,
   PLAN_FIELDS,
@@ -390,4 +392,33 @@ export const AI_PROVIDERS = gql`
       needsBaseUrl
     }
   }
+`;
+
+/* ── Knowledge base ─────────────────────────────────────────────────── */
+export const KNOWLEDGE_SOURCES = gql`
+  query KnowledgeSources {
+    knowledgeSources {
+      ...KnowledgeSourceFields
+    }
+  }
+  ${KNOWLEDGE_SOURCE_FIELDS}
+`;
+
+export const KNOWLEDGE_SOURCE = gql`
+  query KnowledgeSource($id: ID!) {
+    knowledgeSource(id: $id) {
+      ...KnowledgeSourceFields
+      content
+    }
+  }
+  ${KNOWLEDGE_SOURCE_FIELDS}
+`;
+
+export const SEARCH_KNOWLEDGE = gql`
+  query SearchKnowledge($query: String!) {
+    searchKnowledge(query: $query) {
+      ...KnowledgePassageFields
+    }
+  }
+  ${KNOWLEDGE_PASSAGE_FIELDS}
 `;

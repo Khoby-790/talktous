@@ -270,3 +270,31 @@ export const PLAN_FIELDS = gql`
     features
   }
 `;
+
+export const KNOWLEDGE_SOURCE_FIELDS = gql`
+  fragment KnowledgeSourceFields on KnowledgeSource {
+    id
+    type
+    title
+    url
+    fileName
+    enabled
+    charCount
+    chunkCount
+    lastError
+    lastSyncedAt
+    createdAt
+    updatedAt
+  }
+`;
+
+export const KNOWLEDGE_PASSAGE_FIELDS = gql`
+  fragment KnowledgePassageFields on KnowledgePassage {
+    sourceId
+    title
+    url
+    heading
+    content
+    score
+  }
+`;

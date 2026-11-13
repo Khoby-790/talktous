@@ -1,7 +1,14 @@
 import { type FC, useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
-import { ArrowUturnLeftIcon, ChevronDownIcon, LanguageIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUturnLeftIcon,
+  BookOpenIcon,
+  ChevronDownIcon,
+  ExclamationTriangleIcon,
+  LanguageIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 import { Spinner } from "~/components/core";
 import { useAiDraftReply, useAiRewrite, useAiStatus, useAiSummarize } from "~/hooks/data";
 import { toast } from "~/hooks/ui/use-toast";
@@ -9,7 +16,7 @@ import { getErrorMessage } from "~/lib/errors";
 import { cn } from "~/lib/utils";
 import { formatRelative } from "~/utils/date";
 import { useHasRole } from "~/utils/with-roles";
-import type { AiRewriteStyle, ConversationDetail } from "~/utils/types";
+import type { AiDraft, AiRewriteStyle, ConversationDetail } from "~/utils/types";
 
 const LANGUAGES = [
   "English",
@@ -32,6 +39,8 @@ const REWRITES: { style: Exclude<AiRewriteStyle, "translate">; label: string }[]
   { style: "fix", label: "Fix spelling & grammar" },
 ];
 
+export type DraftGrounding = Pick<AiDraft, "knowledge" | "sources">;
+
 const menuItem =
   "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm text-ink-soft data-[focus]:bg-surface-2 data-[focus]:text-ink";
 
@@ -46,18 +55,29 @@ export const AiComposerTools: FC<{
   /** Called with the draft id when a draft fills the box (null when the agent rewrites/undoes). */
   onDraft: (draftId: string | null) => void;
   note: boolean;
-}> = ({ conversationId, text, setText, onDraft, note }) => {
+  /** What the latest draft drew on (null once it's rewritten, undone or sent). Show it with <AiDraftSources>. */
+  onGrounding?: (grounding: DraftGrounding | null) => void;
+}> = ({ conversationId, text, setText, onDraft, note, onGrounding }) => {
   const { aiStatus } = useAiStatus();
   const isAdmin = useHasRole(["admin"]);
   const { draftReply, loading: drafting } = useAiDraftReply();
   const { rewrite, loading: rewriting } = useAiRewrite();
   const [undo, setUndo] = useState<{ text: string; draftId: string | null } | null>(null);
   const [instruction, setInstruction] = useState("");
+  /** What the last draft drew on, shown until the text is rewritten, undone or sent. */
+  const [grounding, setGrounding] = useState<DraftGrounding | null>(null);
   const busy = drafting || rewriting;
+
+  useEffect(() => {
+    onGrounding?.(grounding);
+  }, [grounding, onGrounding]);
 
   // Once the box is emptied (message sent, conversation switched), there's nothing to undo.
   useEffect(() => {
-    if (!text) setUndo(null);
+    if (!text) {
+      setUndo(null);
+      setGrounding(null);
+    }
   }, [text]);
 
   if (!aiStatus) return null;
@@ -83,7 +103,10 @@ export const AiComposerTools: FC<{
   const draft = async (guidance?: string) => {
     try {
       const result = await draftReply(conversationId, guidance);
-      if (result) apply(result.text, result.draftId);
+      if (result) {
+        apply(result.text, result.draftId);
+        setGrounding({ knowledge: result.knowledge, sources: result.sources });
+      }
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -95,13 +118,14 @@ export const AiComposerTools: FC<{
       const result = await rewrite({ text, style, language, conversationId });
       // A rewritten draft no longer counts as "the AI's draft" for quality tracking.
       if (result) apply(result, null);
+      setGrounding(null);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   };
 
   return (
-    <div className="flex items-center gap-1 whitespace-nowrap">
+    <div className="flex flex-wrap items-center gap-1 whitespace-nowrap">
       {!note && (
         <div className="inline-flex overflow-hidden rounded-md border border-fuchsia-500/25 bg-fuchsia-500/8">
           <button
@@ -203,14 +227,65 @@ export const AiComposerTools: FC<{
             setText(undo.text);
             onDraft(undo.draftId);
             setUndo(null);
+            setGrounding(null);
           }}
           className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-ink-muted hover:bg-surface-2 hover:text-ink"
         >
           <ArrowUturnLeftIcon className="h-3.5 w-3.5" /> Undo
         </button>
       )}
+
     </div>
   );
+};
+
+/**
+ * Under the composer header: which knowledge sources the draft used, or a
+ * heads-up that the knowledge base didn't cover the question.
+ */
+export const AiDraftSources: FC<{ grounding: DraftGrounding | null }> = ({ grounding }) => {
+  const canManageKnowledge = useHasRole(["admin", "supervisor"]);
+  if (!grounding) return null;
+  if (grounding.knowledge === "used" && grounding.sources.length) {
+    const titles = grounding.sources.map((s) => s.title).join(", ");
+    return (
+      <Link
+        to="/knowledge"
+        title={`Based on: ${titles}`}
+        className="mb-2 flex min-w-0 items-center gap-1.5 text-[11px] text-ink-muted hover:text-ink"
+      >
+        <BookOpenIcon className="h-3.5 w-3.5 shrink-0" />
+        <span className="truncate">Based on {titles}</span>
+      </Link>
+    );
+  }
+  if (grounding.knowledge === "not_covered") {
+    return (
+      <p className="mb-2 flex min-w-0 items-start gap-1.5 text-[11px] leading-snug text-amber-700 dark:text-amber-300">
+        <ExclamationTriangleIcon className="mt-px h-3.5 w-3.5 shrink-0" />
+        <span>
+          Your knowledge base doesn&apos;t cover this — fill in the [placeholders] before sending.
+          {canManageKnowledge && (
+            <>
+              {" "}
+              <Link to="/knowledge?modal=article" className="font-medium underline underline-offset-2">
+                Add an article
+              </Link>
+            </>
+          )}
+        </span>
+      </p>
+    );
+  }
+  if (grounding.knowledge === "empty" && canManageKnowledge) {
+    return (
+      <Link to="/knowledge" className="mb-2 flex items-center gap-1.5 text-[11px] text-ink-muted hover:text-ink">
+        <BookOpenIcon className="h-3.5 w-3.5 shrink-0" />
+        Drafts get much better when they know your policies and FAQs — add them to the knowledge base.
+      </Link>
+    );
+  }
+  return null;
 };
 
 /** A short AI summary of the conversation, for whoever picks it up. Generated only on request. */
