@@ -21,6 +21,7 @@ import { cn } from "~/lib/utils";
 import { formatRelative } from "~/utils/date";
 import { useHasRole } from "~/utils/with-roles";
 import type { SupportApp, WidgetConfig } from "~/utils/types";
+import { MobileGuide } from "./mobile-guide";
 
 const done = (value: unknown): StepStatus => (value ? "done" : "todo");
 const Code: FC<{ children: ReactNode }> = ({ children }) => <code className="font-mono text-xs text-ink">{children}</code>;
@@ -460,12 +461,12 @@ const emailSteps = (app: SupportApp, mailConfigured: boolean): GuideStep[] => {
 
 /* ─────────────────────────── Web widget ─────────────────────────── */
 
-const widgetSteps = (app: SupportApp): GuideStep[] => {
+const widgetSteps = (app: SupportApp, appUrl: string): GuideStep[] => {
   const s = app.setup;
   return [
     {
       id: "install",
-      title: "Add the chat to your website",
+      title: "Add the chat to your website or app",
       status: done(s.widgetSeenAt),
       summary: s.widgetSeenAt ? `Seen on ${s.widgetSeenOrigin ?? "your site"} ${formatRelative(s.widgetSeenAt)}` : undefined,
       body: (
@@ -486,7 +487,10 @@ const widgetSteps = (app: SupportApp): GuideStep[] => {
               <li><strong>Wix:</strong> Settings › Custom code › Add code → Body – end, all pages.</li>
             </ul>
           </details>
-          <p className="text-xs text-ink-muted">This step ticks itself off the first time the chat loads on your site.</p>
+          <p className="text-xs text-ink-muted">
+            This step ticks itself off the first time the chat loads on your site or in your app. For mobile apps,
+            see “Add the chat to your mobile app” below.
+          </p>
         </>
       ),
     },
@@ -498,6 +502,16 @@ const widgetSteps = (app: SupportApp): GuideStep[] => {
       body: <p>Open your site, click the chat button and send a message. It appears in the Inbox instantly.</p>,
     },
     agentsStep(app),
+    {
+      id: "mobile",
+      title: "Add the chat to your mobile app",
+      status: "optional",
+      summary:
+        app.setup.widgetSeenOrigin && / app$/.test(app.setup.widgetSeenOrigin)
+          ? `Seen in your ${app.setup.widgetSeenOrigin}`
+          : "React Native, Flutter, iOS, Android — or your own native UI",
+      body: <MobileGuide app={app} appUrl={appUrl} />,
+    },
     {
       id: "identify",
       title: "Recognise signed-in customers",
@@ -645,7 +659,7 @@ const SetupTab: FC<{ app: SupportApp }> = ({ app: initial }) => {
       : app.type === "email"
         ? emailSteps(app, environment?.mailConfigured ?? false)
         : app.type === "web_widget"
-          ? widgetSteps(app)
+          ? widgetSteps(app, environment?.appUrl ?? window.location.origin)
           : apiSteps(app);
 
   const checklist = (

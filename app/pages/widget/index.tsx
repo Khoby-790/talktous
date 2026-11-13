@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from "react-router";
 import { ChevronLeftIcon, PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { ChatBubbleLeftRightIcon, PaperClipIcon } from "@heroicons/react/24/outline";
 import config from "~/config";
+import { detectPlatform, sendToHost, type Platform } from "~/components/widget/bridge";
 import { ACCEPTED_FILE_TYPES, uploadFile } from "~/lib/uploads";
 import { createStreamClient } from "~/utils/pusher";
 import type { Attachment } from "~/utils/types";
@@ -29,11 +30,11 @@ export function meta() {
 const POLL_THREAD_MS = 15000;
 const POLL_LIST_MS = 20000;
 
-type Identity = { name?: string | null; email?: string | null };
+type Identity = { name?: string | null; email?: string | null; externalId?: string | null };
 type View = { name: "home" } | { name: "identify"; draft: string } | { name: "thread"; id: string };
 
-const closeWidget = () => window.parent?.postMessage({ type: "ttu:close" }, "*");
-const notifyUnread = () => window.parent?.postMessage({ type: "ttu:unread" }, "*");
+const closeWidget = () => sendToHost("close");
+const notifyUnread = () => sendToHost("unread");
 
 /**
  * The chat customers see inside the iframe that /widget.js (served by the API)
@@ -44,6 +45,9 @@ const WidgetPage: FC = () => {
   const { publicKey = "" } = useParams();
   const [params] = useSearchParams();
   const host = params.get("host");
+  // Mobile apps open this page in a web view with ?platform=… (see components/widget/bridge.ts).
+  const platform: Platform = detectPlatform(params.get("platform"));
+  const mobile = platform !== "web";
 
   const [app, setApp] = useState<WidgetApp | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -51,13 +55,23 @@ const WidgetPage: FC = () => {
   const [customer, setCustomer] = useState<WidgetCustomer | null>(null);
   const [conversations, setConversations] = useState<WidgetConversation[]>([]);
   const [view, setView] = useState<View>({ name: "home" });
-  const identity = useRef<Identity>({});
+  // Apps can pass who's chatting in the URL: ?name=…&email=…&externalId=…
+  const identity = useRef<Identity>({
+    name: params.get("name"),
+    email: params.get("email"),
+    externalId: params.get("externalId"),
+  });
 
   // The dashboard may run dark; the widget is always light, whatever the host page.
   useEffect(() => {
     document.documentElement.classList.remove("dark");
     document.documentElement.style.colorScheme = "light";
-  }, []);
+    // In an app's web view, draw edge to edge and respect the notch / home bar.
+    if (mobile) {
+      const viewport = document.querySelector('meta[name="viewport"]');
+      viewport?.setAttribute("content", "width=device-width, initial-scale=1, viewport-fit=cover");
+    }
+  }, [mobile]);
 
   const createSession = useCallback(
     async (extra: Identity & { token?: string | null } = {}) => {
@@ -66,10 +80,12 @@ const WidgetPage: FC = () => {
         {
           method: "POST",
           host,
+          platform,
           body: {
             token: extra.token ?? null,
             name: extra.name ?? identity.current.name ?? null,
             email: extra.email ?? identity.current.email ?? null,
+            externalId: extra.externalId ?? identity.current.externalId ?? null,
           },
         },
       );
@@ -78,7 +94,7 @@ const WidgetPage: FC = () => {
       setCustomer(session.customer);
       return session;
     },
-    [publicKey, host],
+    [publicKey, host, platform],
   );
 
   const refreshList = useCallback(async (current: string | null) => {
@@ -96,9 +112,10 @@ const WidgetPage: FC = () => {
     let cancelled = false;
     (async () => {
       try {
-        const config = await widgetRequest<WidgetApp>(`/apps/${encodeURIComponent(publicKey)}`, { host });
+        const config = await widgetRequest<WidgetApp>(`/apps/${encodeURIComponent(publicKey)}`, { host, platform });
         if (cancelled) return;
         setApp(config);
+        sendToHost("ready");
         const stored = readToken(publicKey);
         if (stored) {
           const session = await createSession({ token: stored }).catch(() => null);
@@ -113,17 +130,25 @@ const WidgetPage: FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [publicKey, host, createSession, refreshList]);
+  }, [publicKey, host, platform, createSession, refreshList]);
 
-  // The host page can identify a signed-in user: Asotie.identify({ name, email }).
+  // Identify a signed-in user: from a website, Asotie.identify({ name, email }) in widget.js;
+  // from a mobile app, call window.Asotie.identify({...}) inside the web view.
   useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: string; user?: Identity } | null;
-      if (data?.type !== "ttu:identify" || !data.user) return;
-      identity.current = { name: data.user.name ?? null, email: data.user.email ?? null };
+    const identify = (user: Identity) => {
+      identity.current = {
+        name: user.name ?? null,
+        email: user.email ?? null,
+        externalId: user.externalId ?? null,
+      };
       void createSession({ token: readToken(publicKey) }).catch(() => undefined);
     };
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: string; user?: Identity } | null;
+      if ((data?.type === "ttu:identify" || data?.type === "asotie:identify") && data.user) identify(data.user);
+    };
     window.addEventListener("message", onMessage);
+    (window as unknown as { Asotie?: unknown }).Asotie = { identify };
     return () => window.removeEventListener("message", onMessage);
   }, [createSession, publicKey]);
 
@@ -235,9 +260,23 @@ const Shell: FC<{ app: WidgetApp | null; color: string; onBack?: () => void; chi
   color,
   onBack,
   children,
-}) => (
-  <div className="flex h-screen flex-col overflow-hidden bg-white font-sans text-gray-900">
-    <header className="shrink-0 px-5 pb-5 pt-4 text-white" style={{ background: color }}>
+}) => {
+  // How the chat is hosted: a website iframe, or a mobile app's web view.
+  const [params] = useSearchParams();
+  const mobile = detectPlatform(params.get("platform")) !== "web";
+  const showClose = !mobile || params.get("close") === "1";
+  return (
+  <div
+    className={cn(
+      "flex flex-col overflow-hidden bg-white font-sans text-gray-900",
+      // dvh tracks the visible area, so the on-screen keyboard never hides the composer.
+      mobile ? "h-[100dvh] pb-[env(safe-area-inset-bottom)]" : "h-screen",
+    )}
+  >
+    <header
+      className={cn("shrink-0 px-5 pb-5 text-white", mobile ? "pt-[calc(env(safe-area-inset-top)+1rem)]" : "pt-4")}
+      style={{ background: color }}
+    >
       <div className="flex items-center gap-2">
         {onBack && (
           <button onClick={onBack} aria-label="Back" className="-ml-2 rounded-full p-1.5 hover:bg-white/15">
@@ -248,9 +287,11 @@ const Shell: FC<{ app: WidgetApp | null; color: string; onBack?: () => void; chi
           <p className="truncate text-base font-semibold">{app?.config.title || app?.organizationName || "Chat"}</p>
           {app?.config.subtitle && <p className="truncate text-xs text-white/80">{app.config.subtitle}</p>}
         </div>
-        <button onClick={closeWidget} aria-label="Close chat" className="-mr-2 rounded-full p-1.5 hover:bg-white/15">
-          <XMarkIcon className="h-5 w-5" />
-        </button>
+        {showClose && (
+          <button onClick={closeWidget} aria-label="Close chat" className="-mr-2 rounded-full p-1.5 hover:bg-white/15">
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+        )}
       </div>
       {app && app.agents.length > 0 && !onBack && (
         <div className="mt-3 flex items-center gap-2">
@@ -268,7 +309,8 @@ const Shell: FC<{ app: WidgetApp | null; color: string; onBack?: () => void; chi
     <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     <p className="shrink-0 py-1.5 text-center text-[10px] text-gray-400">Powered by Asotie</p>
   </div>
-);
+  );
+};
 
 /* ─────────────────────────────── Home ──────────────────────────────── */
 

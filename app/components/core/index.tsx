@@ -434,7 +434,7 @@ export const CodeBlock: FC<{ value: string; className?: string; secret?: boolean
       <code
         className={cn(
           "min-w-0 flex-1 font-mono text-xs leading-relaxed text-ink",
-          multiline ? "whitespace-pre-wrap break-all" : "truncate",
+          multiline ? "overflow-x-auto whitespace-pre" : "truncate",
           !revealed && "select-none blur-[3px]"
         )}
       >

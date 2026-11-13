@@ -60,7 +60,13 @@ const base = `${config.apiUri}/api/v1/widget`;
 
 export const widgetRequest = async <T,>(
   path: string,
-  options: { method?: string; body?: unknown; token?: string | null; host?: string | null } = {},
+  options: {
+    method?: string;
+    body?: unknown;
+    token?: string | null;
+    host?: string | null;
+    platform?: string | null;
+  } = {},
 ): Promise<T> => {
   const response = await fetch(`${base}${path}`, {
     method: options.method ?? "GET",
@@ -68,6 +74,7 @@ export const widgetRequest = async <T,>(
       ...(options.body !== undefined && { "content-type": "application/json" }),
       ...(options.token && { authorization: `Bearer ${options.token}` }),
       ...(options.host && { "x-widget-host": options.host }),
+      ...(options.platform && options.platform !== "web" && { "x-widget-platform": options.platform }),
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
