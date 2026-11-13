@@ -1,4 +1,4 @@
-import { type FC, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useFormik } from "formik";
 import { LockClosedIcon } from "@heroicons/react/24/outline";
@@ -26,7 +26,18 @@ interface Props {
   onClose: () => void;
 }
 
-/** Two steps: pick a channel type, then configure it. Shows the secret key once at the end. */
+const TITLES: Record<AppType, string> = {
+  web_widget: "New web chat widget",
+  email: "New email inbox",
+  whatsapp: "New WhatsApp app",
+  api: "New API app",
+};
+
+/**
+ * Two steps: pick a channel type, then configure it. API apps then show their
+ * secret key once (it's what developers use); every other type goes straight
+ * to its setup guide, where nothing needs that key.
+ */
 const CreateAppModal: FC<Props> = ({ open, onClose }) => {
   const navigate = useNavigate();
   const me = useCurrentUser();
@@ -49,8 +60,14 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
       try {
         const result = await createApp({ ...valuesToInput(values, type), name: values.name.trim(), type });
         if (result) {
-          setCreated({ id: result.app.id, name: result.app.name, secretKey: result.secretKey });
           toast.success(`${result.app.name} created`);
+          if (type === "api") {
+            setCreated({ id: result.app.id, name: result.app.name, secretKey: result.secretKey });
+          } else {
+            // Replace the ?modal=create entry so Back returns to the list.
+            navigate(`/apps/${result.app.id}?tab=setup`, { replace: true });
+            setTimeout(reset, 200);
+          }
         }
       } catch (error) {
         if (getErrorCode(error) === "FORBIDDEN") setPlanError(getErrorMessage(error));
@@ -61,6 +78,17 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
       }
     },
   });
+
+  // A failed submit shows errors next to each field; bring the first one into
+  // view, since it may be scrolled out of sight above the Create button.
+  useEffect(() => {
+    if (!form.submitCount || form.isSubmitting) return;
+    const first = Object.keys(form.errors)[0];
+    if (!first) return;
+    const field = document.getElementById(first);
+    field?.scrollIntoView({ behavior: "smooth", block: "center" });
+    field?.focus({ preventScroll: true });
+  }, [form.submitCount, form.isSubmitting]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reset = () => {
     setType(null);
@@ -89,8 +117,8 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
     body = (
       <div className="space-y-4">
         <p className="text-sm text-ink-soft">
-          <span className="font-medium text-ink">{created.name}</span> is ready. This is its secret key for the
-          server-to-server API.
+          <span className="font-medium text-ink">{created.name}</span> is ready. Your developers use this secret key
+          to send conversations from your systems.
         </p>
         <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-sm text-amber-800 dark:text-amber-200">
           Copy it now — for your security it won&apos;t be shown again. You can rotate it later from the app&apos;s
@@ -183,7 +211,7 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
     <Modal
       open={open}
       onClose={created ? finish : close}
-      title={created ? "App created" : type ? `New ${APP_TYPES.find((t) => t.value === type)?.label}` : "New app"}
+      title={created ? "App created" : type ? TITLES[type] : "New app"}
       size="2xl"
       footer={footer}
     >

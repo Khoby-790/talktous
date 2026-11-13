@@ -167,6 +167,16 @@ interface InputProps {
   autoFocus?: boolean;
   className?: string;
   disabled?: boolean;
+  /** Shows a "*" after the label. */
+  required?: boolean;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  /**
+   * A credential from another service (an API token, an ID): masked like a
+   * password but NOT a password field, and opted out of browser and password
+   * manager autofill — otherwise Chrome treats the form as a login and fills
+   * in the user's own email and password.
+   */
+  secret?: boolean;
   values?: Record<string, unknown>;
   errors?: Record<string, unknown>;
   touched?: Record<string, unknown>;
@@ -187,6 +197,9 @@ export const TextInput: FC<InputProps> = ({
   autoFocus,
   className,
   disabled,
+  required,
+  inputMode,
+  secret,
   values = {},
   errors = {},
   touched = {},
@@ -198,18 +211,34 @@ export const TextInput: FC<InputProps> = ({
     <div className={cn("flex flex-col gap-1.5", className)}>
       <label htmlFor={id} className="text-sm font-medium text-ink-soft">
         {label}
+        {required && (
+          <span className="ml-0.5 text-red-500" aria-hidden="true">
+            *
+          </span>
+        )}
       </label>
       <input
         id={id}
         name={id}
-        type={type}
+        type={secret ? "text" : type}
         placeholder={placeholder}
         value={(values[id] as string) || ""}
         onChange={handleChange}
         onBlur={handleBlur}
         disabled={disabled}
-        autoComplete={autoComplete}
+        aria-required={required || undefined}
+        aria-invalid={hasError || undefined}
+        inputMode={inputMode}
+        autoComplete={secret ? "off" : autoComplete}
+        autoCorrect={secret ? "off" : undefined}
+        autoCapitalize={secret ? "off" : undefined}
+        spellCheck={secret ? false : undefined}
+        data-1p-ignore={secret || undefined}
+        data-lpignore={secret ? "true" : undefined}
+        data-bwignore={secret || undefined}
+        data-form-type={secret ? "other" : undefined}
         autoFocus={autoFocus}
+        style={secret ? ({ WebkitTextSecurity: "disc" } as React.CSSProperties) : undefined}
         className={cn(
           fieldBase,
           "h-[42px]",
@@ -466,16 +495,28 @@ const channelLabels: Record<string, string> = {
 
 export const channelLabel = (channel: string) => channelLabels[channel] ?? channel;
 
-export const ChannelBadge: FC<{ channel: string; className?: string }> = ({ channel, className }) => (
-  <span
-    className={cn(
-      "inline-flex items-center rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-soft",
-      className
-    )}
-  >
-    {channelLabel(channel)}
-  </span>
-);
+/**
+ * The channel, plus which app it came in on when known: with two WhatsApp
+ * numbers (or two inboxes) "WhatsApp" alone doesn't tell agents which one.
+ */
+export const ChannelBadge: FC<{ channel: string; appName?: string | null; className?: string }> = ({
+  channel,
+  appName,
+  className,
+}) => {
+  const text = appName ? `${channelLabel(channel)} · ${appName}` : channelLabel(channel);
+  return (
+    <span
+      title={text}
+      className={cn(
+        "inline-flex max-w-[14rem] items-center truncate rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-soft",
+        className
+      )}
+    >
+      {text}
+    </span>
+  );
+};
 
 const priorityStyles: Record<string, string> = {
   low: "text-ink-muted",

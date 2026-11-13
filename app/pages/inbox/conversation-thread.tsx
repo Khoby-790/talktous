@@ -506,7 +506,7 @@ const ConversationThread: FC<ConversationThreadProps> = ({
                 {conversation.customer.name}
               </Link>
               <Badge status={conversation.status} />
-              <ChannelBadge channel={conversation.channel} />
+              <ChannelBadge channel={conversation.channel} appName={conversation.app?.name} />
             </div>
             <p className="mt-0.5 truncate text-xs text-ink-muted">
               {conversation.subject ? `${conversation.subject} · ` : ""}

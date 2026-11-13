@@ -71,7 +71,7 @@ const CustomerSidebar: FC<CustomerSidebarProps> = ({ conversation, onClose, link
       <section className="border-b border-line px-5 py-4">
         <p className="label-caps mb-2 text-ink-muted">This conversation</p>
         <Row label="Channel">
-          <ChannelBadge channel={conversation.channel} />
+          <ChannelBadge channel={conversation.channel} appName={conversation.app?.name} />
         </Row>
         <Row label="App">{conversation.app?.name ?? <EmptyValue />}</Row>
         <Row label="First response">

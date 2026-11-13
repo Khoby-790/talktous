@@ -63,7 +63,7 @@ const ListItem: FC<{ conversation: ConversationSummary; active: boolean; onSelec
         </div>
         <p className={cn("mt-0.5 truncate text-xs", unread ? "text-ink" : "text-ink-muted")}>{preview}</p>
         <div className="mt-1.5 flex items-center gap-2">
-          <ChannelBadge channel={c.channel} className="px-1.5 py-0 text-[10px]" />
+          <ChannelBadge channel={c.channel} appName={c.app?.name} className="px-1.5 py-0 text-[10px]" />
           {(c.priority === "high" || c.priority === "urgent") && <PriorityBadge priority={c.priority} className="text-[10px]" />}
           <AutoReplyBadge autoReply={c.aiAutoReply} />
           <TriageBadges triage={c.aiTriage} />
