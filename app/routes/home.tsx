@@ -9,7 +9,7 @@ export function meta({}: Route.MetaArgs) {
     {
       name: "description",
       content:
-        "Manage all your customer conversations in one unified inbox. Web chat, email, and WhatsApp — all in one place.",
+        "Support that feels human, at AI speed. Real people answer your customers on live chat, email and WhatsApp, with AI drafting and summarising beside them.",
     },
   ];
 }
