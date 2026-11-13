@@ -7,7 +7,12 @@
 export type AgentRole = "admin" | "supervisor" | "agent";
 export type AgentStatus = "online" | "offline" | "busy" | "away";
 export type PlanType = "starter" | "growth" | "enterprise";
-export type BillingStatus = "active" | "trialing" | "past_due" | "canceled";
+export type BillingStatus = "incomplete" | "active" | "trialing" | "past_due" | "canceled";
+
+export type LockReason = "no_payment" | "trial_ended" | "payment_failed" | "canceled";
+
+/** Whether the team can use the dashboard. Customers' messages always arrive. */
+export type BillingAccess = { locked: boolean; reason: LockReason | null; endsAt: string | null };
 export type AppType = "web_widget" | "api" | "email" | "whatsapp";
 export type AppStatus = "active" | "inactive" | "draft";
 export type ConversationStatus = "open" | "pending" | "resolved" | "closed";
@@ -36,6 +41,8 @@ export type Organization = {
   timezone: string;
   plan: PlanType;
   billingStatus: BillingStatus;
+  trialEndsAt: string | null;
+  access: BillingAccess;
   onboardedAt: string | null;
   createdAt: string;
   settings: OrganizationSettings;
@@ -374,7 +381,10 @@ export type Integration = {
 export type PlanInfo = {
   id: PlanType;
   name: string;
+  /** USD list price, shown when payments aren't configured. */
   priceMonthly: number;
+  /** The Paystack plan's price; null when payments aren't configured or the plan is free. */
+  price: { amount: number; currency: string; interval: string } | null;
   seatLimit: number | null;
   appLimit: number | null;
   conversationLimit: number | null;
@@ -388,8 +398,19 @@ export type Billing = {
   plan: PlanType;
   billingStatus: BillingStatus;
   currentPeriodEnd: string | null;
-  stripeEnabled: boolean;
-  hasPaymentMethod: boolean;
+  trialEndsAt: string | null;
+  trialDays: number;
+  /** Choosing a plan now starts the free trial (card check) instead of charging. */
+  trialAvailable: boolean;
+  paymentsEnabled: boolean;
+  hasSubscription: boolean;
+  /** Plan switches during the trial need no payment. */
+  cardOnFile: boolean;
+  /** Cancelled but usable until currentPeriodEnd. */
+  cancelsAtPeriodEnd: boolean;
+  /** The refundable charge that verifies a card before the trial. */
+  cardCheck: { amount: number; currency: string } | null;
+  access: BillingAccess;
   overLimit: boolean;
   usage: { seats: number; apps: number; conversationsThisMonth: number };
   limits: PlanInfo;

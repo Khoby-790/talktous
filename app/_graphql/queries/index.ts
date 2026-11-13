@@ -285,8 +285,22 @@ export const BILLING = gql`
       plan
       billingStatus
       currentPeriodEnd
-      stripeEnabled
-      hasPaymentMethod
+      trialEndsAt
+      trialDays
+      trialAvailable
+      paymentsEnabled
+      hasSubscription
+      cardOnFile
+      cancelsAtPeriodEnd
+      cardCheck {
+        amount
+        currency
+      }
+      access {
+        locked
+        reason
+        endsAt
+      }
       overLimit
       usage {
         seats
@@ -296,6 +310,18 @@ export const BILLING = gql`
       limits {
         ...PlanFields
       }
+      plans {
+        ...PlanFields
+      }
+    }
+  }
+  ${PLAN_FIELDS}
+`;
+
+export const PRICING = gql`
+  query Pricing {
+    pricing {
+      trialDays
       plans {
         ...PlanFields
       }

@@ -3,6 +3,7 @@ import { redirect } from "react-router";
 import { client } from "~/_graphql";
 import {
   clearAuth,
+  currentOrgVar,
   currentTokenVar,
   currentUserVar,
   setCurrentOrg,
@@ -64,15 +65,38 @@ const signInRedirect = (request: Request) => {
   return redirect(next && next !== "/" ? `/sign-in?next=${encodeURIComponent(next)}` : "/sign-in");
 };
 
-/** For loaders of signed-in pages: the session, or a redirect to sign in / onboarding. */
+/** Pages an admin of a locked (unpaid) organization can still open. */
+const LOCKED_ADMIN_PATHS = ["/settings/billing", "/profile"];
+
+/**
+ * The organization as of now: the session is fetched once per page load, but
+ * paying (or cancelling) updates currentOrgVar straight away.
+ */
+const latestOrg = (session: Session): CurrentOrg => {
+  const org = currentOrgVar();
+  return org && org.id === session.org.id ? org : session.org;
+};
+
+/** Where a member of a locked organization belongs, or null if `path` is fine. */
+const lockedRedirect = (org: CurrentOrg, role: AgentRole, path: string): string | null => {
+  if (!org.access?.locked) return null;
+  if (role !== "admin") return path === "/subscription-ended" ? null : "/subscription-ended";
+  if (!org.onboardedAt) return path === "/onboarding" ? null : "/onboarding";
+  return LOCKED_ADMIN_PATHS.includes(path) ? null : "/settings/billing";
+};
+
+/** For loaders of signed-in pages: the session, or a redirect to sign in / onboarding / billing. */
 export const requireSession = async (request: Request): Promise<Session> => {
   const session = await loadSession();
   if (!session) throw signInRedirect(request);
   const path = new URL(request.url).pathname;
-  if (!session.org.onboardedAt && session.user.role === "admin" && path !== "/onboarding") {
+  const org = latestOrg(session);
+  if (!org.onboardedAt && session.user.role === "admin" && path !== "/onboarding") {
     throw redirect("/onboarding");
   }
-  return session;
+  const locked = lockedRedirect(org, session.user.role, path);
+  if (locked) throw redirect(locked);
+  return { ...session, org };
 };
 
 /** For loaders of role-restricted pages. Members without the role go to the dashboard. */
@@ -85,6 +109,8 @@ export const requireRoles = async (request: Request, roles: AgentRole[]): Promis
 /** Where to send someone right after they sign in. */
 export const postSignInPath = (session: { user: CurrentUser; org: CurrentOrg }, next?: string | null) => {
   if (!session.org.onboardedAt && session.user.role === "admin") return "/onboarding";
+  const locked = lockedRedirect(session.org, session.user.role, "");
+  if (locked) return locked;
   if (next && next.startsWith("/") && !next.startsWith("//")) return next;
   return session.user.role === "agent" ? "/inbox" : "/dashboard";
 };

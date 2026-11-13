@@ -1,6 +1,6 @@
 import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { ErrorLink } from "@apollo/client/link/error";
-import { clearAuth } from "~/_graphql/cache/auth";
+import { clearAuth, currentUserVar } from "~/_graphql/cache/auth";
 
 /** Pages that work signed-out; an auth error there must not bounce to sign-in. */
 const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/forgot-password", "/reset-password", "/accept-invite", "/widget"];
@@ -28,5 +28,17 @@ export const errorLink = new ErrorLink(({ error, operation }) => {
     (ServerError.is(error) && error.statusCode === 401) ||
     (CombinedGraphQLErrors.is(error) &&
       error.errors.some((e) => e.extensions?.code === "UNAUTHENTICATED"));
-  if (unauthenticated) signOutAndRedirect();
+  if (unauthenticated) {
+    signOutAndRedirect();
+    return;
+  }
+  // The organization's subscription lapsed mid-session: send them where they can sort it out.
+  const paymentRequired =
+    CombinedGraphQLErrors.is(error) && error.errors.some((e) => e.extensions?.code === "PAYMENT_REQUIRED");
+  if (paymentRequired && typeof window !== "undefined") {
+    const target = currentUserVar()?.role === "admin" ? "/settings/billing" : "/subscription-ended";
+    if (window.location.pathname !== target && window.location.pathname !== "/onboarding") {
+      window.location.assign(target);
+    }
+  }
 });

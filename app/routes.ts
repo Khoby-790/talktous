@@ -18,6 +18,8 @@ export default [
   ]),
 
   route("onboarding", "pages/onboarding/index.tsx"),
+  // Non-admins of an organization whose subscription isn't active.
+  route("subscription-ended", "pages/subscription-ended/index.tsx"),
 
   // The chat UI customers see inside the embedded widget iframe. No session.
   route("widget/:publicKey", "pages/widget/index.tsx"),

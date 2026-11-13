@@ -75,6 +75,7 @@ const extraBadgeStyles: Record<string, string> = {
   agent: badgeStyles.closed,
   past_due: "bg-red-500/12 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   trialing: badgeStyles.pending,
+  incomplete: "bg-red-500/12 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   canceled: badgeStyles.inactive,
 };
 

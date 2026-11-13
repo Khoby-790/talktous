@@ -11,6 +11,12 @@ export const ORGANIZATION_FIELDS = gql`
     timezone
     plan
     billingStatus
+    trialEndsAt
+    access {
+      locked
+      reason
+      endsAt
+    }
     onboardedAt
     createdAt
     settings {
@@ -250,6 +256,11 @@ export const PLAN_FIELDS = gql`
     id
     name
     priceMonthly
+    price {
+      amount
+      currency
+      interval
+    }
     seatLimit
     appLimit
     conversationLimit

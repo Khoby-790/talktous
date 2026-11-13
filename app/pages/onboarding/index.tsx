@@ -1,5 +1,5 @@
 import { type FC, useState } from "react";
-import { redirect, useNavigate } from "react-router";
+import { redirect, useNavigate, useSearchParams } from "react-router";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useReactiveVar } from "@apollo/client/react";
@@ -9,22 +9,41 @@ import { CodeBlock, FormError, SelectInput, TextInput } from "~/components/core"
 import { Shimmer } from "~/components/shimmer";
 import { PrimaryButton } from "~/components/buttons";
 import AuthLayout from "~/layouts/auth";
-import { useBilling, useChangePlan, useCompleteOnboarding, useCreateApp } from "~/hooks/data";
+import { formatMoney, formatPlanPrice, useBilling, useChangePlan, useCompleteOnboarding, useCreateApp } from "~/hooks/data";
+import { useCheckoutReturn } from "~/hooks/ui/use-checkout-return";
 import { toast } from "~/hooks/ui/use-toast";
 import { applyFormErrors, getErrorMessage } from "~/lib/errors";
 import { loadSession, resetSession } from "~/lib/session";
 import { cn } from "~/lib/utils";
+import { formatDate } from "~/utils/date";
 import type { PlanType } from "~/utils/types";
 
 export function meta() {
   return [{ title: "Set up your workspace — Asotie" }];
 }
 
-export async function clientLoader() {
+export async function clientLoader({ request }: { request: Request }) {
   const session = await loadSession();
   if (!session) throw redirect("/sign-in?next=%2Fonboarding");
-  if (session.user.role !== "admin" || session.org.onboardedAt) throw redirect("/dashboard");
+  if (session.user.role !== "admin") throw redirect("/dashboard");
+  // The organization step marks onboarding done, so returning from Paystack Checkout
+  // (?checkout=…) must still land here to confirm the payment and finish the wizard.
+  const returningFromCheckout = new URL(request.url).searchParams.has("checkout");
+  if (session.org.onboardedAt && !returningFromCheckout) throw redirect("/dashboard");
   return null;
+}
+
+/** Clearing ?checkout= after a payment mustn't re-run the guard above mid-wizard. */
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
+  defaultShouldRevalidate,
+}: {
+  currentUrl: URL;
+  nextUrl: URL;
+  defaultShouldRevalidate: boolean;
+}) {
+  return currentUrl.pathname === nextUrl.pathname ? false : defaultShouldRevalidate;
 }
 
 
@@ -140,17 +159,32 @@ const OrganizationStep: FC<{ onDone: () => void }> = ({ onDone }) => {
   );
 };
 
-/** Step 2 — plan. Starter is the default; paid plans go through Stripe when it's configured. */
+/**
+ * Step 2 — plan. With payments on, every plan is paid after a free trial that
+ * starts with a card on file, so this step can't be skipped.
+ */
 const PlanStep: FC<{ onBack: () => void; onDone: () => void }> = ({ onDone }) => {
   const { billing, loading } = useBilling();
   const { changePlan, loading: changing } = useChangePlan();
   const [selected, setSelected] = useState<PlanType | null>(null);
-  const current = selected ?? billing?.plan ?? "starter";
+  const current = selected ?? billing?.plan ?? "growth";
+  // Back from Paystack Checkout: confirm the card, then carry on.
+  const { confirming } = useCheckoutReturn(onDone);
+
+  const payments = Boolean(billing?.paymentsEnabled);
+  // Already has a trial or plan (e.g. came back to this step): just continue.
+  const ready = billing && (!payments || !billing.access.locked);
+  const needsCheckout = payments && (!ready || current !== billing?.plan);
+  const firstCharge =
+    billing?.trialEndsAt && new Date(billing.trialEndsAt).getTime() > Date.now()
+      ? billing.trialEndsAt
+      : new Date(Date.now() + (billing?.trialDays ?? 30) * 86_400_000).toISOString();
+  const selectedPlan = billing?.plans.find((p) => p.id === current);
 
   const submit = async () => {
     try {
-      if (billing && current !== billing.plan) {
-        const checkoutUrl = await changePlan(current);
+      if (billing && (current !== billing.plan || needsCheckout)) {
+        const checkoutUrl = await changePlan(current, "onboarding");
         if (checkoutUrl) {
           window.location.assign(checkoutUrl);
           return;
@@ -165,10 +199,16 @@ const PlanStep: FC<{ onBack: () => void; onDone: () => void }> = ({ onDone }) =>
   return (
     <div className="space-y-4">
       <div className="text-center">
-        <h2 className="text-xl font-medium text-ink">Choose your plan</h2>
-        <p className="mt-1 text-sm text-ink-soft">Start free — you can change plans any time in Settings.</p>
+        <h2 className="text-xl font-medium text-ink">
+          {payments ? `Start your ${billing?.trialDays ?? 30}-day free trial` : "Choose your plan"}
+        </h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          {payments
+            ? "Pick a plan — it's free until your trial ends, and you can switch or cancel any time."
+            : "You can change plans any time in Settings."}
+        </p>
       </div>
-      {loading && !billing ? (
+      {(loading && !billing) || confirming ? (
         <div className="grid gap-3 sm:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <Shimmer key={i} className="h-48" />
@@ -190,9 +230,12 @@ const PlanStep: FC<{ onBack: () => void; onDone: () => void }> = ({ onDone }) =>
             >
               <p className="font-medium text-ink">{plan.name}</p>
               <p className="mt-1 text-2xl font-medium tracking-display text-figure">
-                ${plan.priceMonthly}
-                <span className="text-xs font-normal text-ink-muted"> / mo</span>
+                {formatPlanPrice(plan).amount}
+                {formatPlanPrice(plan).per && (
+                  <span className="text-xs font-normal text-ink-muted"> / {formatPlanPrice(plan).per}</span>
+                )}
               </p>
+              {payments && <p className="mt-0.5 text-[11px] text-ink-muted">after the free trial</p>}
               <ul className="mt-3 space-y-1.5">
                 {plan.features.map((f) => (
                   <li key={f} className="flex gap-1.5 text-xs text-ink-soft">
@@ -205,13 +248,27 @@ const PlanStep: FC<{ onBack: () => void; onDone: () => void }> = ({ onDone }) =>
           ))}
         </div>
       )}
-      {billing && !billing.stripeEnabled && (
+      {billing && !payments && (
         <p className="text-center text-xs text-ink-muted">
-          Billing isn&apos;t configured on this server — the plan you choose applies immediately.
+          Payments aren&apos;t set up on this server — the plan you choose applies immediately.
         </p>
       )}
-      <PrimaryButton className="w-full" onClick={submit} loading={changing} disabled={!billing}>
-        Continue
+      {billing && needsCheckout && selectedPlan && (
+        <p className="text-center text-xs text-ink-muted">
+          {billing.trialAvailable ? (
+            <>
+              Add a card on Paystack&apos;s secure checkout. We verify it with a small{" "}
+              {billing.cardCheck ? formatMoney(billing.cardCheck.amount, billing.cardCheck.currency) : ""} charge
+              that&apos;s refunded straight away. Your first payment of {formatPlanPrice(selectedPlan).amount} is on{" "}
+              {formatDate(firstCharge)} — cancel before then and you won&apos;t be charged.
+            </>
+          ) : (
+            <>You&apos;ll pay on Paystack&apos;s secure checkout and come straight back here.</>
+          )}
+        </p>
+      )}
+      <PrimaryButton className="w-full" onClick={submit} loading={changing} disabled={!billing || confirming}>
+        {!needsCheckout ? "Continue" : billing?.trialAvailable ? "Add card & start free trial" : "Continue to payment"}
       </PrimaryButton>
     </div>
   );
@@ -304,7 +361,9 @@ const ChannelStep: FC<{ onFinish: () => void }> = ({ onFinish }) => {
 
 const OnboardingPage: FC = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
+  const [params] = useSearchParams();
+  // Paystack Checkout returns here with ?checkout=…; the organization step is already done.
+  const [step, setStep] = useState(params.get("checkout") ? 1 : 0);
 
   return (
     <AuthLayout wide>

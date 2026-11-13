@@ -294,12 +294,34 @@ export const TEST_INTEGRATION = gql`
 
 /* ── Billing ─────────────────────────────────────────────────────────── */
 export const CHANGE_PLAN = gql`
-  mutation ChangePlan($plan: Plan!) {
-    changePlan(plan: $plan) {
+  mutation ChangePlan($plan: Plan!, $returnTo: CheckoutReturn) {
+    changePlan(plan: $plan, returnTo: $returnTo) {
       checkoutUrl
       organization {
         ...OrganizationFields
       }
+    }
+  }
+  ${ORGANIZATION_FIELDS}
+`;
+
+export const CONFIRM_CHECKOUT = gql`
+  mutation ConfirmCheckout($reference: String!) {
+    confirmCheckout(reference: $reference) {
+      paid
+      trialStarted
+      organization {
+        ...OrganizationFields
+      }
+    }
+  }
+  ${ORGANIZATION_FIELDS}
+`;
+
+export const CANCEL_SUBSCRIPTION = gql`
+  mutation CancelSubscription {
+    cancelSubscription {
+      ...OrganizationFields
     }
   }
   ${ORGANIZATION_FIELDS}

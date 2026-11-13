@@ -3,6 +3,7 @@ import { BrandLogo } from "~/components/brand";
 import { Link } from "react-router";
 import { ArrowUpRightIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { cn } from "~/lib/utils";
+import { formatPlanPrice, usePricing } from "~/hooks/data";
 import { ParticleSphere } from "./particle-sphere";
 import { Molecule } from "./molecule";
 
@@ -68,11 +69,30 @@ const testimonials = [
   },
 ];
 
+/** Prices come from the API (the Paystack plans), so they always match what customers pay. */
 const plans = [
-  { name: "Starter", price: "$0", cadence: "/ mo", features: ["3 agent seats", "1 support app", "500 conversations / mo", "Web chat & email"], cta: "Get started", highlight: false },
-  { name: "Growth", price: "$79", cadence: "/ mo", features: ["15 agent seats", "5 support apps", "5,000 conversations / mo", "WhatsApp channel", "Integrations & webhooks"], cta: "Start with Growth", highlight: true },
-  { name: "Enterprise", price: "$299", cadence: "/ mo", features: ["Unlimited seats", "Unlimited apps", "Unlimited conversations", "All channels & integrations", "Priority support"], cta: "Get Enterprise", highlight: false },
+  { id: "starter", name: "Starter", features: ["3 agent seats", "1 support app", "500 conversations / mo", "Web chat & email"], cta: "Start free trial", highlight: false },
+  { id: "growth", name: "Growth", features: ["15 agent seats", "5 support apps", "5,000 conversations / mo", "WhatsApp channel", "Integrations & webhooks"], cta: "Start with Growth", highlight: true },
+  { id: "enterprise", name: "Enterprise", features: ["Unlimited seats", "Unlimited apps", "Unlimited conversations", "All channels & integrations", "Priority support"], cta: "Get Enterprise", highlight: false },
 ];
+
+const PlanPrice: FC<{ id: string; highlight: boolean }> = ({ id, highlight }) => {
+  const { pricing } = usePricing();
+  const plan = pricing?.plans.find((p) => p.id === id);
+  const price = plan ? formatPlanPrice(plan) : null;
+  return (
+    <p className="mt-10 flex min-h-[61px] items-baseline gap-2">
+      {price && (
+        <>
+          <span className={cn("text-[61px] font-medium leading-none tracking-display", highlight ? "text-phosphor" : "text-white")}>
+            {price.amount}
+          </span>
+          {price.per && <span className="text-sm text-silver">/ {price.per}</span>}
+        </>
+      )}
+    </p>
+  );
+};
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -217,7 +237,7 @@ const LandingPage: FC = () => (
           <Link to="/sign-in" className="label-caps hidden font-normal text-silver transition hover:text-white sm:block">
             Sign in
           </Link>
-          <AuroraLink to="/sign-up">Start free</AuroraLink>
+          <AuroraLink to="/sign-up">Start free trial</AuroraLink>
         </div>
       </nav>
     </header>
@@ -245,7 +265,7 @@ const LandingPage: FC = () => (
         </p>
         <div className="fade-up-4 mt-12 flex flex-col items-center gap-6 sm:flex-row sm:gap-10">
           <AuroraLink to="/sign-up" size="lg">
-            Get started free
+            Try it free for 30 days
             <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
           </AuroraLink>
           <GhostLink to="/sign-in">
@@ -376,9 +396,9 @@ const LandingPage: FC = () => (
       <div className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
         <div>
           <Eyebrow>Pricing</Eyebrow>
-          <h2 className="mt-6 text-[clamp(2.1rem,4.6vw,3.8rem)] leading-none tracking-display text-white">Start free. Scale as you grow.</h2>
+          <h2 className="mt-6 text-[clamp(2.1rem,4.6vw,3.8rem)] leading-none tracking-display text-white">30 days free. Then scale as you grow.</h2>
         </div>
-        <p className="max-w-[340px] text-base leading-[1.45] text-silver">No setup fees, no per-seat surprises. Change plans any time.</p>
+        <p className="max-w-[340px] text-base leading-[1.45] text-silver">Every plan starts with a 30-day free trial. No setup fees, no per-seat surprises. Change plans any time.</p>
       </div>
       <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-3">
         {plans.map((p) => (
@@ -393,12 +413,7 @@ const LandingPage: FC = () => (
               <span className="label-caps text-mist">{p.name}</span>
               {p.highlight && <span className="text-[10px] uppercase tracking-[0.15em] text-phosphor">Most popular</span>}
             </div>
-            <p className="mt-10 flex items-baseline gap-2">
-              <span className={cn("text-[61px] font-medium leading-none tracking-display", p.highlight ? "text-phosphor" : "text-white")}>
-                {p.price}
-              </span>
-              {p.cadence && <span className="text-sm text-silver">{p.cadence}</span>}
-            </p>
+            <PlanPrice id={p.id} highlight={p.highlight} />
             <ul className="mb-10 mt-10 flex-1 space-y-3.5">
               {p.features.map((f) => (
                 <li key={f} className="flex items-center gap-3 text-[15px] text-silver">
@@ -438,7 +453,7 @@ const LandingPage: FC = () => (
           </h2>
           <div className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10">
             <AuroraLink to="/sign-up" size="lg">
-              Get started free
+              Try it free for 30 days
               <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
             </AuroraLink>
             <GhostLink to="/sign-in">

@@ -47,7 +47,7 @@ const SignUpPage: FC = () => {
 
   return (
     <form onSubmit={form.handleSubmit} className="space-y-4" noValidate>
-      <AuthHeading title="Create your account" subtitle="Start free — set up your support workspace in minutes." />
+      <AuthHeading title="Create your account" subtitle="Start your 30-day free trial — set up your support workspace in minutes." />
       <FormError message={error} />
       <TextInput id="name" label="Your name" placeholder="Ada Lovelace" autoComplete="name" autoFocus {...form} />
       <TextInput id="email" label="Work email" type="email" placeholder="you@company.com" autoComplete="email" {...form} />

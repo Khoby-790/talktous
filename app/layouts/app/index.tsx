@@ -244,7 +244,11 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-ink">{org?.name || "Asotie"}</p>
-          <p className="text-[11px] capitalize text-ink-muted">{org?.plan || "starter"} plan</p>
+          <p className="text-[11px] text-ink-muted">
+            {org?.billingStatus === "incomplete"
+              ? "No plan yet"
+              : `${(org?.plan || "starter").replace(/^./, (c) => c.toUpperCase())} plan${org?.billingStatus === "trialing" ? " · trial" : ""}`}
+          </p>
         </div>
       </div>
 
@@ -307,6 +311,46 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
         <UserMenu onSignOut={onSignOut} />
       </div>
     </aside>
+  );
+};
+
+/**
+ * Admins see a heads-up while access is about to end: a trial without a card,
+ * a failed payment in its grace period, or a cancelled subscription.
+ */
+const BillingNotice: FC = () => {
+  const org = useReactiveVar(currentOrgVar);
+  const user = useReactiveVar(currentUserVar);
+  const location = useLocation();
+  const access = org?.access;
+  if (!org || !access || access.locked || !access.endsAt || user?.role !== "admin") return null;
+  if (location.pathname === "/settings/billing") return null;
+  const status = org.billingStatus;
+  // (A trial with a card on file has no endsAt: it renews automatically.)
+  if (!["trialing", "past_due", "canceled"].includes(status)) return null;
+  const days = Math.max(0, Math.ceil((new Date(access.endsAt).getTime() - Date.now()) / 86_400_000));
+  if (status === "trialing" && days > 7) return null;
+  const when = days === 0 ? "today" : days === 1 ? "tomorrow" : `in ${days} days`;
+  const text =
+    status === "past_due"
+      ? `Your last payment didn't go through. Update your card — your team's access pauses ${when}.`
+      : status === "canceled"
+        ? `Your subscription is cancelled — your team's access ends ${when}.`
+        : `Your free trial ends ${when}. Add a card to keep your team's access.`;
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b px-4 py-2 text-center text-sm",
+        status === "past_due"
+          ? "border-red-500/20 bg-red-500/10 text-red-800 dark:text-red-200"
+          : "border-amber-500/20 bg-amber-500/10 text-amber-900 dark:text-amber-100",
+      )}
+    >
+      <span>{text}</span>
+      <NavLink to="/settings/billing" className="font-medium underline underline-offset-2">
+        Go to billing
+      </NavLink>
+    </div>
   );
 };
 
@@ -392,6 +436,7 @@ const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
             </div>
           </div>
         </header>
+        <BillingNotice />
 
         <main className={cn("flex-1 bg-app", fullBleed ? "overflow-hidden" : "overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-7")}>
           {fullBleed ? children : <div className="mx-auto max-w-7xl">{children}</div>}
