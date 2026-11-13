@@ -8,6 +8,8 @@ import {
 } from "react-router";
 import { ApolloProvider } from "@apollo/client/react";
 import { client } from "~/_graphql";
+import { Spinner } from "~/components/core";
+import { Toaster } from "~/components/core/Toaster";
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
 import { themeInitScript } from "~/hooks/ui/use-theme";
@@ -24,6 +26,10 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..500&display=swap",
   },
   { rel: "stylesheet", href: stylesheet },
+  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+  { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+  { rel: "icon", href: "/favicon.ico", sizes: "any" },
+  { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -49,7 +55,17 @@ export default function App() {
   return (
     <ApolloProvider client={client}>
       <Outlet />
+      <Toaster />
     </ApolloProvider>
+  );
+}
+
+/** Shown while the SPA boots, before any route has loaded. */
+export function HydrateFallback() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-app text-primary-600">
+      <Spinner className="h-6 w-6" />
+    </div>
   );
 }
 
@@ -70,9 +86,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="container mx-auto p-4 pt-16">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="mx-auto max-w-2xl p-6 pt-24 text-ink">
+      <p className="label-caps text-ink-muted">{message}</p>
+      <h1 className="mt-3 text-3xl font-medium tracking-display">Something went wrong</h1>
+      <p className="mt-3 text-sm text-ink-soft">{details}</p>
+      <a href="/" className="mt-6 inline-block text-sm font-medium text-primary-600 dark:text-primary-300">
+        ← Back to safety
+      </a>
       {stack && (
         <pre className="w-full overflow-x-auto p-4">
           <code>{stack}</code>

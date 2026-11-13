@@ -1,128 +1,76 @@
-import { type FC, useState } from "react";
-import { Header } from "~/components/layouts";
-import { TextInput } from "~/components/core";
-import { PrimaryButton } from "~/components/buttons";
-import SelectInput from "~/components/core/SelectInput";
-import { useFormik } from "formik";
-import { mockOrg } from "~/mock/data";
-import { mockSubmit } from "~/mock/service";
+import { type FC } from "react";
+import { NavLink, useParams } from "react-router";
+import { Header, PageShimmer } from "~/components/layouts";
+import { Card } from "~/components/core";
+import { useOrganization } from "~/hooks/data";
+import { requireRoles } from "~/lib/session";
 import { cn } from "~/lib/utils";
+import { BillingSection } from "./sections/billing";
+import { ConversationsSection } from "./sections/conversations";
+import { GeneralSection } from "./sections/general";
+import { RolesSection } from "./sections/roles";
+import { SecuritySection } from "./sections/security";
+import type { Route } from "./+types/index";
 
-type Tab = "general" | "billing" | "notifications";
+export function meta() {
+  return [{ title: "Settings — Asotie" }];
+}
 
-const tabs: { id: Tab; label: string }[] = [
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  await requireRoles(request, ["admin"]);
+  return null;
+}
+
+const SECTIONS = [
   { id: "general", label: "General" },
   { id: "billing", label: "Billing" },
-  { id: "notifications", label: "Notifications" },
-];
-
-const timezoneOptions = [
-  { label: "UTC", value: "UTC" },
-  { label: "America/New_York", value: "America/New_York" },
-  { label: "America/Los_Angeles", value: "America/Los_Angeles" },
-  { label: "Europe/London", value: "Europe/London" },
-  { label: "Africa/Accra", value: "Africa/Accra" },
-];
-
-const GeneralSettings: FC = () => {
-  const [saved, setSaved] = useState(false);
-
-  const form = useFormik({
-    initialValues: {
-      name: mockOrg.name,
-      industry: mockOrg.industry,
-      timezone: mockOrg.timezone,
-    },
-    onSubmit: async (_v) => {
-      await mockSubmit(null);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    },
-  });
-
-  return (
-    <form onSubmit={form.handleSubmit} className="max-w-xl space-y-6">
-      <div>
-        <p className="text-[11px] font-medium uppercase tracking-widest text-ink-muted">Organization</p>
-        <div className="mt-3 space-y-4">
-          <TextInput
-            id="name"
-            label="Organization Name"
-            values={form.values}
-            errors={form.errors}
-            touched={form.touched}
-            handleChange={form.handleChange}
-            handleBlur={form.handleBlur}
-          />
-          <TextInput
-            id="industry"
-            label="Industry"
-            values={form.values}
-            errors={form.errors}
-            touched={form.touched}
-            handleChange={form.handleChange}
-            handleBlur={form.handleBlur}
-          />
-          <SelectInput
-            id="timezone"
-            label="Timezone"
-            options={timezoneOptions}
-            values={form.values}
-            errors={form.errors}
-            touched={form.touched}
-            setFieldValue={form.setFieldValue}
-            handleBlur={form.handleBlur}
-          />
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <PrimaryButton type="submit" loading={form.isSubmitting}>Save Changes</PrimaryButton>
-        {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved!</span>}
-      </div>
-    </form>
-  );
-};
+  { id: "conversations", label: "Conversations" },
+  { id: "roles", label: "Roles" },
+  { id: "security", label: "Security" },
+] as const;
 
 const SettingsPage: FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("general");
+  const params = useParams();
+  const section = SECTIONS.find((s) => s.id === params.section)?.id ?? "general";
+  const { organization, loading } = useOrganization();
 
   return (
     <div>
-      <Header title="Settings" description="Manage your organization settings" />
-      <div className="mb-6 flex gap-1 border-b border-line">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "-mb-px border-b-2 px-4 py-2 text-sm font-medium transition",
-              activeTab === tab.id
-                ? "border-primary-600 text-primary-600 dark:text-primary-400"
-                : "border-transparent text-ink-soft hover:text-ink"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <Header title="Settings" description="Manage your organization, plan and policies" />
+      <div className="flex flex-col gap-6 lg:flex-row">
+        <nav className="flex shrink-0 gap-1 overflow-x-auto lg:w-48 lg:flex-col" aria-label="Settings sections">
+          {SECTIONS.map((s) => (
+            <NavLink
+              key={s.id}
+              to={`/settings/${s.id}`}
+              className={cn(
+                "shrink-0 rounded-md px-3 py-2 text-sm font-medium transition",
+                section === s.id
+                  ? "bg-primary-50 text-primary-800 dark:bg-kelp dark:text-white"
+                  : "text-ink-soft hover:bg-surface-2 hover:text-ink",
+              )}
+            >
+              {s.label}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="min-w-0 flex-1">
+          {section === "billing" && <BillingSection />}
+          {section === "roles" && <RolesSection />}
+          {["general", "conversations", "security"].includes(section) &&
+            (loading && !organization ? (
+              <PageShimmer rows={1} />
+            ) : !organization ? (
+              <Card className="p-6 text-sm text-ink-soft">Couldn&apos;t load your organization.</Card>
+            ) : section === "general" ? (
+              <GeneralSection org={organization} />
+            ) : section === "conversations" ? (
+              <ConversationsSection org={organization} />
+            ) : (
+              <SecuritySection org={organization} />
+            ))}
+        </div>
       </div>
-      {activeTab === "general" && <GeneralSettings />}
-      {activeTab === "billing" && (
-        <div className="max-w-xl rounded-2xl border border-line bg-surface p-6">
-          <p className="text-sm font-medium text-ink">
-            Current Plan: <span className="capitalize text-primary-600 dark:text-primary-400">{mockOrg.plan}</span>
-          </p>
-          <p className="mt-2 text-sm text-ink-muted">
-            Billing management will be available once connected to the backend.
-          </p>
-        </div>
-      )}
-      {activeTab === "notifications" && (
-        <div className="max-w-xl rounded-2xl border border-line bg-surface p-6">
-          <p className="text-sm text-ink-muted">
-            Notification preferences will be available once connected to the backend.
-          </p>
-        </div>
-      )}
     </div>
   );
 };

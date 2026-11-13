@@ -1,137 +1,175 @@
 import { type FC } from "react";
-import { Header } from "~/components/layouts";
-import { mockDashboardStats, mockAgents, mockConversations, mockCustomers } from "~/mock/data";
-import { Avatar, Badge, StatusDot, Card } from "~/components/core";
-import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from "@heroicons/react/20/solid";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { formatRelative } from "~/utils/date";
+import { GettingStarted } from "~/components/dashboard/getting-started";
+import { Link } from "react-router";
+import { Card } from "~/components/core";
+import { ActivityFeed, ChannelChart, StatCard, TopAgents, VolumeChart } from "~/components/dashboard";
+import { Header, PageShimmer } from "~/components/layouts";
+import { useDashboardStats, useRecentActivity } from "~/hooks/data";
+import { useLiveRefetch } from "~/hooks/ui/use-conversation-subscription";
 import { cn } from "~/lib/utils";
+import { formatDuration, percentChange } from "~/utils/date";
+import { useUrlState } from "~/utils/use-url-state";
 
-const StatCard: FC<{
-  label: string;
-  value: string | number;
-  delta?: string;
-  trend?: "up" | "down";
-  accent?: string;
-}> = ({ label, value, delta, trend, accent = "var(--color-primary-600)" }) => (
-  <Card className="p-6">
-    <div className="flex items-center justify-between">
-      <p className="label-caps text-ink-soft">{label}</p>
-      <span className="flex h-7 w-7 items-center justify-center rounded-md" style={{ background: `color-mix(in srgb, ${accent} 14%, transparent)` }}>
-        <span className="h-2 w-2 rounded-full" style={{ background: accent }} />
-      </span>
-    </div>
-    <p className="mt-4 text-5xl font-medium leading-none tracking-display text-figure tabular-nums">{value}</p>
-    {delta && (
-      <div className="mt-3 flex items-center gap-1 text-xs">
-        <span className={cn("inline-flex items-center gap-0.5 font-medium", trend === "down" ? "text-red-500" : "text-emerald-600 dark:text-emerald-400")}>
-          {trend === "down" ? <ArrowTrendingDownIcon className="h-3.5 w-3.5" /> : <ArrowTrendingUpIcon className="h-3.5 w-3.5" />}
-          {delta}
-        </span>
-        <span className="text-ink-muted">vs last week</span>
-      </div>
-    )}
-  </Card>
+export function meta() {
+  return [{ title: "Dashboard — Asotie" }];
+}
+
+const RANGES = [7, 14, 30, 90];
+
+const RangePicker: FC<{ value: number; onChange: (days: number) => void }> = ({ value, onChange }) => (
+  <div className="inline-flex rounded-md border border-line bg-surface p-0.5" role="group" aria-label="Date range">
+    {RANGES.map((days) => (
+      <button
+        key={days}
+        onClick={() => onChange(days)}
+        aria-pressed={value === days}
+        className={cn(
+          "rounded px-3 py-1.5 text-xs font-medium transition",
+          value === days ? "bg-surface-2 text-ink" : "text-ink-muted hover:text-ink",
+        )}
+      >
+        {days}d
+      </button>
+    ))}
+  </div>
 );
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs">
-      <p className="font-medium text-ink">{label}</p>
-      <p className="text-primary-600 dark:text-primary-400">{payload[0].value} conversations</p>
-    </div>
-  );
-};
-
 const DashboardPage: FC = () => {
-  const stats = mockDashboardStats;
-  const onlineAgents = mockAgents.filter((a) => a.status === "online" || a.status === "busy");
-  const recentConversations = mockConversations.slice(0, 4);
+  const [rangeParam, setRange] = useUrlState("range");
+  const range = RANGES.includes(Number(rangeParam)) ? Number(rangeParam) : 30;
+  const { stats, loading, error, refetch } = useDashboardStats(range);
+  const { activity, refetch: refetchActivity } = useRecentActivity(12);
+  useLiveRefetch(() => {
+    void refetch();
+    void refetchActivity();
+  });
+
+  if (loading && !stats) return <PageShimmer rows={2} />;
+  if (!stats) {
+    return (
+      <div className="space-y-6">
+        <Header title="Dashboard" />
+        <Card className="p-8 text-center text-sm text-ink-soft">
+          {error ? "We couldn't load your dashboard. " : ""}
+          <button onClick={() => void refetch()} className="font-medium text-primary-600 dark:text-primary-300">
+            Try again
+          </button>
+        </Card>
+      </div>
+    );
+  }
+
+  const self = stats.scope === "self";
+  const deltaLabel = `vs previous ${range} days`;
 
   return (
     <div className="space-y-6">
-      <Header title="Dashboard" description="Overview of your support operations" />
+      <Header
+        title={self ? "My dashboard" : "Dashboard"}
+        description={
+          self
+            ? "Your conversations and performance"
+            : `Support activity over the last ${range} days`
+        }
+        action={<RangePicker value={range} onChange={(d) => setRange(String(d))} />}
+      />
 
-      {/* KPI */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Open" value={stats.openConversations} delta="12%" trend="up" accent="#2bbab1" />
-        <StatCard label="Pending" value={stats.pendingConversations} delta="4%" trend="down" accent="#f59e0b" />
-        <StatCard label="Resolved today" value={stats.resolvedToday} delta="18%" trend="up" accent="#10b981" />
-        <StatCard label="CSAT Score" value={`${stats.csatScore}/5`} delta="0.3" trend="up" accent="#f0b8f7" />
+      <GettingStarted />
+
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <StatCard
+          label="Open"
+          value={stats.openConversations}
+          accent="var(--color-status-open)"
+          hint={
+            <Link to="/inbox" className="hover:text-ink">
+              {stats.unassignedConversations} unassigned · {stats.pendingConversations} pending
+            </Link>
+          }
+        />
+        <StatCard
+          label="New"
+          value={stats.newConversations}
+          delta={percentChange(stats.newConversations, stats.newConversationsPrevious)}
+          deltaLabel={deltaLabel}
+          accent="var(--color-primary-400)"
+        />
+        <StatCard
+          label="Resolved"
+          value={stats.resolvedConversations}
+          delta={percentChange(stats.resolvedConversations, stats.resolvedConversationsPrevious)}
+          deltaLabel={deltaLabel}
+          accent="var(--color-status-resolved)"
+        />
+        <StatCard
+          label="CSAT"
+          value={stats.csatScore !== null ? `${stats.csatScore.toFixed(1)}/5` : "—"}
+          delta={percentChange(stats.csatScore, stats.csatScorePrevious)}
+          deltaLabel={deltaLabel}
+          hint={`${stats.csatResponses} ratings`}
+          accent="#f0b8f7"
+        />
+      </div>
+
+      <div className={cn("grid grid-cols-2 gap-3 sm:gap-4", !self && "lg:grid-cols-3")}>
+        <StatCard
+          label="First response"
+          value={formatDuration(stats.avgFirstResponseSeconds)}
+          delta={percentChange(stats.avgFirstResponseSeconds, stats.avgFirstResponseSecondsPrevious)}
+          lowerIsBetter
+          deltaLabel={deltaLabel}
+          accent="var(--color-status-pending)"
+        />
+        <StatCard
+          label="Time to resolve"
+          value={formatDuration(stats.avgResolutionSeconds)}
+          delta={percentChange(stats.avgResolutionSeconds, stats.avgResolutionSecondsPrevious)}
+          lowerIsBetter
+          deltaLabel={deltaLabel}
+          accent="var(--color-status-closed)"
+        />
+        {!self && (
+          <StatCard
+            label="Agents online"
+            value={`${stats.agentsOnline}/${stats.agentsTotal}`}
+            accent="var(--color-online)"
+            hint={
+              <Link to="/agents" className="hover:text-ink">
+                View team
+              </Link>
+            }
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        {/* Chart */}
         <Card className="p-5 lg:col-span-2">
-          <div className="mb-5 flex items-center justify-between">
-            <h3 className="label-caps text-ink-soft">Conversations this week</h3>
-            <span className="rounded-md bg-surface-2 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.15em] text-ink-soft">Last 7 days</span>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={stats.conversationsByDay} barSize={26}>
-              <CartesianGrid vertical={false} stroke="var(--line)" />
-              <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--ink-muted)" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "var(--ink-muted)" }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--surface-2)" }} />
-              <Bar dataKey="count" fill="var(--color-primary-600)" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Online agents */}
-        <Card className="p-5">
-          <h3 className="label-caps mb-5 flex items-center gap-2 text-ink-soft">
-            Online agents
-            <span className="rounded-md bg-emerald-500/12 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
-              {onlineAgents.length} live
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="label-caps text-ink-soft">Conversation volume</h3>
+            <span className="rounded-md bg-surface-2 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.15em] text-ink-soft">
+              Last {range} days
             </span>
-          </h3>
-          <div className="space-y-3.5">
-            {onlineAgents.map((agent) => (
-              <div key={agent.id} className="flex items-center gap-3">
-                <div className="relative">
-                  <Avatar name={agent.name} size="sm" />
-                  <StatusDot status={agent.status} className="absolute -bottom-0.5 -right-0.5 ring-2 ring-surface" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-medium text-ink">{agent.name}</p>
-                  <p className="text-[11px] capitalize text-ink-muted">{agent.status}</p>
-                </div>
-                <span className="rounded-md bg-primary-500/10 px-2 py-0.5 text-[10px] font-medium capitalize text-primary-700 dark:text-primary-300">
-                  {agent.role}
-                </span>
-              </div>
-            ))}
           </div>
+          <VolumeChart data={stats.volume} />
+        </Card>
+        <Card className="p-5">
+          <h3 className="label-caps mb-4 text-ink-soft">By channel</h3>
+          <ChannelChart data={stats.channels} />
         </Card>
       </div>
 
-      {/* Recent conversations */}
-      <Card>
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h3 className="label-caps text-ink-soft">Recent conversations</h3>
-          <a href="/conversations" className="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400">View all</a>
-        </div>
-        {recentConversations.map((conv) => {
-          const customer = mockCustomers.find((c) => c.id === conv.customerId);
-          const lastMsg = conv.messages[conv.messages.length - 1];
-          return (
-            <div
-              key={conv.id}
-              className="flex items-center gap-4 border-b border-line px-5 py-3.5 transition-colors last:border-0 hover:bg-surface-2/50"
-            >
-              <Avatar name={customer?.name || "?"} size="sm" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-ink">{customer?.name}</p>
-                <p className="truncate text-xs text-ink-soft">{lastMsg?.content}</p>
-              </div>
-              <Badge status={conv.status} />
-              <span className="text-[11px] text-ink-muted">{formatRelative(conv.updatedAt)}</span>
-            </div>
-          );
-        })}
-      </Card>
+      <div className={cn("grid grid-cols-1 gap-5", !self && "lg:grid-cols-2")}>
+        {!self && (
+          <Card className="p-5">
+            <h3 className="label-caps mb-2 text-ink-soft">Top agents</h3>
+            <TopAgents rows={stats.topAgents} />
+          </Card>
+        )}
+        <Card className="p-5">
+          <h3 className="label-caps mb-4 text-ink-soft">Live activity</h3>
+          <ActivityFeed events={activity} />
+        </Card>
+      </div>
     </div>
   );
 };

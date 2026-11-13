@@ -1,198 +1,318 @@
 import { type FC, useState } from "react";
-import { useNavigate } from "react-router";
-import { TextInput } from "~/components/core";
-import SelectInput from "~/components/core/SelectInput";
-import { PrimaryButton } from "~/components/buttons";
+import { redirect, useNavigate } from "react-router";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { mockSubmit } from "~/mock/service";
-import { setAuth } from "~/_graphql/cache/auth";
-import { mockUser, mockOrg } from "~/mock/data";
+import { useReactiveVar } from "@apollo/client/react";
+import { CheckIcon } from "@heroicons/react/20/solid";
+import { currentOrgVar } from "~/_graphql/cache/auth";
+import { CodeBlock, FormError, SelectInput, TextInput } from "~/components/core";
+import { Shimmer } from "~/components/shimmer";
+import { PrimaryButton } from "~/components/buttons";
+import AuthLayout from "~/layouts/auth";
+import { useBilling, useChangePlan, useCompleteOnboarding, useCreateApp } from "~/hooks/data";
+import { toast } from "~/hooks/ui/use-toast";
+import { applyFormErrors, getErrorMessage } from "~/lib/errors";
+import { loadSession, resetSession } from "~/lib/session";
 import { cn } from "~/lib/utils";
+import type { PlanType } from "~/utils/types";
 
-const steps = ["Organization", "Plan", "Done"];
+export function meta() {
+  return [{ title: "Set up your workspace — Asotie" }];
+}
+
+export async function clientLoader() {
+  const session = await loadSession();
+  if (!session) throw redirect("/sign-in?next=%2Fonboarding");
+  if (session.user.role !== "admin" || session.org.onboardedAt) throw redirect("/dashboard");
+  return null;
+}
+
+
+const steps = ["Organization", "Plan", "First channel"];
 
 const industryOptions = [
-  { label: "Technology", value: "Technology" },
-  { label: "E-commerce", value: "E-commerce" },
-  { label: "Healthcare", value: "Healthcare" },
-  { label: "Finance", value: "Finance" },
-  { label: "Education", value: "Education" },
-  { label: "Other", value: "Other" },
-];
+  "Technology",
+  "E-commerce",
+  "Retail",
+  "Healthcare",
+  "Finance",
+  "Education",
+  "Travel & hospitality",
+  "Logistics",
+  "Other",
+].map((v) => ({ label: v, value: v }));
 
-const planOptions = [
-  {
-    id: "starter",
-    label: "Starter",
-    price: "Free",
-    features: ["1 App", "3 Agents", "1,000 conversations/mo"],
-  },
-  {
-    id: "growth",
-    label: "Growth",
-    price: "$49/mo",
-    features: ["5 Apps", "15 Agents", "10,000 conversations/mo"],
-  },
-  {
-    id: "enterprise",
-    label: "Enterprise",
-    price: "$199/mo",
-    features: ["Unlimited Apps", "Unlimited Agents", "Unlimited conversations"],
-  },
-];
+const timezoneOptions = (() => {
+  try {
+    return (Intl as unknown as { supportedValuesOf(k: string): string[] })
+      .supportedValuesOf("timeZone")
+      .map((tz) => ({ label: tz.replace(/_/g, " "), value: tz }));
+  } catch {
+    return ["UTC", "Europe/London", "America/New_York", "Africa/Accra"].map((tz) => ({ label: tz, value: tz }));
+  }
+})();
+
+const browserTimezone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+};
+
+const StepIndicator: FC<{ step: number }> = ({ step }) => (
+  <div className="mb-8 flex flex-wrap items-center justify-center gap-2">
+    {steps.map((label, i) => (
+      <div key={label} className="flex items-center gap-2">
+        <div
+          className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition",
+            i <= step ? "bg-primary-600 text-white" : "bg-surface-2 text-ink-muted",
+          )}
+        >
+          {i < step ? <CheckIcon className="h-4 w-4" /> : i + 1}
+        </div>
+        <span className={cn("text-sm", i === step ? "font-medium text-ink" : "text-ink-muted")}>{label}</span>
+        {i < steps.length - 1 && <div className="hidden h-px w-8 bg-line sm:block" />}
+      </div>
+    ))}
+  </div>
+);
+
+/** Step 1 — organization details. Completes onboarding server-side, so a refresh never loops. */
+const OrganizationStep: FC<{ onDone: () => void }> = ({ onDone }) => {
+  const org = useReactiveVar(currentOrgVar);
+  const { completeOnboarding } = useCompleteOnboarding();
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useFormik({
+    initialValues: {
+      name: org?.name ?? "",
+      industry: org?.industry ?? "Technology",
+      website: org?.website ?? "",
+      timezone: org?.timezone && org.timezone !== "UTC" ? org.timezone : browserTimezone(),
+    },
+    validationSchema: Yup.object({
+      name: Yup.string().trim().min(2, "At least 2 characters").required("Organization name is required"),
+      website: Yup.string().url("Enter a full URL, e.g. https://acme.com").nullable(),
+      timezone: Yup.string().required("Choose a time zone"),
+    }),
+    onSubmit: async (values, helpers) => {
+      setError(null);
+      try {
+        await completeOnboarding({
+          name: values.name.trim(),
+          industry: values.industry || null,
+          website: values.website.trim() || null,
+          timezone: values.timezone,
+        });
+        resetSession();
+        onDone();
+      } catch (err) {
+        setError(applyFormErrors(err, helpers));
+      }
+    },
+  });
+
+  return (
+    <form onSubmit={form.handleSubmit} className="space-y-4" noValidate>
+      <div className="text-center">
+        <h2 className="text-xl font-medium text-ink">Tell us about your organization</h2>
+        <p className="mt-1 text-sm text-ink-soft">This is how your team and customers will see you.</p>
+      </div>
+      <FormError message={error} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <TextInput id="name" label="Organization name" placeholder="Acme Corp" className="sm:col-span-2" {...form} />
+        <SelectInput id="industry" label="Industry" options={industryOptions} {...form} />
+        <SelectInput id="timezone" label="Time zone" options={timezoneOptions} {...form} />
+        <TextInput
+          id="website"
+          label="Website (optional)"
+          placeholder="https://acme.com"
+          className="sm:col-span-2"
+          {...form}
+        />
+      </div>
+      <PrimaryButton type="submit" className="w-full" loading={form.isSubmitting}>
+        Continue
+      </PrimaryButton>
+    </form>
+  );
+};
+
+/** Step 2 — plan. Starter is the default; paid plans go through Stripe when it's configured. */
+const PlanStep: FC<{ onBack: () => void; onDone: () => void }> = ({ onDone }) => {
+  const { billing, loading } = useBilling();
+  const { changePlan, loading: changing } = useChangePlan();
+  const [selected, setSelected] = useState<PlanType | null>(null);
+  const current = selected ?? billing?.plan ?? "starter";
+
+  const submit = async () => {
+    try {
+      if (billing && current !== billing.plan) {
+        const checkoutUrl = await changePlan(current);
+        if (checkoutUrl) {
+          window.location.assign(checkoutUrl);
+          return;
+        }
+      }
+      onDone();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="text-center">
+        <h2 className="text-xl font-medium text-ink">Choose your plan</h2>
+        <p className="mt-1 text-sm text-ink-soft">Start free — you can change plans any time in Settings.</p>
+      </div>
+      {loading && !billing ? (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Shimmer key={i} className="h-48" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {billing?.plans.map((plan) => (
+            <button
+              key={plan.id}
+              type="button"
+              onClick={() => setSelected(plan.id)}
+              className={cn(
+                "flex flex-col rounded-2xl border-2 p-4 text-left transition",
+                current === plan.id
+                  ? "border-primary-600 bg-primary-50 dark:bg-primary-500/10"
+                  : "border-line hover:border-line-strong",
+              )}
+            >
+              <p className="font-medium text-ink">{plan.name}</p>
+              <p className="mt-1 text-2xl font-medium tracking-display text-figure">
+                ${plan.priceMonthly}
+                <span className="text-xs font-normal text-ink-muted"> / mo</span>
+              </p>
+              <ul className="mt-3 space-y-1.5">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex gap-1.5 text-xs text-ink-soft">
+                    <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-600 dark:text-primary-300" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </button>
+          ))}
+        </div>
+      )}
+      {billing && !billing.stripeEnabled && (
+        <p className="text-center text-xs text-ink-muted">
+          Billing isn&apos;t configured on this server — the plan you choose applies immediately.
+        </p>
+      )}
+      <PrimaryButton className="w-full" onClick={submit} loading={changing} disabled={!billing}>
+        Continue
+      </PrimaryButton>
+    </div>
+  );
+};
+
+/** Step 3 — first web chat widget, with the embed snippet. */
+const ChannelStep: FC<{ onFinish: () => void }> = ({ onFinish }) => {
+  const { createApp } = useCreateApp();
+  const [snippet, setSnippet] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useFormik({
+    initialValues: { name: "Website chat", primaryColor: "#00827C" },
+    validationSchema: Yup.object({
+      name: Yup.string().trim().required("Give your widget a name"),
+      primaryColor: Yup.string()
+        .matches(/^#[0-9a-fA-F]{6}$/, "Use a hex colour like #00827C")
+        .required(),
+    }),
+    onSubmit: async (values, helpers) => {
+      setError(null);
+      try {
+        const result = await createApp({
+          name: values.name.trim(),
+          type: "web_widget",
+          widgetConfig: { primaryColor: values.primaryColor },
+        });
+        setSnippet(result?.app.endpoints.embedSnippet ?? null);
+      } catch (err) {
+        setError(applyFormErrors(err, helpers));
+      }
+    },
+  });
+
+  if (snippet) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center">
+          <h2 className="text-xl font-medium text-ink">Your chat widget is ready 🎉</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Paste this snippet before the closing <code className="font-mono">&lt;/body&gt;</code> tag of your site.
+          </p>
+        </div>
+        <CodeBlock value={snippet} multiline />
+        <PrimaryButton className="w-full" onClick={onFinish}>
+          Go to dashboard
+        </PrimaryButton>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={form.handleSubmit} className="space-y-4" noValidate>
+      <div className="text-center">
+        <h2 className="text-xl font-medium text-ink">Add live chat to your website</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Create a chat widget now, or add email, WhatsApp and API channels later from Apps.
+        </p>
+      </div>
+      <FormError message={error} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
+        <TextInput id="name" label="Widget name" {...form} />
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="primaryColor" className="text-sm font-medium text-ink-soft">
+            Brand colour
+          </label>
+          <div className="flex h-[42px] items-center gap-2 rounded-md border border-line bg-field px-2">
+            <input
+              type="color"
+              id="primaryColor"
+              value={form.values.primaryColor}
+              onChange={(e) => form.setFieldValue("primaryColor", e.target.value.toUpperCase())}
+              className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent"
+            />
+            <span className="font-mono text-xs text-ink-soft">{form.values.primaryColor}</span>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col-reverse gap-3 sm:flex-row">
+        <PrimaryButton type="button" variant="secondary" className="flex-1" onClick={onFinish}>
+          Skip for now
+        </PrimaryButton>
+        <PrimaryButton type="submit" className="flex-1" loading={form.isSubmitting}>
+          Create widget
+        </PrimaryButton>
+      </div>
+    </form>
+  );
+};
 
 const OnboardingPage: FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [selectedPlan, setSelectedPlan] = useState("growth");
-  const [completing, setCompleting] = useState(false);
-
-  const orgForm = useFormik({
-    initialValues: { name: "", industry: "Technology" },
-    validationSchema: Yup.object({
-      name: Yup.string().required("Organization name is required"),
-      industry: Yup.string().required("Industry is required"),
-    }),
-    onSubmit: async () => {
-      setStep(1);
-    },
-  });
-
-  const handleComplete = async () => {
-    setCompleting(true);
-    await mockSubmit(null, 1000);
-    setAuth({
-      user: mockUser,
-      token: "mock-token-xyz",
-      org: {
-        ...mockOrg,
-        name: orgForm.values.name || mockOrg.name,
-        plan: selectedPlan as "starter" | "growth" | "enterprise",
-      },
-    });
-    navigate("/dashboard");
-  };
 
   return (
-    <div>
-      {/* Step indicator */}
-      <div className="mb-8 flex items-center justify-center gap-2">
-        {steps.map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
-            <div
-              className={cn(
-                "flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition",
-                i <= step ? "bg-primary-600 text-white" : "bg-surface-2 text-ink-muted"
-              )}
-            >
-              {i < step ? "\u2713" : i + 1}
-            </div>
-            <span
-              className={cn(
-                "text-sm",
-                i === step ? "font-medium text-ink" : "text-ink-muted"
-              )}
-            >
-              {s}
-            </span>
-            {i < steps.length - 1 && <div className="h-px w-8 bg-line" />}
-          </div>
-        ))}
-      </div>
-
-      {step === 0 && (
-        <form onSubmit={orgForm.handleSubmit} className="space-y-4">
-          <h2 className="text-center text-xl font-medium text-ink">
-            Tell us about your organization
-          </h2>
-          <p className="text-center text-sm text-ink-soft">
-            We&apos;ll use this to personalize your experience.
-          </p>
-          <div className="mt-6 space-y-4">
-            <TextInput
-              id="name"
-              label="Organization Name"
-              placeholder="Acme Corp"
-              values={orgForm.values}
-              errors={orgForm.errors}
-              touched={orgForm.touched}
-              handleChange={orgForm.handleChange}
-              handleBlur={orgForm.handleBlur}
-            />
-            <SelectInput
-              id="industry"
-              label="Industry"
-              options={industryOptions}
-              values={orgForm.values}
-              errors={orgForm.errors}
-              touched={orgForm.touched}
-              setFieldValue={orgForm.setFieldValue}
-              handleBlur={orgForm.handleBlur}
-            />
-          </div>
-          <PrimaryButton type="submit" className="mt-4 w-full" loading={orgForm.isSubmitting}>
-            Continue
-          </PrimaryButton>
-        </form>
-      )}
-
-      {step === 1 && (
-        <div className="space-y-4">
-          <h2 className="text-center text-xl font-medium text-ink">Choose your plan</h2>
-          <div className="space-y-3">
-            {planOptions.map((plan) => (
-              <button
-                key={plan.id}
-                type="button"
-                onClick={() => setSelectedPlan(plan.id)}
-                className={cn(
-                  "w-full rounded-2xl border-2 p-4 text-left transition",
-                  selectedPlan === plan.id
-                    ? "border-primary-600 bg-primary-50 dark:bg-primary-500/10"
-                    : "border-line hover:border-line-strong"
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-ink">{plan.label}</p>
-                  <p className="font-medium text-primary-600 dark:text-primary-400">{plan.price}</p>
-                </div>
-                <ul className="mt-2 space-y-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="text-xs text-ink-soft">
-                      &check; {f}
-                    </li>
-                  ))}
-                </ul>
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-3">
-            <PrimaryButton variant="secondary" className="flex-1" onClick={() => setStep(0)}>
-              Back
-            </PrimaryButton>
-            <PrimaryButton className="flex-1" onClick={() => setStep(2)}>
-              Continue
-            </PrimaryButton>
-          </div>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-700 dark:text-emerald-300">
-            <span className="text-3xl">&#127881;</span>
-          </div>
-          <h2 className="text-xl font-medium text-ink">You&apos;re all set!</h2>
-          <p className="text-sm text-ink-soft">
-            Your organization is ready. Let&apos;s get you to the dashboard.
-          </p>
-          <PrimaryButton className="w-full" loading={completing} onClick={handleComplete}>
-            Go to Dashboard
-          </PrimaryButton>
-        </div>
-      )}
-    </div>
+    <AuthLayout wide>
+      <StepIndicator step={step} />
+      {step === 0 && <OrganizationStep onDone={() => setStep(1)} />}
+      {step === 1 && <PlanStep onBack={() => setStep(0)} onDone={() => setStep(2)} />}
+      {step === 2 && <ChannelStep onFinish={() => navigate("/dashboard", { replace: true })} />}
+    </AuthLayout>
   );
 };
 

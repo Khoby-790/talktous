@@ -65,18 +65,32 @@ const badgeStyles: Record<BadgeVariant, string> = {
   draft: "bg-fuchsia-500/10 text-fuchsia-800 dark:bg-phosphor/10 dark:text-phosphor",
 };
 
-export const Badge: FC<{ status: BadgeVariant; className?: string }> = ({
+const extraBadgeStyles: Record<string, string> = {
+  connected: badgeStyles.active,
+  disconnected: badgeStyles.inactive,
+  error: "bg-red-500/12 text-red-700 dark:bg-red-500/15 dark:text-red-300",
+  invited: badgeStyles.pending,
+  admin: "bg-fuchsia-500/10 text-fuchsia-800 dark:bg-phosphor/10 dark:text-phosphor",
+  supervisor: badgeStyles.open,
+  agent: badgeStyles.closed,
+  past_due: "bg-red-500/12 text-red-700 dark:bg-red-500/15 dark:text-red-300",
+  trialing: badgeStyles.pending,
+  canceled: badgeStyles.inactive,
+};
+
+export const Badge: FC<{ status: BadgeVariant | string; label?: string; className?: string }> = ({
   status,
+  label,
   className,
 }) => (
   <span
     className={cn(
       "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium capitalize",
-      badgeStyles[status],
+      badgeStyles[status as BadgeVariant] ?? extraBadgeStyles[status] ?? badgeStyles.closed,
       className
     )}
   >
-    {status}
+    {label ?? status.replace(/_/g, " ")}
   </span>
 );
 
@@ -111,7 +125,7 @@ const sizeMap = {
 
 export const Avatar: FC<{
   name: string;
-  src?: string;
+  src?: string | null;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }> = ({ name, src, size = "md", className }) => {
@@ -147,6 +161,9 @@ interface InputProps {
   label: string;
   type?: string;
   placeholder?: string;
+  hint?: string;
+  autoComplete?: string;
+  autoFocus?: boolean;
   className?: string;
   disabled?: boolean;
   values?: Record<string, unknown>;
@@ -164,6 +181,9 @@ export const TextInput: FC<InputProps> = ({
   label,
   type = "text",
   placeholder,
+  hint,
+  autoComplete,
+  autoFocus,
   className,
   disabled,
   values = {},
@@ -172,7 +192,7 @@ export const TextInput: FC<InputProps> = ({
   handleChange,
   handleBlur,
 }) => {
-  const hasError = touched[id] && errors[id];
+  const hasError = Boolean(touched[id] && errors[id]);
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <label htmlFor={id} className="text-sm font-medium text-ink-soft">
@@ -187,23 +207,28 @@ export const TextInput: FC<InputProps> = ({
         onChange={handleChange}
         onBlur={handleBlur}
         disabled={disabled}
+        autoComplete={autoComplete}
+        autoFocus={autoFocus}
         className={cn(
           fieldBase,
           "h-[42px]",
           hasError ? "border-red-400 focus:border-red-400 focus:ring-red-500/15" : "border-line"
         )}
       />
-      {hasError && (
-        <p className="text-xs text-red-500">{errors[id] as string}</p>
+      {hasError ? (
+        <p className="text-xs text-red-500">{String(errors[id])}</p>
+      ) : (
+        hint && <p className="text-xs text-ink-muted">{hint}</p>
       )}
     </div>
   );
 };
 
 // ─── TextArea ────────────────────────────────────────────────────────────────
-interface TextAreaProps extends Omit<InputProps, "type" | "handleChange"> {
+interface TextAreaProps extends Omit<InputProps, "type" | "handleChange" | "handleBlur"> {
   rows?: number;
   handleChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
+  handleBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
 }
 
 export const TextArea: FC<TextAreaProps> = ({
@@ -219,7 +244,7 @@ export const TextArea: FC<TextAreaProps> = ({
   handleChange,
   handleBlur,
 }) => {
-  const hasError = touched[id] && errors[id];
+  const hasError = Boolean(touched[id] && errors[id]);
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <label htmlFor={id} className="text-sm font-medium text-ink-soft">
@@ -232,7 +257,7 @@ export const TextArea: FC<TextAreaProps> = ({
         placeholder={placeholder}
         value={(values[id] as string) || ""}
         onChange={handleChange}
-        onBlur={handleBlur as React.FocusEventHandler<HTMLTextAreaElement>}
+        onBlur={handleBlur}
         disabled={disabled}
         className={cn(
           fieldBase,
@@ -241,7 +266,7 @@ export const TextArea: FC<TextAreaProps> = ({
         )}
       />
       {hasError && (
-        <p className="text-xs text-red-500">{errors[id] as string}</p>
+        <p className="text-xs text-red-500">{String(errors[id])}</p>
       )}
     </div>
   );
@@ -390,3 +415,119 @@ export const EmptyState: FC<{
 
 // ─── SelectInput ─────────────────────────────────────────────────────────────
 export { default as SelectInput } from "./SelectInput";
+
+// ─── EmptyValue ──────────────────────────────────────────────────────────────
+/** The em dash shown for missing values in detail views. */
+export const EmptyValue: FC = () => <span className="text-ink-muted">—</span>;
+
+// ─── CodeBlock ───────────────────────────────────────────────────────────────
+/** Monospace value (snippet, key, URL) with a copy button. `secret` blurs until revealed. */
+export const CodeBlock: FC<{ value: string; className?: string; secret?: boolean; multiline?: boolean }> = ({
+  value,
+  className,
+  secret,
+  multiline,
+}) => {
+  const [revealed, setRevealed] = React.useState(!secret);
+  return (
+    <div className={cn("flex items-start gap-2 rounded-md border border-line bg-field p-2.5", className)}>
+      <code
+        className={cn(
+          "min-w-0 flex-1 font-mono text-xs leading-relaxed text-ink",
+          multiline ? "whitespace-pre-wrap break-all" : "truncate",
+          !revealed && "select-none blur-[3px]"
+        )}
+      >
+        {value}
+      </code>
+      {secret && (
+        <button
+          type="button"
+          onClick={() => setRevealed((v) => !v)}
+          className="rounded-md bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink"
+        >
+          {revealed ? "Hide" : "Show"}
+        </button>
+      )}
+      <CopyButton text={value} />
+    </div>
+  );
+};
+
+// ─── ChannelBadge / PriorityBadge ────────────────────────────────────────────
+const channelLabels: Record<string, string> = {
+  web: "Web chat",
+  email: "Email",
+  whatsapp: "WhatsApp",
+  api: "API",
+  web_widget: "Web widget",
+};
+
+export const channelLabel = (channel: string) => channelLabels[channel] ?? channel;
+
+export const ChannelBadge: FC<{ channel: string; className?: string }> = ({ channel, className }) => (
+  <span
+    className={cn(
+      "inline-flex items-center rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-soft",
+      className
+    )}
+  >
+    {channelLabel(channel)}
+  </span>
+);
+
+const priorityStyles: Record<string, string> = {
+  low: "text-ink-muted",
+  normal: "text-ink-soft",
+  high: "text-amber-600 dark:text-amber-400",
+  urgent: "text-red-600 dark:text-red-400",
+};
+
+export const PriorityBadge: FC<{ priority: string; className?: string }> = ({ priority, className }) => (
+  <span className={cn("inline-flex items-center gap-1 text-xs font-medium capitalize", priorityStyles[priority], className)}>
+    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+    {priority}
+  </span>
+);
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+/** Underline tabs. Drive `value` from URL state (`useUrlState("tab")`) per the project convention. */
+export const Tabs: FC<{
+  tabs: { value: string; label: string; count?: number }[];
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}> = ({ tabs, value, onChange, className }) => (
+  <div className={cn("flex gap-1 overflow-x-auto border-b border-line", className)} role="tablist">
+    {tabs.map((tab) => (
+      <button
+        key={tab.value}
+        role="tab"
+        aria-selected={tab.value === value}
+        onClick={() => onChange(tab.value)}
+        className={cn(
+          "-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition",
+          tab.value === value
+            ? "border-primary-600 text-ink dark:border-primary-300"
+            : "border-transparent text-ink-muted hover:text-ink"
+        )}
+      >
+        {tab.label}
+        {tab.count !== undefined && (
+          <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[10px] tabular-nums text-ink-soft">{tab.count}</span>
+        )}
+      </button>
+    ))}
+  </div>
+);
+
+// ─── FormError ───────────────────────────────────────────────────────────────
+export const FormError: FC<{ message?: string | null; className?: string }> = ({ message, className }) =>
+  message ? (
+    <div
+      role="alert"
+      className={cn("rounded-md border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-700 dark:text-red-300", className)}
+    >
+      {message}
+    </div>
+  ) : null;

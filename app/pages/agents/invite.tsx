@@ -1,85 +1,139 @@
-import { type FC } from "react";
+import { type FC, useState } from "react";
+import { Link } from "react-router";
 import { useFormik } from "formik";
-import * as Yup from "yup";
-import { Modal } from "~/components/layouts";
-import { TextInput, SelectInput } from "~/components/core";
 import { PrimaryButton } from "~/components/buttons";
+import { CodeBlock, FormError } from "~/components/core";
+import AgentForm, { inviteValidationSchema, type AgentFormValues } from "~/components/forms/agent";
+import { Modal } from "~/components/layouts";
+import { useApps, useInviteAgent } from "~/hooks/data";
+import { toast } from "~/hooks/ui/use-toast";
+import { applyFormErrors, getErrorCode, getErrorMessage } from "~/lib/errors";
 
-const roleOptions = [
-  { label: "Admin", value: "admin" },
-  { label: "Supervisor", value: "supervisor" },
-  { label: "Agent", value: "agent" },
-];
-
-interface InviteAgentModalProps {
+interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-const InviteAgentModal: FC<InviteAgentModalProps> = ({ open, onClose }) => {
-  const form = useFormik({
-    initialValues: { name: "", email: "", role: "agent" },
-    validationSchema: Yup.object({
-      name: Yup.string().required("Name is required"),
-      email: Yup.string().email("Invalid email").required("Email is required"),
-      role: Yup.string().required("Role is required"),
-    }),
-    onSubmit: async (_values) => {
-      // TODO: implement invite mutation
-      onClose();
+const initialValues: AgentFormValues = { name: "", email: "", role: "agent", jobTitle: "", appIds: [] };
+
+/** The invite link, shown after inviting or resending. */
+export const InviteLinkPanel: FC<{ name: string; email: string; inviteUrl: string; emailSent: boolean }> = ({
+  name,
+  email,
+  inviteUrl,
+  emailSent,
+}) => (
+  <div className="space-y-4">
+    <p className="text-sm text-ink-soft">
+      {emailSent ? (
+        <>
+          We emailed an invitation to <span className="font-medium text-ink">{email}</span>. You can also share this
+          link with {name} directly:
+        </>
+      ) : (
+        <>
+          Email delivery isn&apos;t configured, so share this link with{" "}
+          <span className="font-medium text-ink">{name}</span> yourself:
+        </>
+      )}
+    </p>
+    <CodeBlock value={inviteUrl} />
+    <p className="text-xs text-ink-muted">The link is valid for 7 days and can only be used once.</p>
+  </div>
+);
+
+const InviteAgentModal: FC<Props> = ({ open, onClose }) => {
+  const { apps } = useApps();
+  const { inviteAgent } = useInviteAgent();
+  const [result, setResult] = useState<{ name: string; email: string; inviteUrl: string; emailSent: boolean } | null>(
+    null,
+  );
+  const [planError, setPlanError] = useState<string | null>(null);
+
+  const form = useFormik<AgentFormValues>({
+    initialValues,
+    validationSchema: inviteValidationSchema,
+    onSubmit: async (values, helpers) => {
+      setPlanError(null);
+      try {
+        const payload = await inviteAgent({
+          name: values.name.trim(),
+          email: values.email.trim(),
+          role: values.role,
+          appIds: values.appIds,
+        });
+        if (payload) {
+          setResult({ name: payload.agent.name, email: payload.agent.email, inviteUrl: payload.inviteUrl, emailSent: payload.emailSent });
+          toast.success(`${payload.agent.name} invited`);
+        }
+      } catch (error) {
+        const code = getErrorCode(error);
+        if (code === "FORBIDDEN") setPlanError(getErrorMessage(error));
+        else if (code === "CONFLICT") helpers.setFieldError("email", getErrorMessage(error));
+        else {
+          const message = applyFormErrors(error, helpers);
+          if (message) toast.error(message);
+        }
+      }
     },
   });
+
+  const close = () => {
+    onClose();
+    setTimeout(() => {
+      setResult(null);
+      setPlanError(null);
+      form.resetForm();
+    }, 200);
+  };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
-      title="Invite Agent"
+      onClose={close}
+      title={result ? "Invitation sent" : "Invite agent"}
+      size="xl"
       footer={
-        <>
-          <PrimaryButton variant="secondary" onClick={onClose}>
-            Cancel
-          </PrimaryButton>
-          <PrimaryButton
-            loading={form.isSubmitting}
-            onClick={() => form.handleSubmit()}
-          >
-            Send Invite
-          </PrimaryButton>
-        </>
+        result ? (
+          <>
+            <PrimaryButton
+              variant="secondary"
+              onClick={() => {
+                setResult(null);
+                form.resetForm();
+              }}
+            >
+              Invite another
+            </PrimaryButton>
+            <PrimaryButton onClick={close}>Done</PrimaryButton>
+          </>
+        ) : (
+          <>
+            <PrimaryButton variant="secondary" onClick={close} disabled={form.isSubmitting}>
+              Cancel
+            </PrimaryButton>
+            <PrimaryButton type="submit" form="invite-agent-form" loading={form.isSubmitting}>
+              Send invite
+            </PrimaryButton>
+          </>
+        )
       }
     >
-      <div className="space-y-4">
-        <TextInput
-          id="name"
-          label="Full Name"
-          values={form.values}
-          errors={form.errors}
-          touched={form.touched}
-          handleChange={form.handleChange}
-          handleBlur={form.handleBlur}
-        />
-        <TextInput
-          id="email"
-          label="Email Address"
-          type="email"
-          values={form.values}
-          errors={form.errors}
-          touched={form.touched}
-          handleChange={form.handleChange}
-          handleBlur={form.handleBlur}
-        />
-        <SelectInput
-          id="role"
-          label="Role"
-          options={roleOptions}
-          values={form.values}
-          errors={form.errors}
-          touched={form.touched}
-          setFieldValue={form.setFieldValue}
-          handleBlur={form.handleBlur}
-        />
-      </div>
+      {result ? (
+        <InviteLinkPanel {...result} />
+      ) : (
+        <form id="invite-agent-form" onSubmit={form.handleSubmit} className="space-y-5">
+          {planError && (
+            <div className="space-y-2">
+              <FormError message={planError} />
+              <Link to="/settings/billing" onClick={close} className="inline-block text-sm font-medium text-primary-600 dark:text-primary-300">
+                Upgrade your plan →
+              </Link>
+            </div>
+          )}
+          <AgentForm form={form} mode="invite" appOptions={apps.map((a) => ({ label: a.name, value: a.id }))} />
+        </form>
+      )}
     </Modal>
   );
 };

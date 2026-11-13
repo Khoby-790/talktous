@@ -89,7 +89,7 @@ const SelectInput: FC<SelectInputProps> = ({
   setFieldValue,
   handleBlur,
 }) => {
-  const hasError = touched[id] && errors[id];
+  const hasError = Boolean(touched[id] && errors[id]);
 
   const selected = isMulti
     ? options.filter((o) => ((values[id] as (string | number)[]) || []).includes(o.value))

@@ -6,3 +6,5 @@
 /.react-router/
 /build/
 .yarn
+# Playwright MCP artifacts
+.playwright-mcp/

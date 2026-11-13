@@ -1,8 +1,8 @@
-# CLAUDE.md — Talk To Us (Customer Support Platform)
+# CLAUDE.md — Asotie (Customer Support Platform)
 
 ## Project Overview
 
-**Talk To Us** is a multi-tenant customer support SaaS platform. Organizations onboard, create support apps, connect their internal systems, and allow their customers to communicate with them through managed channels. Support agents are managed directly from the dashboard.
+**Asotie** is a multi-tenant customer support SaaS platform. Organizations onboard, create support apps, connect their internal systems, and allow their customers to communicate with them through managed channels. Support agents are managed directly from the dashboard.
 
 The platform supports three core actor types: **Organizations** (admins), **Support Agents** (staff), and **Customers** (end users). The dashboard is the main interface for organizations to manage everything.
 
@@ -11,13 +11,13 @@ The platform supports three core actor types: **Organizations** (admins), **Supp
 ## Quick Reference
 
 ```bash
-npm run dev         # Dev server (Vite)
-npm run build       # Production build
-npm run lint        # ESLint
-npm run format      # Prettier
-npm test            # Vitest
-npm run cy:open     # Cypress E2E
+npm run dev         # Dev server (React Router + Vite) → http://localhost:5173
+npm run build       # Static SPA build → build/client
+npm run start       # Preview the production build
+npm run typecheck   # react-router typegen && tsc
 ```
+
+**Backend:** [`../talktous-api`](../talktous-api) (generated with `kay-tools`, service-template-typescript). Run it alongside: `npm run dev` + `npm run dev:worker` there, `npm run db:seed` for demo data (alex@acmecorp.com / password123). Its GraphQL schema in `src/graphql/schema/**` is the contract for `app/_graphql/**` and `app/utils/types.ts`.
 
 ---
 
@@ -25,17 +25,17 @@ npm run cy:open     # Cypress E2E
 
 | Category | Technology |
 |----------|-----------|
-| **Framework** | React 18 + TypeScript (strict mode) |
-| **Build** | Vite + vite-tsconfig-paths |
-| **GraphQL** | Apollo Client 3 |
-| **REST** | Axios (file uploads, webhook testing) |
-| **Routing** | React Router v6 |
-| **UI Framework** | Tailwind CSS v3 + Headless UI |
+| **Framework** | React 19 + TypeScript (strict mode) |
+| **Build** | React Router 7 framework mode on Vite, **SPA mode** (`ssr: false`) |
+| **GraphQL** | Apollo Client 4 (`@apollo/client`, hooks from `@apollo/client/react`) |
+| **REST** | Axios / fetch (widget API, realtime auth) |
+| **Routing** | React Router 7 — route config in `app/routes.ts`, guards in `clientLoader`s |
+| **UI Framework** | Tailwind CSS v4 (`@theme` tokens in `app/app.css`) + Headless UI 2 |
 | **Forms** | Formik 2 + Yup validation |
 | **Charts** | Recharts (conversation volume, response time, CSAT trends) |
 | **Icons** | Heroicons (24/outline, 20/solid), Lucide React |
-| **Real-time** | Pusher.js (live conversation updates, agent status) |
-| **Rich Text** | TipTap 2 (canned responses editor) |
+| **Real-time** | The API's built-in Server-Sent Events stream by default; Pusher.js when the API has Pusher keys (`utils/pusher.ts` wraps both) |
+| **Rich Text** | TipTap (installed, not yet used) |
 | **Error Tracking** | Sentry |
 | **Utilities** | lodash, date-fns, numeral |
 | **Styling Utils** | clsx + tailwind-merge (via `cn()`), class-variance-authority |
@@ -45,17 +45,16 @@ npm run cy:open     # Cypress E2E
 ## Project Structure
 
 ```
-talk-to-us/
-├── .env / .env.example
-├── .prettierrc
-├── tailwind.config.js
+talktous.io/
+├── .env / .env.example             # VITE_APOLLO_URI (talktous-api /graphql)
+├── react-router.config.ts          # ssr: false
 ├── vite.config.ts
-├── tsconfig.json
-├── index.html
+├── Dockerfile + nginx.conf         # static build served by nginx
 │
-└── src/
-    ├── App.tsx                     # Root component (Apollo + Router + Auth)
-    ├── index.tsx                   # Entry point
+└── app/
+    ├── root.tsx                    # HTML shell, ApolloProvider, <Toaster/>
+    ├── routes.ts                   # All routes (pages are route modules)
+    ├── routes/home.tsx             # Landing (redirects signed-in users)
     │
     ├── _graphql/                   # ──── GraphQL Layer ────
     │   ├── index.tsx               # Apollo Client setup
@@ -67,8 +66,9 @@ talk-to-us/
     │   │   ├── auth.ts             # Bearer token injection
     │   │   ├── error.ts            # Error handling + toast
     │   │   └── retry.ts            # Exponential backoff
-    │   ├── queries/                # GraphQL query documents
-    │   └── mutations/              # GraphQL mutation documents
+    │   ├── fragments.ts            # Shared field sets (mirror utils/types.ts)
+    │   ├── queries/index.ts        # GraphQL query documents
+    │   └── mutations/index.ts      # GraphQL mutation documents
     │
     ├── components/                 # ──── UI Components ────
     │   ├── core/                   # Reusable input/UI primitives
@@ -95,15 +95,11 @@ talk-to-us/
     │   └── profile/                # User profile
     │
     ├── layouts/                    # ──── App Shell Layouts ────
-    │   ├── app/                    # Main authenticated layout (sidebar, topbar)
-    │   │   └── components/         # Notification containers, agent status bar
-    │   ├── auth/                   # Login/onboarding layout
+    │   ├── app/index.tsx           # Sidebar (live inbox badge), topbar (search, activity, status menu)
+    │   ├── app/route.tsx           # Layout route: requireSession() guard
+    │   ├── auth/index.tsx          # Auth card layout (also used by onboarding)
+    │   ├── auth/route.tsx          # Layout route for signed-out pages
     │   └── _404/                   # 404 fallback
-    │
-    ├── router/
-    │   ├── index.tsx               # Router init
-    │   ├── routes.tsx              # All route definitions
-    │   └── guards.tsx              # Auth + role guards
     │
     ├── hooks/
     │   ├── data/                   # Apollo query/mutation wrapper hooks
@@ -120,10 +116,12 @@ talk-to-us/
     │   └── types.ts                # Shared TypeScript types
     │
     ├── lib/
-    │   └── utils.ts                # cn(), business logic helpers
+    │   ├── utils.ts                # cn()
+    │   ├── session.ts              # loadSession, requireSession, requireRoles, postSignInPath
+    │   └── errors.ts               # getErrorMessage, applyFormErrors (API validation → Formik)
     │
     ├── config/
-    │   └── index.ts                # Validates VITE_* env vars
+    │   └── index.ts                # VITE_* env vars (apolloUri, apiUri)
     │
     └── assets/
         ├── css/                    # Global styles
@@ -136,7 +134,7 @@ talk-to-us/
 
 | Category | Pages |
 |----------|-------|
-| **Auth** | sign-in, forgot-password, reset-password |
+| **Auth** | sign-in, sign-up, forgot-password, reset-password, accept-invite |
 | **Onboarding** | onboarding (multi-step wizard: org info → plan → first app) |
 | **Dashboard** | dashboard (overview stats, charts, live activity feed) |
 | **Apps** | apps (list), view-app (detail + tabs), create-app (modal), edit-app (modal) |
@@ -145,7 +143,8 @@ talk-to-us/
 | **Inbox** | inbox (live split-pane: conversation list + active thread) |
 | **Conversations** | conversations (history, search, filters), view-conversation (detail) |
 | **Customers** | customers (list), view-customer (profile + conversation history) |
-| **Settings** | settings/general, settings/billing, settings/notifications, settings/roles, settings/security |
+| **Settings** | settings/:section (general, billing, conversations, roles, security) — admin only |
+| **Widget** | widget/:publicKey — customer-facing chat UI inside the embed iframe (REST, no session) |
 | **Profile** | profile (personal info, preferences, notification settings) |
 
 ---
@@ -374,21 +373,19 @@ All follow the same Apollo wrapper pattern:
 
 ```typescript
 // hooks/data/use-agents.ts
-export const useAgents = (variables: AgentsVariables) => {
-  const { data, ...rest } = useQuery<AgentsData, AgentsVariables>(
-    getAgents,
-    { variables, fetchPolicy: "network-only" }
-  );
-  const agents = data?.rows || [];
-  const count = data?.count || 0;
-  return { agents, count, ...rest };
+export const useAgents = (filter: AgentFilter = {}, pagination = { limit: 100 }) => {
+  const { data, ...rest } = useQuery<{ agents: ListResult<AgentWithStats> }>(AGENTS, {
+    variables: { filter, pagination },
+  });
+  return { agents: data?.agents.items ?? [], count: data?.agents.total ?? 0, ...rest };
 };
 
 export const useInviteAgent = () => {
-  const [inviteAgent, rest] = useMutation<Response, Variables>(
-    inviteAgentMutation,
-    { refetchQueries: ["Agents"] }
-  );
+  const [mutate, rest] = useMutation<{ inviteAgent: InvitePayload }>(INVITE_AGENT, {
+    refetchQueries: ["Agents", "Billing"],
+  });
+  const inviteAgent = async (input: InviteAgentInput) =>
+    (await mutate({ variables: { input } })).data?.inviteAgent;   // throws on API errors
   return { inviteAgent, ...rest };
 };
 ```
@@ -416,6 +413,12 @@ Available data hooks:
 
 ## Authentication & State Management
 
+### Session & guards
+
+- Token, user and org live in reactive vars (below), persisted to localStorage.
+- `lib/session.ts` → `loadSession()` fetches `me` once per page load; `requireSession(request)` / `requireRoles(request, roles)` are called from `clientLoader`s (layout route `layouts/app/route.tsx`, plus role-restricted pages like settings and integrations). Admins whose org has no `onboardedAt` are sent to `/onboarding`.
+- `_graphql/link/error.ts` signs out and redirects on 401 / `UNAUTHENTICATED`.
+
 ### Reactive Variables (`_graphql/cache/auth.tsx`)
 
 ```typescript
@@ -429,7 +432,6 @@ currentOrgVar         // Organization | null — active organization
 - JWT Token → `localStorage` key: `talktous:auth:token`
 - User data → `localStorage` key: `talktous:auth:user`
 - Org data → `localStorage` key: `talktous:auth:org`
-- Login flag → Cookie: `talktous:auth:token`
 
 **Functions:**
 - `setAuth({ user, token, org })` — sets all auth state + persists
@@ -453,20 +455,18 @@ currentConfigVar: {
 
 ### Route Structure
 
+Routes are declared in `app/routes.ts` (React Router 7 config). Pages under `pages/` are the route modules; they may export `meta` and, for role-restricted pages, a `clientLoader` that calls `requireRoles(request, [...])`.
+
 ```typescript
-type RouteProps = {
-  id?: string;
-  path: string;
-  element: ReactNode;
-  withRoles?: AgentRole[];          // "admin" | "supervisor" | "agent"
-  sidebar?: { label: string; icon: any; badge?: number };
-  meta?: {
-    layout: "App" | "Auth";
-    breadcrumb: () => string;
-    section: string;
-  };
-  children?: RouteProps[];
-};
+layout("layouts/auth/route.tsx", [route("sign-in", "pages/sign-in/index.tsx"), ...]),
+route("onboarding", "pages/onboarding/index.tsx"),
+route("widget/:publicKey", "pages/widget/index.tsx"),
+layout("layouts/app/route.tsx", [            // requireSession()
+  route("dashboard", "pages/dashboard/index.tsx"),
+  route("apps/:id", "pages/view-app/index.tsx"),
+  route("settings/:section?", "pages/settings/index.tsx"),  // requireRoles(["admin"])
+  ...
+]),
 ```
 
 ### Sidebar Sections
@@ -508,18 +508,22 @@ const [status] = useUrlState("status");     // ?status=open (inbox filter)
 
 ### Roles
 
-| Role | Access |
+| Role | Access (enforced by the API; the UI mirrors it) |
 |------|--------|
-| **admin** | Full access to all settings, agents, apps, billing |
-| **supervisor** | View all conversations, assign agents, view reports |
-| **agent** | Own inbox and assigned conversations only |
+| **admin** | Everything: team, apps, integrations, billing, settings |
+| **supervisor** | All conversations, assign anyone, org-wide dashboard |
+| **agent** | Conversations assigned to them + unassigned ones in apps they work; can claim/release, not assign others; personal dashboard |
 
 ### Permission-Based Rendering
 
 ```typescript
 import { withRoles } from "utils/with-roles";
 
-// Only admins see this
+// Reactive, in components
+const canManage = useHasRole(["admin"]);
+canManage && <InviteAgentButton />
+
+// Non-reactive, in handlers
 withRoles(["admin"]) && <InviteAgentButton />
 
 // Admins and supervisors
@@ -577,19 +581,29 @@ Border:                border-gray-200 dark:border-gray-700
 ## Real-time Architecture (Pusher)
 
 ```typescript
-// Conversation updates
-channel: "org-{orgId}"
+// Dashboard members — private channel, authorized by POST {api}/api/v1/realtime/auth
+channel: "private-org-{orgId}"
 events:
-  - "conversation.created"    // New conversation
-  - "conversation.assigned"   // Agent assigned
-  - "conversation.resolved"   // Conversation closed
-  - "message.received"        // New message in thread
-  - "agent.status_changed"    // Agent online/offline
+  - "conversation.created"
+  - "conversation.assigned"
+  - "conversation.updated"    // status / priority / tags / CSAT
+  - "conversation.resolved"
+  - "message.created"         // any sender; payload { conversationId, messageId, senderType, isInternal }
+  - "agent.status_changed"
+
+// Widget customers
+channel: "private-conversation-{conversationId}"   // message.created, conversation.updated
 ```
 
+Payloads carry ids only — refetch through GraphQL. The transport comes from the API's `realtimeConfig` query (`provider: "stream" | "pusher"`), not env vars:
+- **stream** (default): `POST {api}/api/v1/realtime/ticket` with the bearer token → one-minute ticket → `EventSource({api}/api/v1/realtime/stream?ticket=…)`. Events reach every API process via Postgres LISTEN/NOTIFY.
+- **pusher**: private channels authorized by `POST {api}/api/v1/realtime/auth`.
+
+Attachments: upload with `uploadFile(file, token)` (`lib/uploads.ts`, → `POST {api}/api/v1/uploads`), then send the returned `{url,name,contentType,size}` in `attachments`. Render with `AttachmentList` (`components/conversations/attachments.tsx`).
+
 Used in:
-- `hooks/ui/useConversationSubscription` — updates inbox list in real-time
-- `layouts/app/components/` — global notification toasts for new conversations
+- `hooks/ui/use-conversation-subscription.ts` — `useConversationSubscription(events, handler)` and `useLiveRefetch(refetch, events)` (subscribes; polls every `currentConfigVar.pollInterval` only if the API can't be reached)
+- `pages/widget` — subscribes to `private-conversation-{id}` with the customer's widget token
 
 ---
 
@@ -597,19 +611,15 @@ Used in:
 
 | Variable | Purpose |
 |----------|---------|
-| `VITE_APOLLO_URI` | GraphQL API endpoint |
-| `VITE_APP_NAME` | "Talk To Us" |
-| `VITE_ASSET_URI` | Asset CDN URL |
+| `VITE_APOLLO_URI` | talktous-api GraphQL endpoint (its origin is used for REST too) |
+| `VITE_APP_NAME` | "Asotie" |
 | `VITE_SENTRY_DSN` | Sentry DSN |
-| `VITE_PUSHER_KEY` | Pusher app key |
-| `VITE_PUSHER_CLUSTER` | Pusher cluster |
-| `VITE_PUSHER_CHANNEL_PREFIX` | Pusher channel prefix (e.g. `"org-"`) |
 
 ---
 
 ## Key Patterns Summary
 
-1. **Data fetching**: Always via custom hooks in `hooks/data/` wrapping Apollo `useQuery`/`useMutation`
+1. **Data fetching**: Always via custom hooks in `hooks/data/` wrapping Apollo `useQuery`/`useMutation`; GraphQL documents in `_graphql/queries|mutations`, types in `utils/types.ts`
 2. **Forms**: Formik instance passed as single `form` prop, spread into core inputs via `{...form}`
 3. **Modals**: URL-state driven (`?modal=invite&id=abc`), not sub-routes
 4. **Tabs**: URL-state driven (`?tab=settings`), conditional rendering, each tab fetches its own data
@@ -618,6 +628,6 @@ Used in:
 7. **Type safety**: Full TypeScript. Domain entity types in `utils/types.ts`
 8. **Styling**: Tailwind CSS + `cn()`. Consistent section/grid/label patterns everywhere
 9. **State**: Apollo reactive vars for auth + config; URL state for modals, tabs, filters
-10. **Notifications**: Toast-based (`useToast`) for mutations; Pusher-based for real-time events
+10. **Notifications**: Global toasts (`toast.success/error` from `hooks/ui/use-toast`, rendered by `<Toaster/>`); API validation errors go onto forms with `applyFormErrors`
 11. **Empty states**: Always use `<EmptyState>` component with contextual illustration + CTA
 12. **Loading states**: Always use shimmer components, never raw spinners for page-level loads

@@ -1,16 +1,14 @@
 import axios from "axios";
+import { currentTokenVar } from "~/_graphql/cache/auth";
 import config from "~/config";
 
-const api = axios.create({
-  baseURL: config.apolloUri.replace("/graphql", ""),
-});
+/** REST client for talktous-api (non-GraphQL endpoints). */
+const api = axios.create({ baseURL: config.apiUri });
 
-api.interceptors.request.use((reqConfig) => {
-  const token = localStorage.getItem("talktous:auth:token");
-  if (token) {
-    reqConfig.headers.Authorization = `Bearer ${token}`;
-  }
-  return reqConfig;
+api.interceptors.request.use((request) => {
+  const token = currentTokenVar();
+  if (token) request.headers.Authorization = `Bearer ${token}`;
+  return request;
 });
 
 export const useApi = () => api;

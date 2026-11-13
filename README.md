@@ -1,87 +1,56 @@
-# Welcome to React Router!
+# Asotie — dashboard
 
-A modern, production-ready template for building full-stack React applications using React Router.
+The web app for **Asotie**, a multi-tenant customer support platform. Organizations sign up, create support apps (web chat widget, email inbox, WhatsApp number, API), invite their team, and answer customers from a live inbox.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+This repo is the dashboard and the customer-facing chat widget UI. The API lives in [`../talktous-api`](../talktous-api).
 
-## Features
-
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+## Run it locally
 
 ```bash
-npm install
+# 1. API (see talktous-api/README.md for details)
+cd ../talktous-api
+npm install && cp .env.example .env        # set JWT_SECRET + DATABASE_*
+npm run db:migrate && npm run db:seed      # demo org: alex@acmecorp.com / password123
+npm run dev                                # API + worker → http://localhost:8001/graphql
+
+# 2. Dashboard
+cd ../talktous.io
+npm install && cp .env.example .env        # VITE_APOLLO_URI=http://localhost:8001/graphql
+npm run dev                                # http://localhost:5173
 ```
 
-### Development
+Sign in as `alex@acmecorp.com` / `password123` (admin). The seeded team also has a supervisor (`maria@…`) and agents (`james@…`, `sara@…`, `tom@…`), all with the same password.
 
-Start the development server with HMR:
+In development the API logs emails instead of sending them, so invite and password-reset links appear in the API terminal (`[worker]` lines). Invites also show the link in the UI.
+
+## Try the chat widget
+
+Open **Apps → Website Chat → Setup** and copy the embed snippet into any HTML page:
+
+```html
+<script src="http://localhost:8001/widget.js" data-app-key="pk_live_…" async></script>
+```
+
+Messages you send from that page show up in the inbox instantly. Replies (including file attachments), assignment and resolution flow back live, and the customer is asked for a CSAT rating once you resolve the conversation.
+
+## Scripts
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Dev server with HMR |
+| `npm run build` | Static SPA build into `build/client` |
+| `npm run start` | Preview the production build |
+| `npm run typecheck` | Route type generation + `tsc` |
+
+## Deploy
+
+It's a static site (`react-router.config.ts` → `ssr: false`). Any static host works if unknown paths fall back to `index.html`. The Dockerfile builds it and serves it with nginx:
 
 ```bash
-npm run dev
+docker build --build-arg VITE_APOLLO_URI=https://api.example.com/graphql -t talktous-web .
+docker run -p 8080:80 talktous-web
 ```
 
-Your application will be available at `http://localhost:5173`.
+Set the API's `APP_URL` to wherever this is served (it's used in email links and as the widget iframe origin), and add that origin to the API's `ALLOWED_ORIGINS`.
 
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+See `CLAUDE.md` for architecture and conventions.

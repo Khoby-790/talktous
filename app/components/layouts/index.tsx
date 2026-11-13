@@ -3,6 +3,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { cn } from "~/lib/utils";
 import { Spinner } from "~/components/core";
+import { PrimaryButton } from "~/components/buttons";
 
 // ─── Modal ───────────────────────────────────────────────────────────────────
 const sizeClasses = {
@@ -180,5 +181,67 @@ export const Header: FC<HeaderProps> = ({
       )}
     </div>
     {action && <div className="shrink-0">{action}</div>}
+  </div>
+);
+
+// ─── ConfirmModal ────────────────────────────────────────────────────────────
+interface ConfirmModalProps {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void | Promise<void>;
+  title: string;
+  description: ReactNode;
+  confirmLabel?: string;
+  variant?: "danger" | "primary";
+  loading?: boolean;
+}
+
+/** "Are you sure?" dialog for destructive or hard-to-reverse actions. */
+export const ConfirmModal: FC<ConfirmModalProps> = ({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  description,
+  confirmLabel = "Confirm",
+  variant = "danger",
+  loading,
+}) => (
+  <Modal
+    open={open}
+    onClose={onClose}
+    title={title}
+    size="md"
+    footer={
+      <>
+        <PrimaryButton variant="secondary" onClick={onClose} disabled={loading}>
+          Cancel
+        </PrimaryButton>
+        <PrimaryButton variant={variant} onClick={() => void onConfirm()} loading={loading}>
+          {confirmLabel}
+        </PrimaryButton>
+      </>
+    }
+  >
+    <div className="text-sm leading-relaxed text-ink-soft">{description}</div>
+  </Modal>
+);
+
+// ─── PageShimmer ─────────────────────────────────────────────────────────────
+/** Page-level loading skeleton (never a bare spinner for page loads). */
+export const PageShimmer: FC<{ rows?: number }> = ({ rows = 3 }) => (
+  <div className="space-y-6">
+    <div className="space-y-3 border-b border-line pb-5">
+      <div className="h-3 w-24 animate-pulse rounded-md bg-surface-2" />
+      <div className="h-9 w-64 animate-pulse rounded-md bg-surface-2" />
+    </div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="h-28 animate-pulse rounded-2xl bg-surface-2" />
+      ))}
+    </div>
+    {Array.from({ length: rows }).map((_, i) => (
+      <div key={i} className="h-40 animate-pulse rounded-2xl bg-surface-2" />
+    ))}
   </div>
 );

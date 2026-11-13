@@ -1,4 +1,5 @@
 import { type FC, type ReactNode } from "react";
+import { BrandLogo } from "~/components/brand";
 import { Link } from "react-router";
 import { ArrowUpRightIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { cn } from "~/lib/utils";
@@ -56,7 +57,7 @@ const capabilities = [
 
 const testimonials = [
   {
-    quote: "Talk To Us cut our average response time from 18 minutes to under 4. CSAT went from 3.9 to 4.8 in the first month.",
+    quote: "Asotie cut our average response time from 18 minutes to under 4. CSAT went from 3.9 to 4.8 in the first month.",
     name: "Sarah K.",
     role: "Head of Support · Fintech",
   },
@@ -68,9 +69,9 @@ const testimonials = [
 ];
 
 const plans = [
-  { name: "Starter", price: "Free", cadence: "", features: ["1 app", "3 agents", "1,000 conversations / mo", "Web chat", "Email support"], cta: "Get started", highlight: false },
-  { name: "Growth", price: "$49", cadence: "/ mo", features: ["5 apps", "15 agents", "10,000 conversations / mo", "All channels", "Analytics", "Priority support"], cta: "Start free trial", highlight: true },
-  { name: "Enterprise", price: "$199", cadence: "/ mo", features: ["Unlimited apps", "Unlimited agents", "Unlimited conversations", "All channels", "SSO & audit logs", "Dedicated support"], cta: "Contact sales", highlight: false },
+  { name: "Starter", price: "$0", cadence: "/ mo", features: ["3 agent seats", "1 support app", "500 conversations / mo", "Web chat & email"], cta: "Get started", highlight: false },
+  { name: "Growth", price: "$79", cadence: "/ mo", features: ["15 agent seats", "5 support apps", "5,000 conversations / mo", "WhatsApp channel", "Integrations & webhooks"], cta: "Start with Growth", highlight: true },
+  { name: "Enterprise", price: "$299", cadence: "/ mo", features: ["Unlimited seats", "Unlimited apps", "Unlimited conversations", "All channels & integrations", "Priority support"], cta: "Get Enterprise", highlight: false },
 ];
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
@@ -118,11 +119,8 @@ const ArrowButton: FC<{ to: string; label: string }> = ({ to, label }) => (
 );
 
 const Wordmark: FC = () => (
-  <Link to="/" className="flex items-center gap-3">
-    <span className="bg-aurora flex h-8 w-8 items-center justify-center rounded-md text-[11px] font-medium tracking-[0.08em] text-[#222222]">
-      TU
-    </span>
-    <span className="label-caps text-white">Talk To Us</span>
+  <Link to="/" className="flex items-center" aria-label="Asotie — home">
+    <BrandLogo tone="light" className="h-8" />
   </Link>
 );
 
@@ -138,7 +136,7 @@ const conversations = [
 const InboxPreview: FC = () => (
   <div className="overflow-hidden rounded-2xl bg-deep">
     <div className="flex items-center justify-between border-b border-white/5 px-5 py-3">
-      <span className="label-caps text-silver">app.talktous.io / inbox</span>
+      <span className="label-caps text-silver">Asotie · Inbox</span>
       <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-silver">
         <span className="h-1.5 w-1.5 rounded-full bg-online" /> Live
       </span>
@@ -219,7 +217,7 @@ const LandingPage: FC = () => (
           <Link to="/sign-in" className="label-caps hidden font-normal text-silver transition hover:text-white sm:block">
             Sign in
           </Link>
-          <AuroraLink to="/onboarding">Start free</AuroraLink>
+          <AuroraLink to="/sign-up">Start free</AuroraLink>
         </div>
       </nav>
     </header>
@@ -246,7 +244,7 @@ const LandingPage: FC = () => (
           Bring web chat, email, WhatsApp and API messages into a single real-time inbox. Assign, reply and resolve — with the whole team in sync.
         </p>
         <div className="fade-up-4 mt-12 flex flex-col items-center gap-6 sm:flex-row sm:gap-10">
-          <AuroraLink to="/onboarding" size="lg">
+          <AuroraLink to="/sign-up" size="lg">
             Get started free
             <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
           </AuroraLink>
@@ -410,12 +408,12 @@ const LandingPage: FC = () => (
               ))}
             </ul>
             {p.highlight ? (
-              <AuroraLink to="/onboarding" className="w-full">
+              <AuroraLink to="/sign-up" className="w-full">
                 {p.cta}
               </AuroraLink>
             ) : (
               <Link
-                to="/onboarding"
+                to="/sign-up"
                 className="inline-flex w-full items-center justify-center rounded-md bg-kelp px-[18px] py-3 text-[14px] uppercase tracking-[0.08em] text-white transition hover:bg-[#0a4642]"
               >
                 {p.cta}
@@ -439,7 +437,7 @@ const LandingPage: FC = () => (
             Your customers are already talking. Be there when they do.
           </h2>
           <div className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10">
-            <AuroraLink to="/onboarding" size="lg">
+            <AuroraLink to="/sign-up" size="lg">
               Get started free
               <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
             </AuroraLink>
@@ -469,7 +467,7 @@ const LandingPage: FC = () => (
           </div>
         </div>
         <div className="mt-20 flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-[12px] text-silver/70 sm:flex-row">
-          <span>© 2026 Talk To Us</span>
+          <span>© 2026 Asotie</span>
           <span>Made for support teams everywhere</span>
         </div>
       </div>
@@ -478,7 +476,7 @@ const LandingPage: FC = () => (
         aria-hidden
         className="mx-auto -mb-[0.22em] mt-10 max-w-[1440px] select-none whitespace-nowrap text-center text-[clamp(4rem,17vw,18.4rem)] font-medium leading-none tracking-kinetic text-kelp"
       >
-        Talk To Us
+        Asotie
       </p>
     </footer>
   </div>

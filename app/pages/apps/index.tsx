@@ -1,158 +1,217 @@
 import { type FC, useState } from "react";
-import { Header, Modal } from "~/components/layouts";
-import { PrimaryButton, ActionButton } from "~/components/buttons";
-import { TableComponent } from "~/components/tables";
-import { Badge, TextInput } from "~/components/core";
-import SelectInput from "~/components/core/SelectInput";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { mockApps } from "~/mock/data";
-import { mockSubmit } from "~/mock/service";
-import type { SupportApp } from "~/utils/types";
+import { Link } from "react-router";
+import { PlusIcon } from "@heroicons/react/24/outline";
+import { ActionButton, PrimaryButton } from "~/components/buttons";
+import { Badge, Card, EmptyState } from "~/components/core";
+import { Header } from "~/components/layouts";
+import { CardShimmer } from "~/components/shimmer";
+import { appTypeIcons, appTypeLabel } from "~/components/forms/app";
+import { useApps } from "~/hooks/data";
+import { useDebounce } from "~/hooks/ui/use-debounce";
+import { cn } from "~/lib/utils";
 import { formatDate } from "~/utils/date";
+import { useUrlState } from "~/utils/use-url-state";
+import { useHasRole } from "~/utils/with-roles";
+import type { AppStatus, AppType, SupportApp } from "~/utils/types";
+import CreateAppModal from "./create-app";
+import DeleteAppModal from "./delete-app";
+import EditAppModal from "./edit-app";
 
-const columns = [
-  { label: "Name", key: "name" },
-  { label: "Type", key: "type" },
-  { label: "Status", key: "status" },
-  { label: "API Key", key: "apiKey" },
-  { label: "Created", key: "createdAt" },
-  { label: "", key: "actions" },
+export function meta() {
+  return [{ title: "Apps — Asotie" }];
+}
+
+const typeFilters: { value: AppType | ""; label: string }[] = [
+  { value: "", label: "All" },
+  { value: "web_widget", label: "Web chat" },
+  { value: "email", label: "Email" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "api", label: "API" },
 ];
 
-const typeOptions = [
-  { label: "Web Widget", value: "web_widget" },
-  { label: "Email", value: "email" },
-  { label: "WhatsApp", value: "whatsapp" },
-  { label: "API", value: "api" },
-];
-
-const typeLabels: Record<string, string> = {
-  web_widget: "Web Widget",
-  email: "Email",
-  whatsapp: "WhatsApp",
-  api: "API",
-};
-
-const CreateAppModal: FC<{
-  open: boolean;
-  onClose: () => void;
-  onCreate: (app: SupportApp) => void;
-}> = ({ open, onClose, onCreate }) => {
-  const form = useFormik({
-    initialValues: { name: "", type: "web_widget" },
-    validationSchema: Yup.object({
-      name: Yup.string().required("App name is required"),
-      type: Yup.string().required("Type is required"),
-    }),
-    onSubmit: async (values, helpers) => {
-      const newApp: SupportApp = {
-        id: `app_${Date.now()}`,
-        organizationId: "org_1",
-        name: values.name,
-        type: values.type as SupportApp["type"],
-        status: "draft",
-        apiKey: `sk-live-${Math.random().toString(36).substring(2, 14)}`,
-        integrations: [],
-        createdAt: new Date().toISOString(),
-      };
-      await mockSubmit(newApp);
-      onCreate(newApp);
-      helpers.resetForm();
-      onClose();
-    },
-  });
-
+const AppCard: FC<{ app: SupportApp; canManage: boolean; onEdit: () => void; onDelete: () => void }> = ({
+  app,
+  canManage,
+  onEdit,
+  onDelete,
+}) => {
+  const Icon = appTypeIcons[app.type];
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Create App"
-      size="md"
-      footer={
-        <>
-          <PrimaryButton variant="secondary" onClick={onClose}>Cancel</PrimaryButton>
-          <PrimaryButton onClick={() => form.handleSubmit()} loading={form.isSubmitting}>
-            Create App
-          </PrimaryButton>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <TextInput
-          id="name"
-          label="App Name"
-          placeholder="e.g. Website Chat"
-          values={form.values}
-          errors={form.errors}
-          touched={form.touched}
-          handleChange={form.handleChange}
-          handleBlur={form.handleBlur}
-        />
-        <SelectInput
-          id="type"
-          label="Channel Type"
-          options={typeOptions}
-          values={form.values}
-          errors={form.errors}
-          touched={form.touched}
-          setFieldValue={form.setFieldValue}
-          handleBlur={form.handleBlur}
-        />
+    <Card className="flex flex-col p-5 transition hover:border-line-strong">
+      <div className="flex items-start justify-between gap-3">
+        <Link to={`/apps/${app.id}`} className="flex min-w-0 items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary-500/10 text-primary-600 dark:text-primary-300">
+            <Icon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-medium text-ink">{app.name}</p>
+            <p className="text-xs text-ink-muted">{appTypeLabel(app.type)}</p>
+          </div>
+        </Link>
+        <Badge status={app.status} />
       </div>
-    </Modal>
+      <p className="mt-3 line-clamp-2 min-h-[2.5rem] text-sm text-ink-soft">{app.description || "No description"}</p>
+      {!app.setup.firstConversationAt && (
+        <Link
+          to={`/apps/${app.id}?tab=setup`}
+          className="mt-3 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-500/15 dark:text-amber-200"
+        >
+          <span>Setup not finished — no messages yet</span>
+          <span>Continue setup →</span>
+        </Link>
+      )}
+      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4 text-center">
+        <div>
+          <p className="text-xl font-medium tabular-nums text-figure">{app.stats.openConversations}</p>
+          <p className="text-[11px] text-ink-muted">Open</p>
+        </div>
+        <div>
+          <p className="text-xl font-medium tabular-nums text-figure">{app.stats.totalConversations}</p>
+          <p className="text-[11px] text-ink-muted">Total</p>
+        </div>
+        <div>
+          <p className="text-xl font-medium tabular-nums text-figure">{app.agentIds.length}</p>
+          <p className="text-[11px] text-ink-muted">Agents</p>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-xs text-ink-muted">Created {formatDate(app.createdAt)}</span>
+        <div className="flex items-center gap-1">
+          <Link to={`/apps/${app.id}`}>
+            <ActionButton action="view" tooltip="Open" />
+          </Link>
+          {canManage && (
+            <>
+              <ActionButton action="edit" tooltip="Edit" onClick={onEdit} />
+              <ActionButton action="remove" tooltip="Delete" onClick={onDelete} />
+            </>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 };
 
 const AppsPage: FC = () => {
-  const [apps, setApps] = useState<SupportApp[]>(mockApps);
-  const [showCreate, setShowCreate] = useState(false);
+  const canManage = useHasRole(["admin"]);
+  const [modal, setModal] = useUrlState("modal");
+  const [id, setId] = useUrlState("id");
+  const [type, setType] = useUrlState("type");
+  const [status, setStatus] = useState<AppStatus | "">("");
+  const [search, setSearch] = useState("");
+  const debounced = useDebounce(search);
+
+  const { apps, loading } = useApps({
+    type: (type as AppType) || null,
+    status: status || null,
+    search: debounced || null,
+  });
+
+  const open = (name: string, appId?: string) => {
+    setId(appId ?? null);
+    setModal(name);
+  };
+  const close = () => {
+    setModal(null);
+    setId(null);
+  };
+  const filtered = Boolean(type || status || debounced);
 
   return (
-    <div>
+    <div className="space-y-6">
       <Header
         title="Apps"
-        description="Manage your support channel apps"
-        action={<PrimaryButton onClick={() => setShowCreate(true)}>Create App</PrimaryButton>}
+        description="Channels your customers use to reach you"
+        action={
+          canManage && (
+            <PrimaryButton onClick={() => open("create")}>
+              <PlusIcon className="h-4 w-4" /> New app
+            </PrimaryButton>
+          )
+        }
       />
-      <TableComponent
-        columns={columns}
-        data={apps}
-        loading={false}
-        renderItem={(app) => (
-          <>
-            <td className="px-4 py-3">
-              <p className="text-sm font-medium text-ink">{app.name}</p>
-            </td>
-            <td className="px-4 py-3">
-              <span className="text-sm text-ink-soft">{typeLabels[app.type] || app.type}</span>
-            </td>
-            <td className="px-4 py-3">
-              <Badge status={app.status} />
-            </td>
-            <td className="px-4 py-3">
-              <code className="rounded-md bg-surface-2 px-2 py-0.5 text-xs text-ink-soft">
-                {app.apiKey.slice(0, 16)}&hellip;
-              </code>
-            </td>
-            <td className="px-4 py-3 text-sm text-ink-muted">{formatDate(app.createdAt)}</td>
-            <td className="px-4 py-3 text-right">
-              <div className="flex items-center justify-end gap-1">
-                <ActionButton action="view" tooltip="View app" />
-                <ActionButton action="edit" tooltip="Edit app" />
-                <ActionButton action="remove" tooltip="Delete app" />
-              </div>
-            </td>
-          </>
-        )}
-        emptyTitle="No apps yet"
-        emptyDescription="Create your first support app to get started."
-      />
-      <CreateAppModal
-        open={showCreate}
-        onClose={() => setShowCreate(false)}
-        onCreate={(app) => setApps((prev) => [...prev, app])}
-      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-1">
+          {typeFilters.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setType(f.value || null)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition",
+                (type ?? "") === f.value ? "bg-surface-2 text-ink" : "text-ink-muted hover:text-ink",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as AppStatus | "")}
+            className="h-10 rounded-md border border-line bg-field px-3 text-sm text-ink outline-none focus:border-primary-500"
+            aria-label="Filter by status"
+          >
+            <option value="">Any status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="draft">Draft</option>
+          </select>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search apps…"
+            className="h-10 w-full rounded-md border border-line bg-field px-3.5 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-primary-500 sm:w-56"
+          />
+        </div>
+      </div>
+
+      {loading && !apps.length ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <CardShimmer key={i} />
+          ))}
+        </div>
+      ) : apps.length === 0 ? (
+        <Card>
+          <EmptyState
+            title={filtered ? "No apps match these filters" : "No apps yet"}
+            description={
+              filtered
+                ? "Try a different type, status or search."
+                : "Create a web chat widget, email inbox, WhatsApp number or API app to start receiving conversations."
+            }
+            action={
+              !filtered && canManage ? (
+                <PrimaryButton onClick={() => open("create")}>
+                  <PlusIcon className="h-4 w-4" /> Create your first app
+                </PrimaryButton>
+              ) : undefined
+            }
+          />
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {apps.map((app) => (
+            <AppCard
+              key={app.id}
+              app={app}
+              canManage={canManage}
+              onEdit={() => open("edit", app.id)}
+              onDelete={() => open("delete", app.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {canManage && (
+        <>
+          <CreateAppModal open={modal === "create"} onClose={close} />
+          <EditAppModal open={modal === "edit"} id={id} onClose={close} />
+          <DeleteAppModal open={modal === "delete"} id={id} onClose={close} />
+        </>
+      )}
     </div>
   );
 };
