@@ -2,8 +2,8 @@ import { type FC } from "react";
 import { Link, useParams } from "react-router";
 import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "~/components/buttons";
-import { Badge, Card, EmptyState, Tabs } from "~/components/core";
-import { appTypeIcons, appTypeLabel } from "~/components/forms/app";
+import { Card, EmptyState, Tabs } from "~/components/core";
+import { AppStatusBadge, appTypeIcons, appTypeLabel } from "~/components/forms/app";
 import { Header, PageShimmer } from "~/components/layouts";
 import { useApp } from "~/hooks/data";
 import { getErrorCode } from "~/lib/errors";
@@ -78,7 +78,7 @@ const ViewAppPage: FC = () => {
         <span className="inline-flex items-center gap-1.5">
           <Icon className="h-4 w-4 text-primary-600 dark:text-primary-300" /> {appTypeLabel(app.type)}
         </span>
-        <Badge status={app.status} />
+        <AppStatusBadge app={app} />
       </div>
 
       <Tabs tabs={tabs} value={active} onChange={(v) => setTab(v === "overview" ? null : v)} />

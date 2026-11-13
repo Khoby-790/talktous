@@ -119,6 +119,7 @@ export const APP_FIELDS = gql`
       whatsappAccessTokenSet
       whatsappAppSecretSet
       whatsappConnectedVia
+      whatsappMetaAppId
       callbackUrl
       callbackSecret
     }
@@ -126,6 +127,7 @@ export const APP_FIELDS = gql`
       widgetScriptUrl
       embedSnippet
       inboundEmailWebhookUrl
+      inboundEmailAddress
       whatsappWebhookUrl
       apiBaseUrl
     }
@@ -142,6 +144,7 @@ export const APP_FIELDS = gql`
       credentialsError
       credentialsCheckedAt
       webhookVerifiedAt
+      webhookMismatchAt
       widgetSeenAt
       widgetSeenOrigin
       lastApiCallAt

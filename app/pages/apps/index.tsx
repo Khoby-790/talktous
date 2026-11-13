@@ -2,10 +2,10 @@ import { type FC, useState } from "react";
 import { Link } from "react-router";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { ActionButton, PrimaryButton } from "~/components/buttons";
-import { Badge, Card, EmptyState } from "~/components/core";
+import { Card, EmptyState } from "~/components/core";
 import { Header } from "~/components/layouts";
 import { CardShimmer } from "~/components/shimmer";
-import { appTypeIcons, appTypeLabel } from "~/components/forms/app";
+import { AppStatusBadge, appTypeIcons, appTypeLabel } from "~/components/forms/app";
 import { useApps } from "~/hooks/data";
 import { useDebounce } from "~/hooks/ui/use-debounce";
 import { cn } from "~/lib/utils";
@@ -48,7 +48,7 @@ const AppCard: FC<{ app: SupportApp; canManage: boolean; onEdit: () => void; onD
             <p className="text-xs text-ink-muted">{appTypeLabel(app.type)}</p>
           </div>
         </Link>
-        <Badge status={app.status} />
+        <AppStatusBadge app={app} />
       </div>
       <p className="mt-3 line-clamp-2 min-h-[2.5rem] text-sm text-ink-soft">{app.description || "No description"}</p>
       {!app.setup.firstConversationAt && (

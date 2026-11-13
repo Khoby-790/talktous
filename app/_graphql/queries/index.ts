@@ -347,6 +347,7 @@ export const ENVIRONMENT = gql`
         configId
         graphVersion
       }
+      inboundEmailDomain
     }
   }
 `;

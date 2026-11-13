@@ -154,9 +154,9 @@ export const GettingStarted: FC = () => {
       {!g.emailSendingConfigured && (
         <div className="border-t border-line px-5 py-4">
           <Callout tone="warning" title="Emails aren't being sent yet">
-            Invitations, password resets and email-channel replies need an email account configured on the server
-            (<code className="font-mono text-xs">SMTP_*</code> in <code className="font-mono text-xs">talktous-api/.env</code>).
-            Until then, invite links are shown on screen so you can share them yourself.
+            Asotie hasn&apos;t switched on email for your workspace yet, so invitations, password resets and email
+            replies aren&apos;t emailed. Invite links are shown on screen so you can share them yourself. Contact Asotie
+            support to switch email on — there&apos;s nothing for you to set up.
           </Callout>
         </div>
       )}

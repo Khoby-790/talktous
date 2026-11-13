@@ -154,6 +154,8 @@ export type ChannelConfig = {
   whatsappAppSecretSet: boolean;
   /** "embedded_signup" when connected through Meta's popup; null when set up by hand. */
   whatsappConnectedVia: "embedded_signup" | null;
+  /** The customer's own Meta app, detected from their token, for direct links. */
+  whatsappMetaAppId: string | null;
   callbackUrl: string | null;
   callbackSecret: string | null;
 };
@@ -162,6 +164,8 @@ export type AppEndpoints = {
   widgetScriptUrl: string;
   embedSnippet: string | null;
   inboundEmailWebhookUrl: string | null;
+  /** Set when the platform receives email itself: forward the mailbox here. */
+  inboundEmailAddress: string | null;
   whatsappWebhookUrl: string | null;
   apiBaseUrl: string;
 };
@@ -180,6 +184,8 @@ export type AppSetup = {
   credentialsError: string | null;
   credentialsCheckedAt: string | null;
   webhookVerifiedAt: string | null;
+  /** Last WhatsApp webhook ignored because it named another number (e.g. Meta's sample). */
+  webhookMismatchAt: string | null;
   widgetSeenAt: string | null;
   widgetSeenOrigin: string | null;
   lastApiCallAt: string | null;
@@ -197,6 +203,7 @@ export type Environment = {
   realtimeProvider: "stream" | "pusher";
   /** Set when WhatsApp can be connected through Meta's Embedded Signup popup. */
   whatsappSignup: { appId: string; configId: string; graphVersion: string } | null;
+  inboundEmailDomain: string | null;
 };
 
 export type GettingStarted = {

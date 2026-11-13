@@ -7,7 +7,7 @@ import {
   DevicePhoneMobileIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
-import { SelectInput, TextArea, TextInput, Toggle } from "~/components/core";
+import { Badge, SelectInput, TextArea, TextInput, Toggle } from "~/components/core";
 import { Callout, ExternalLink, MenuPath } from "~/components/guides";
 import { useEnvironment, type AppInput } from "~/hooks/data";
 import type { AppStatus, AppType, SupportApp } from "~/utils/types";
@@ -66,6 +66,17 @@ export const appTypeIcons: Record<AppType, typeof EnvelopeIcon> = {
   whatsapp: DevicePhoneMobileIcon,
   api: CodeBracketIcon,
 };
+
+/**
+ * "Setting up" until the first conversation arrives: an active app that has
+ * never received a message isn't really live, and calling it Active misleads.
+ */
+export const AppStatusBadge: FC<{ app: Pick<SupportApp, "status" | "setup"> }> = ({ app }) =>
+  app.status === "active" && !app.setup.firstConversationAt ? (
+    <Badge status="pending" label="Setting up" />
+  ) : (
+    <Badge status={app.status} />
+  );
 
 export const appTypeLabel = (type: string) => APP_TYPES.find((t) => t.value === type)?.label ?? type;
 
@@ -166,8 +177,35 @@ export const valuesToInput = (values: AppFormValues, type: AppType): AppInput =>
   return input;
 };
 
+/** Mirrors the API's checks, so a browser-autofilled email or password is caught before saving. */
+const META_ID = /^\d{5,32}$/;
+const META_TOKEN = /^EA[A-Za-z0-9]{40,}$/;
+const META_APP_SECRET = /^[a-f0-9]{32}$/i;
+
+export const whatsappFieldRules = {
+  whatsappPhoneNumberId: Yup.string()
+    .trim()
+    .matches(META_ID, { message: "The Phone number ID is a long number from Meta", excludeEmptyString: true }),
+  whatsappBusinessAccountId: Yup.string()
+    .trim()
+    .matches(META_ID, {
+      message: "The Business account ID is a long number from Meta. Did your browser fill in an email?",
+      excludeEmptyString: true,
+    }),
+  whatsappAccessToken: Yup.string()
+    .trim()
+    .matches(META_TOKEN, {
+      message: "That isn't a Meta access token (they start with EA). Did your browser fill in a password?",
+      excludeEmptyString: true,
+    }),
+  whatsappAppSecret: Yup.string()
+    .trim()
+    .matches(META_APP_SECRET, { message: "The App secret is 32 letters and numbers", excludeEmptyString: true }),
+};
+
 export const appValidationSchema = (type: AppType) =>
   Yup.object({
+    ...(type === "whatsapp" ? whatsappFieldRules : {}),
     name: Yup.string().trim().required("Give the app a name").max(120),
     description: Yup.string().max(500),
     primaryColor:
@@ -242,6 +280,13 @@ interface AppFormProps {
   secretsSet?: { whatsappAccessToken?: boolean; whatsappAppSecret?: boolean };
 }
 
+const NAME_PLACEHOLDERS: Record<AppType, string> = {
+  web_widget: "Website chat",
+  email: "Support inbox",
+  whatsapp: "Customer support",
+  api: "Mobile app support",
+};
+
 /** Points people without a Meta app to the easiest path instead of asking for IDs up front. */
 const WhatsappFormHint: FC<{ connected: boolean }> = ({ connected }) => {
   const { environment } = useEnvironment();
@@ -255,16 +300,82 @@ const WhatsappFormHint: FC<{ connected: boolean }> = ({ connected }) => {
       </Callout>
     );
   return (
-    <Callout tone="tip" className="sm:col-span-2" title="Where to find these">
+    <Callout tone="tip" className="sm:col-span-2" title="No Meta app yet? Leave these empty">
       <p>
-        In your Meta app on{" "}
+        After you save, the app&apos;s Setup tab walks you through creating one and shows exactly where each value is.
+        Already have one? In your app on{" "}
         <ExternalLink href="https://developers.facebook.com/apps">developers.facebook.com</ExternalLink>, open{" "}
-        <MenuPath items={["WhatsApp", "API Setup"]} />. Don&apos;t have a Meta app yet? Leave these empty and save — the
-        app&apos;s Setup tab walks you through it step by step.
+        <MenuPath items={["Use cases", "Customize", "Step 1. Try it out"]} />.
       </p>
     </Callout>
   );
 };
+
+/**
+ * The WhatsApp Cloud API fields, shared by the app form and the setup guide's
+ * "copy your details" step. Tokens are `secret` inputs, never password fields,
+ * so browsers don't autofill the user's own login into them.
+ */
+export const WhatsappFields: FC<{
+  form: FormikProps<AppFormValues>;
+  secretsSet?: AppFormProps["secretsSet"];
+  /** The setup guide already explains where each value is. */
+  showHint?: boolean;
+}> = ({ form, secretsSet = {}, showHint = true }) => (
+  <>
+    {showHint && <WhatsappFormHint connected={form.values.whatsappPhoneNumberId !== ""} />}
+    <TextInput
+      id="whatsappPhoneNumberId"
+      label="Phone number ID"
+      placeholder="e.g. 100000000000001"
+      inputMode="numeric"
+      autoComplete="off"
+      hint="Meta: “Phone Number ID”, next to your number"
+      {...form}
+    />
+    <TextInput
+      id="whatsappBusinessAccountId"
+      label="Business account ID"
+      placeholder="e.g. 200000000000002"
+      inputMode="numeric"
+      autoComplete="off"
+      hint="Meta: “Messaging account ID” (older pages: “WhatsApp Business Account ID”)"
+      {...form}
+    />
+    <TextInput
+      id="whatsappAccessToken"
+      label="Access token"
+      placeholder={secretsSet.whatsappAccessToken ? "Saved — paste a new one to replace it" : "Starts with EAA…"}
+      secret
+      hint={
+        secretsSet.whatsappAccessToken
+          ? "Saved — leave blank to keep it"
+          : "Meta: “Access token” → Generate token. It expires in about 24 hours; see “Go live” for a permanent one"
+      }
+      {...form}
+    />
+    <TextInput
+      id="whatsappDisplayNumber"
+      label="Display number (optional)"
+      placeholder="Filled in when the connection test passes"
+      autoComplete="off"
+      hint="Your WhatsApp number, shown to your team"
+      {...form}
+    />
+    <TextInput
+      id="whatsappAppSecret"
+      label="App secret (recommended)"
+      placeholder={secretsSet.whatsappAppSecret ? "Saved — paste a new one to replace it" : "32 letters and numbers"}
+      secret
+      hint={
+        secretsSet.whatsappAppSecret
+          ? "Saved — leave blank to keep it"
+          : "Meta: App settings › Basic › App secret › Show. Proves messages really come from Meta"
+      }
+      {...form}
+    />
+  </>
+);
 
 export const AppForm: FC<AppFormProps> = ({
   form,
@@ -276,7 +387,7 @@ export const AppForm: FC<AppFormProps> = ({
 }) => (
   <div className="space-y-6 divide-y divide-line">
     <Section title="App details">
-      <TextInput id="name" label="Name" placeholder="Website chat" {...form} />
+      <TextInput id="name" label="Name" placeholder={NAME_PLACEHOLDERS[type]} required {...form} />
       {showStatus && <SelectInput id="status" label="Status" options={statusOptions} {...form} />}
       <TextArea id="description" label="Description" rows={2} className="sm:col-span-2" {...form} />
     </Section>
@@ -350,52 +461,7 @@ export const AppForm: FC<AppFormProps> = ({
 
     {type === "whatsapp" && (
       <Section title="WhatsApp Cloud API">
-        <WhatsappFormHint connected={form.values.whatsappPhoneNumberId !== ""} />
-        <TextInput
-          id="whatsappPhoneNumberId"
-          label="Phone number ID"
-          placeholder="e.g. 1511241778728173"
-          hint="Labelled “Phone Number ID” next to your number"
-          {...form}
-        />
-        <TextInput
-          id="whatsappBusinessAccountId"
-          label="Business account ID"
-          placeholder="e.g. 2765099410554959"
-          hint="Labelled “Messaging account ID” (or “WhatsApp Business Account ID”)"
-          {...form}
-        />
-        <TextInput
-          id="whatsappAccessToken"
-          label="Access token"
-          type="password"
-          autoComplete="off"
-          hint={
-            secretsSet.whatsappAccessToken
-              ? "Saved — leave blank to keep it"
-              : "The “Access token” box. It expires in ~24h — use a permanent one to go live"
-          }
-          {...form}
-        />
-        <TextInput
-          id="whatsappDisplayNumber"
-          label="Display number"
-          placeholder="+1 555 146 6346"
-          hint="Your WhatsApp number, shown to your team. Filled in automatically when you test the connection"
-          {...form}
-        />
-        <TextInput
-          id="whatsappAppSecret"
-          label="App secret (optional)"
-          type="password"
-          autoComplete="off"
-          hint={
-            secretsSet.whatsappAppSecret
-              ? "Saved — leave blank to keep it"
-              : "App settings › Basic › App secret. Lets us reject fake webhooks"
-          }
-          {...form}
-        />
+        <WhatsappFields form={form} secretsSet={secretsSet} />
       </Section>
     )}
 
@@ -404,7 +470,7 @@ export const AppForm: FC<AppFormProps> = ({
         <TextInput
           id="callbackUrl"
           label="Callback URL (optional)"
-          placeholder="https://api.yourcompany.com/talktous/replies"
+          placeholder="https://api.yourcompany.com/asotie/replies"
           hint="We POST agent replies here. Without it, poll the conversation endpoint."
           className="sm:col-span-2"
           {...form}
