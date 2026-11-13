@@ -342,6 +342,11 @@ export const ENVIRONMENT = gql`
       mailConfigured
       billingConfigured
       realtimeProvider
+      whatsappSignup {
+        appId
+        configId
+        graphVersion
+      }
     }
   }
 `;

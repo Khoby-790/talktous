@@ -114,6 +114,8 @@ export type ChannelConfig = {
   whatsappVerifyToken: string | null;
   whatsappAccessTokenSet: boolean;
   whatsappAppSecretSet: boolean;
+  /** "embedded_signup" when connected through Meta's popup; null when set up by hand. */
+  whatsappConnectedVia: "embedded_signup" | null;
   callbackUrl: string | null;
   callbackSecret: string | null;
 };
@@ -155,6 +157,8 @@ export type Environment = {
   mailConfigured: boolean;
   billingConfigured: boolean;
   realtimeProvider: "stream" | "pusher";
+  /** Set when WhatsApp can be connected through Meta's Embedded Signup popup. */
+  whatsappSignup: { appId: string; configId: string; graphVersion: string } | null;
 };
 
 export type GettingStarted = {

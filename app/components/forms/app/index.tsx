@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { SelectInput, TextArea, TextInput, Toggle } from "~/components/core";
 import { Callout, ExternalLink, MenuPath } from "~/components/guides";
-import type { AppInput } from "~/hooks/data";
+import { useEnvironment, type AppInput } from "~/hooks/data";
 import type { AppStatus, AppType, SupportApp } from "~/utils/types";
 
 /** Flat form values for every app type; mapped to the nested API input on submit. */
@@ -242,6 +242,30 @@ interface AppFormProps {
   secretsSet?: { whatsappAccessToken?: boolean; whatsappAppSecret?: boolean };
 }
 
+/** Points people without a Meta app to the easiest path instead of asking for IDs up front. */
+const WhatsappFormHint: FC<{ connected: boolean }> = ({ connected }) => {
+  const { environment } = useEnvironment();
+  if (environment?.whatsappSignup && !connected)
+    return (
+      <Callout tone="tip" className="sm:col-span-2" title="No Meta account? Leave these empty">
+        <p>
+          After you save, the app&apos;s Setup tab connects your number in a Meta pop-up — no developer site and no
+          copying IDs. Only fill these in if you already run your own Meta app.
+        </p>
+      </Callout>
+    );
+  return (
+    <Callout tone="tip" className="sm:col-span-2" title="Where to find these">
+      <p>
+        In your Meta app on{" "}
+        <ExternalLink href="https://developers.facebook.com/apps">developers.facebook.com</ExternalLink>, open{" "}
+        <MenuPath items={["WhatsApp", "API Setup"]} />. Don&apos;t have a Meta app yet? Leave these empty and save — the
+        app&apos;s Setup tab walks you through it step by step.
+      </p>
+    </Callout>
+  );
+};
+
 export const AppForm: FC<AppFormProps> = ({
   form,
   type,
@@ -326,14 +350,7 @@ export const AppForm: FC<AppFormProps> = ({
 
     {type === "whatsapp" && (
       <Section title="WhatsApp Cloud API">
-        <Callout tone="tip" className="sm:col-span-2" title="Where to find these">
-          <p>
-            In your Meta app on{" "}
-            <ExternalLink href="https://developers.facebook.com/apps">developers.facebook.com</ExternalLink>, open{" "}
-            <MenuPath items={["WhatsApp", "API Setup"]} />. Don&apos;t have a Meta app yet? Save what you have — the
-            app&apos;s Setup tab walks you through creating one.
-          </p>
-        </Callout>
+        <WhatsappFormHint connected={form.values.whatsappPhoneNumberId !== ""} />
         <TextInput
           id="whatsappPhoneNumberId"
           label="Phone number ID"

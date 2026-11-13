@@ -107,6 +107,7 @@ export const APP_FIELDS = gql`
       whatsappVerifyToken
       whatsappAccessTokenSet
       whatsappAppSecretSet
+      whatsappConnectedVia
       callbackUrl
       callbackSecret
     }

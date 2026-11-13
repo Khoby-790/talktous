@@ -1,6 +1,6 @@
 import { type FC, type ReactNode, useState } from "react";
 import { Link } from "react-router";
-import { BoltIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon, BoltIcon } from "@heroicons/react/24/outline";
 import { CodeBlock } from "~/components/core";
 import { PrimaryButton } from "~/components/buttons";
 import {
@@ -20,7 +20,8 @@ import { getErrorMessage } from "~/lib/errors";
 import { cn } from "~/lib/utils";
 import { formatRelative } from "~/utils/date";
 import { useHasRole } from "~/utils/with-roles";
-import type { SupportApp, WidgetConfig } from "~/utils/types";
+import type { Environment, SupportApp, WidgetConfig } from "~/utils/types";
+import { WhatsappConnectButton } from "~/components/guides/whatsapp-connect";
 import { MobileGuide } from "./mobile-guide";
 
 const done = (value: unknown): StepStatus => (value ? "done" : "todo");
@@ -114,35 +115,266 @@ const ConnectionTest: FC<{ app: SupportApp; label?: string }> = ({ app, label = 
   );
 };
 
-const whatsappSteps = (app: SupportApp): GuideStep[] => {
+/** Direct links into a customer's Meta app, so nobody has to hunt through developers.facebook.com. */
+const metaPages = (metaAppId: string | null) => {
+  const base = metaAppId ? `https://developers.facebook.com/apps/${metaAppId}` : null;
+  return {
+    create: "https://developers.facebook.com/apps/creation/",
+    apiSetup: base ? `${base}/whatsapp-business/wa-dev-console/` : "https://developers.facebook.com/apps",
+    configuration: base ? `${base}/whatsapp-business/wa-settings/` : "https://developers.facebook.com/apps",
+    basic: base ? `${base}/settings/basic/` : "https://developers.facebook.com/apps",
+    known: Boolean(base),
+  };
+};
+
+/** "https://developers.facebook.com/apps/1234567890/…" (or the bare ID) → "1234567890". */
+const parseMetaAppId = (value: string) => value.match(/apps\/(\d{6,})/)?.[1] ?? value.trim().match(/^\d{6,}$/)?.[0] ?? null;
+
+const useMetaAppId = (appId: string) => {
+  const key = `talktous:meta-app:${appId}`;
+  const [value, setValue] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  });
+  const save = (next: string | null) => {
+    setValue(next);
+    try {
+      if (next) localStorage.setItem(key, next);
+      else localStorage.removeItem(key);
+    } catch {
+      /* private mode: the links just last for this visit */
+    }
+  };
+  return [value, save] as const;
+};
+
+const MetaAppLinker: FC<{ metaAppId: string | null; onChange: (id: string | null) => void }> = ({ metaAppId, onChange }) => {
+  const [draft, setDraft] = useState("");
+  const parsed = parseMetaAppId(draft);
+  if (metaAppId)
+    return (
+      <Callout tone="success" title="Your Meta app is linked">
+        The buttons in the next steps open the right page of app {metaAppId} directly.{" "}
+        <button type="button" className="font-medium underline" onClick={() => onChange(null)}>
+          Change
+        </button>
+      </Callout>
+    );
+  return (
+    <div className="space-y-2 rounded-lg border border-line p-3">
+      <p className="font-medium text-ink">Save yourself some clicking</p>
+      <p className="text-xs text-ink-muted">
+        Once your app is created, copy the address from your browser&apos;s address bar (it looks like{" "}
+        <Code>developers.facebook.com/apps/1234567890/…</Code>) and paste it here. The next steps will then take you
+        straight to each page.
+      </p>
+      <div className="flex gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Paste your Meta app's address or App ID"
+          className="h-[38px] flex-1 rounded-md border border-line bg-field px-3 text-sm"
+        />
+        <PrimaryButton size="sm" variant="secondary" disabled={!parsed} onClick={() => onChange(parsed)}>
+          Link
+        </PrimaryButton>
+      </div>
+      {draft && !parsed && <p className="text-xs text-red-600 dark:text-red-400">That doesn&apos;t contain an App ID.</p>}
+    </div>
+  );
+};
+
+/** A big "open this page" button, used instead of describing Meta's menus. */
+const OpenMeta: FC<{ href: string; children: ReactNode }> = ({ href, children }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer"
+    className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-medium text-primary-700 hover:bg-surface-2 dark:text-primary-300"
+  >
+    {children}
+    <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+  </a>
+);
+
+const whatYouNeed = (
+  <ul className="list-disc space-y-1 pl-5">
+    <li>
+      <strong>A phone number for your business</strong> that can receive an SMS or call. It must not be in use on the
+      WhatsApp app — if it is, delete that WhatsApp account first (or use a new number).
+    </li>
+    <li>Your business name and website, as you want customers to see them.</li>
+    <li>
+      A Facebook login. No account yet? You can create one in the window that opens — no Meta developer account or
+      business setup needed beforehand.
+    </li>
+  </ul>
+);
+
+interface WhatsappGuideOptions {
+  signup: Environment["whatsappSignup"];
+  manual: boolean;
+  setManual: (manual: boolean) => void;
+  metaAppId: string | null;
+  setMetaAppId: (id: string | null) => void;
+}
+
+const whatsappSteps = (app: SupportApp, options: WhatsappGuideOptions): GuideStep[] => {
   const c = app.channelConfig;
   const s = app.setup;
+  const viaSignup = c.whatsappConnectedVia === "embedded_signup";
+  const useSignup = Boolean(options.signup) && (!options.manual || viaSignup);
+
+  const firstMessage: GuideStep = {
+    id: "first-message",
+    title: "Send yourself a test message",
+    status: done(s.firstConversationAt),
+    summary: firstMessageSummary(app),
+    body: (
+      <p>
+        From your personal phone, send a WhatsApp message to <strong>{c.whatsappDisplayNumber ?? "your business number"}</strong>.
+        It appears in the{" "}
+        <Link to="/inbox" className="font-medium text-primary-700 underline dark:text-primary-300">Inbox</Link> within
+        seconds — reply from there and it goes back to your phone.
+        {!viaSignup && " Using Meta's free test number? First add your phone under “To” on the API Setup page (it can only message up to 5 numbers you verify there)."}
+      </p>
+    ),
+  };
+
+  const twentyFourHours = (
+    <Callout tone="info" title="The 24-hour rule">
+      WhatsApp allows free-form replies only within 24 hours of the customer&apos;s last message. Later replies fail and
+      are marked as failed in the inbox.
+    </Callout>
+  );
+
+  if (useSignup && options.signup) {
+    return [
+      {
+        id: "connect",
+        title: "Connect your WhatsApp number",
+        status: done(s.credentialsSaved),
+        summary: s.credentialsSaved
+          ? `Connected${c.whatsappDisplayNumber ? ` · ${c.whatsappDisplayNumber}` : ""}`
+          : "About 5 minutes, in a Meta window — no developer setup",
+        body: (
+          <>
+            <p>
+              Click the button and Meta guides you through everything in a pop-up: signing in, creating your WhatsApp
+              Business account and verifying your number. When it closes, we finish the rest automatically.
+            </p>
+            <p className="font-medium text-ink">Have these ready</p>
+            {whatYouNeed}
+            <WhatsappConnectButton
+              appId={app.id}
+              config={options.signup}
+              label={s.credentialsSaved ? "Reconnect with WhatsApp" : "Connect with WhatsApp"}
+            />
+            <p className="text-xs text-ink-muted">
+              Pop-up blocked? Allow pop-ups for this site and click again. Already set up a Meta app yourself?{" "}
+              <button type="button" className="font-medium underline" onClick={() => options.setManual(true)}>
+                Enter your details manually
+              </button>
+              .
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "webhook",
+        title: "Messages start flowing to your inbox",
+        status: done(s.webhookVerifiedAt),
+        summary: s.webhookVerifiedAt ? `Meta confirmed delivery ${formatRelative(s.webhookVerifiedAt)}` : "Set up for you when you connect",
+        body: (
+          <>
+            <PublicUrlWarning who="Meta" />
+            <p>
+              Nothing to do here: connecting tells Meta to send this number&apos;s messages to Asotie, and this ticks
+              off when Meta confirms. If it doesn&apos;t within a minute of connecting, connect again.
+            </p>
+          </>
+        ),
+      },
+      firstMessage,
+      agentsStep(app),
+      {
+        id: "go-live",
+        title: "Verify your business",
+        status: "optional",
+        summary: "Raises Meta's messaging limits and gets your display name approved",
+        body: (
+          <>
+            <p>
+              You can chat with customers straight away. Meta asks you to verify your business to lift its starting
+              limits — the only step that happens on Meta&apos;s site.
+            </p>
+            <OpenMeta href="https://business.facebook.com/settings/security">Open business verification</OpenMeta>
+            {twentyFourHours}
+          </>
+        ),
+      },
+    ];
+  }
+
+  const pages = metaPages(options.metaAppId);
   return [
+    {
+      id: "before",
+      title: "Before you start",
+      status: s.credentialsSaved ? "done" : "todo",
+      summary: s.credentialsSaved ? "Done" : "What you need — about 15 minutes",
+      body: (
+        <>
+          {options.signup && (
+            <Callout tone="tip" title="There's an easier way">
+              Connect in a Meta pop-up instead — no developer site, no copying IDs.{" "}
+              <button type="button" className="font-medium underline" onClick={() => options.setManual(false)}>
+                Use “Connect with WhatsApp”
+              </button>
+            </Callout>
+          )}
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              <strong>A Facebook account.</strong> No account?{" "}
+              <ExternalLink href="https://www.facebook.com/r.php">Create one</ExternalLink> first — you&apos;ll use it to
+              sign in to Meta&apos;s developer site.
+            </li>
+            <li>
+              <strong>Nothing else to start with.</strong> Meta gives you a free test number, so you can try everything
+              before adding your real number (that comes in “Go live”).
+            </li>
+          </ul>
+        </>
+      ),
+    },
     {
       id: "meta-app",
       title: "Create a Meta app with WhatsApp",
       status: done(s.credentialsSaved),
-      summary: s.credentialsSaved ? "Done" : "About 5 minutes, on developers.facebook.com",
+      summary: s.credentialsSaved ? "Done" : "On developers.facebook.com",
       body: (
         <>
           <Instructions>
             <li>
-              Go to <ExternalLink href="https://developers.facebook.com/apps">developers.facebook.com/apps</ExternalLink> and
-              sign in with your Facebook account.
+              <OpenMeta href={pages.create}>Create a Meta app</OpenMeta>
+              <span className="mt-1 block">
+                Sign in with Facebook. If asked to register as a developer, accept — it&apos;s free and takes a minute.
+              </span>
             </li>
             <li>
-              Click <MenuPath items={["Create app"]} />, choose the <strong>Business</strong> type, and connect it to your
-              business (create one when asked).
+              Give the app any name (e.g. “{app.name} support”). When asked what it&apos;s for, choose the{" "}
+              <strong>WhatsApp</strong> option (“Connect with customers through WhatsApp”).
             </li>
             <li>
-              On the app dashboard, find <strong>WhatsApp</strong> and click <MenuPath items={["Set up"]} />. Meta gives you
-              a free test number straight away.
+              When asked for a business portfolio, pick yours or <strong>create one</strong> — just your business name
+              and email.
             </li>
+            <li>Finish creating the app. Meta adds WhatsApp and a free test number for you.</li>
           </Instructions>
-          <Callout tone="tip">
-            Two Meta websites are involved: <strong>developers.facebook.com</strong> (your app, IDs, webhook) and{" "}
-            <strong>business.facebook.com</strong> (permanent tokens, verification, billing). Same login.
-          </Callout>
+          <MetaAppLinker metaAppId={options.metaAppId} onChange={options.setMetaAppId} />
         </>
       ),
     },
@@ -153,9 +385,13 @@ const whatsappSteps = (app: SupportApp): GuideStep[] => {
       summary: s.credentialsSaved ? `Saved${c.whatsappDisplayNumber ? ` · ${c.whatsappDisplayNumber}` : ""}` : undefined,
       body: (
         <>
-          <p>
-            In your Meta app open <MenuPath items={["WhatsApp", "API Setup"]} />. Under the test number you&apos;ll see:
-          </p>
+          <OpenMeta href={pages.apiSetup}>Open API Setup</OpenMeta>
+          {!pages.known && (
+            <p className="text-xs text-ink-muted">
+              Open your app, then <MenuPath items={["WhatsApp", "API Setup"]} /> in the left menu.
+            </p>
+          )}
+          <p>Click <strong>Generate access token</strong>, then copy these four values into the Settings tab:</p>
           <div className="overflow-hidden rounded-lg border border-line">
             <table className="w-full text-left text-xs">
               <thead className="bg-surface-2 text-ink-muted">
@@ -178,7 +414,7 @@ const whatsappSteps = (app: SupportApp): GuideStep[] => {
                   <td className="px-3 py-2">Access token</td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-2">The phone number itself</td>
+                  <td className="px-3 py-2">The phone number itself (“From”)</td>
                   <td className="px-3 py-2">Display number</td>
                 </tr>
               </tbody>
@@ -187,7 +423,7 @@ const whatsappSteps = (app: SupportApp): GuideStep[] => {
           <p>
             Enter them on the <TabLink app={app} tab="settings">Settings tab</TabLink>.
           </p>
-          <Callout tone="warning" title="The access token on that page expires in about 24 hours">
+          <Callout tone="warning" title="That access token expires in about 24 hours">
             It&apos;s fine for trying things out. Before real customers use this number, create a permanent token (see
             “Go live” below).
           </Callout>
@@ -217,44 +453,30 @@ const whatsappSteps = (app: SupportApp): GuideStep[] => {
           <PublicUrlWarning who="Meta" />
           <Instructions>
             <li>
-              In your Meta app open <MenuPath items={["WhatsApp", "Configuration"]} /> and click <strong>Edit</strong> in
-              the Webhook section.
+              <OpenMeta href={pages.configuration}>Open WhatsApp Configuration</OpenMeta>
+              {!pages.known && (
+                <span className="mt-1 block text-xs text-ink-muted">
+                  Or <MenuPath items={["WhatsApp", "Configuration"]} /> in your app&apos;s left menu.
+                </span>
+              )}
             </li>
             <li>
-              Paste these two values, then click <strong>Verify and save</strong>:
+              In the <strong>Webhook</strong> section click <strong>Edit</strong>, paste these two values, then click{" "}
+              <strong>Verify and save</strong>:
               <div className="mt-2 space-y-2">
                 <Copyable label="Callback URL" value={app.endpoints.whatsappWebhookUrl} />
                 <Copyable label="Verify token" value={c.whatsappVerifyToken} />
               </div>
             </li>
             <li>
-              Under <strong>Webhook fields</strong>, click <strong>Manage</strong> and subscribe to{" "}
-              <Code>messages</Code>.
+              Under <strong>Webhook fields</strong>, click <strong>Manage</strong> and subscribe to <Code>messages</Code>.
             </li>
           </Instructions>
           <p className="text-xs text-ink-muted">This step ticks itself off as soon as Meta verifies the URL.</p>
         </>
       ),
     },
-    {
-      id: "first-message",
-      title: "Send yourself a test message",
-      status: done(s.firstConversationAt),
-      summary: firstMessageSummary(app),
-      body: (
-        <Instructions>
-          <li>
-            In <MenuPath items={["WhatsApp", "API Setup"]} />, add your own phone under <strong>To</strong> (the test number
-            can only talk to up to 5 numbers you verify there).
-          </li>
-          <li>
-            From that phone, send a WhatsApp message to {c.whatsappDisplayNumber ?? "your test number"}. It appears in the{" "}
-            <Link to="/inbox" className="font-medium text-primary-700 underline dark:text-primary-300">Inbox</Link> within
-            seconds — reply from there and it goes back to your phone.
-          </li>
-        </Instructions>
-      ),
-    },
+    firstMessage,
     agentsStep(app),
     {
       id: "go-live",
@@ -266,11 +488,13 @@ const whatsappSteps = (app: SupportApp): GuideStep[] => {
           <p className="font-medium text-ink">1. A permanent access token</p>
           <Instructions>
             <li>
-              Go to <ExternalLink href="https://business.facebook.com/settings/system-users">business.facebook.com › Settings › System users</ExternalLink>{" "}
-              and add a system user with the <strong>Admin</strong> role.
+              <OpenMeta href="https://business.facebook.com/settings/system-users">Open System users</OpenMeta>
+              <span className="mt-1 block">
+                Add a system user with the <strong>Admin</strong> role.
+              </span>
             </li>
             <li>
-              <strong>Add assets</strong>: give it your app and your WhatsApp account (full control).
+              <strong>Assign assets</strong>: give it your app and your WhatsApp account (full control).
             </li>
             <li>
               <strong>Generate new token</strong> → choose your app → expiry <strong>Never</strong> → tick{" "}
@@ -283,24 +507,20 @@ const whatsappSteps = (app: SupportApp): GuideStep[] => {
           </Instructions>
           <p className="font-medium text-ink">2. Your own phone number</p>
           <p>
-            In <MenuPath items={["WhatsApp", "API Setup"]} /> choose <strong>Add phone number</strong>. It can&apos;t be
-            in use on the regular WhatsApp app. Then update the Phone number ID here.
+            On <OpenMeta href={pages.apiSetup}>API Setup</OpenMeta> choose <strong>Add phone number</strong>. It
+            can&apos;t be in use on the WhatsApp app. Then update the Phone number ID here.
           </p>
           <p className="font-medium text-ink">3. Verify your business and add billing</p>
           <p>
-            In <ExternalLink href="https://business.facebook.com/settings">Business settings</ExternalLink>, complete{" "}
-            <strong>Business verification</strong> and add a payment method, then switch your Meta app to{" "}
-            <strong>Live</strong>.
+            <OpenMeta href="https://business.facebook.com/settings/security">Open business verification</OpenMeta> and
+            add a payment method, then switch your Meta app to <strong>Live</strong>.
           </p>
           <p className="font-medium text-ink">Optional: the app secret</p>
           <p>
-            <MenuPath items={["App settings", "Basic", "App secret"]} /> on developers.facebook.com. Saving it lets us
-            reject webhooks that didn&apos;t come from Meta.
+            Copy it from <OpenMeta href={pages.basic}>App settings › Basic</OpenMeta>. Saving it lets us reject webhooks
+            that didn&apos;t come from Meta.
           </p>
-          <Callout tone="info" title="The 24-hour rule">
-            WhatsApp allows free-form replies only within 24 hours of the customer&apos;s last message. Later replies
-            fail and are marked as failed in the inbox.
-          </Callout>
+          {twentyFourHours}
         </>
       ),
     },
@@ -652,10 +872,18 @@ const SetupTab: FC<{ app: SupportApp }> = ({ app: initial }) => {
   const { app: fresh, refetch, loading } = useApp(initial.id, { pollInterval: incomplete ? 10_000 : undefined });
   const app = fresh ?? initial;
   const text = TITLES[app.type];
+  const [manual, setManual] = useState(false);
+  const [metaAppId, setMetaAppId] = useMetaAppId(app.id);
 
   const steps =
     app.type === "whatsapp"
-      ? whatsappSteps(app)
+      ? whatsappSteps(app, {
+          signup: environment?.whatsappSignup ?? null,
+          manual,
+          setManual,
+          metaAppId,
+          setMetaAppId,
+        })
       : app.type === "email"
         ? emailSteps(app, environment?.mailConfigured ?? false)
         : app.type === "web_widget"

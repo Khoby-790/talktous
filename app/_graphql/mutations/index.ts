@@ -335,6 +335,14 @@ export const CREATE_BILLING_PORTAL_SESSION = gql`
   }
 `;
 
+export const CONNECT_WHATSAPP = gql`
+  mutation ConnectWhatsapp($id: ID!, $input: ConnectWhatsappInput!) {
+    connectWhatsapp(id: $id, input: $input) {
+      id
+    }
+  }
+`;
+
 export const TEST_APP_CONNECTION = gql`
   mutation TestAppConnection($id: ID!) {
     testAppConnection(id: $id) {
