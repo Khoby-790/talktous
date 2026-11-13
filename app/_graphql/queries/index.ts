@@ -231,6 +231,11 @@ export const CONVERSATION = gql`
       customer {
         ...CustomerFields
       }
+      aiSummary {
+        text
+        generatedAt
+        stale
+      }
       messages(limit: $limit, before: $before) {
         hasMore
         items {
@@ -323,6 +328,40 @@ export const GETTING_STARTED = gql`
       integrationConnected
       brandingAdded
       emailSendingConfigured
+    }
+  }
+`;
+
+/* ── AI assist ───────────────────────────────────────────────────────── */
+export const AI_STATUS = gql`
+  query AiStatus {
+    aiStatus {
+      configured
+      enabled
+      available
+      provider
+      model
+      baseUrl
+      apiKeyLast4
+      verifiedAt
+      lastError
+      usedThisMonth
+      limit
+      draftsGenerated
+      draftsSentUnchanged
+      draftsSentEdited
+    }
+  }
+`;
+
+export const AI_PROVIDERS = gql`
+  query AiProviders {
+    aiProviders {
+      id
+      name
+      keyUrl
+      keyHint
+      needsBaseUrl
     }
   }
 `;

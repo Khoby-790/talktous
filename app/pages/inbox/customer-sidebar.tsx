@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Avatar, Badge, ChannelBadge, EmptyValue } from "~/components/core";
 import { Shimmer } from "~/components/shimmer";
+import { AiSummaryCard } from "~/components/conversations/ai-assist";
 import { useConversations } from "~/hooks/data";
 import { cn } from "~/lib/utils";
 import { formatDate, formatDuration, formatRelative, formatShort } from "~/utils/date";
@@ -54,6 +55,8 @@ const CustomerSidebar: FC<CustomerSidebarProps> = ({ conversation, onClose, link
           </button>
         )}
       </div>
+
+      <AiSummaryCard conversation={conversation} className="m-4 mb-0" />
 
       <section className="border-b border-line px-5 py-4">
         <p className="label-caps mb-2 text-ink-muted">Contact</p>

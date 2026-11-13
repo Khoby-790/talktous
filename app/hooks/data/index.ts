@@ -8,3 +8,4 @@ export * from "./use-conversations";
 export * from "./use-integrations";
 export * from "./use-billing";
 export * from "./use-setup";
+export * from "./use-ai";

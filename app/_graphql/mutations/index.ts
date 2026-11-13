@@ -319,3 +319,91 @@ export const TEST_APP_CONNECTION = gql`
     }
   }
 `;
+
+/* ── AI assist ───────────────────────────────────────────────────────── */
+export const AI_DRAFT_REPLY = gql`
+  mutation AiDraftReply($conversationId: ID!, $instruction: String) {
+    aiDraftReply(conversationId: $conversationId, instruction: $instruction) {
+      text
+      draftId
+    }
+  }
+`;
+
+export const AI_SUMMARIZE = gql`
+  mutation AiSummarize($conversationId: ID!, $refresh: Boolean) {
+    aiSummarize(conversationId: $conversationId, refresh: $refresh) {
+      text
+      generatedAt
+      stale
+    }
+  }
+`;
+
+export const AI_REWRITE = gql`
+  mutation AiRewrite($text: String!, $style: AiRewriteStyle!, $language: String, $conversationId: ID) {
+    aiRewrite(text: $text, style: $style, language: $language, conversationId: $conversationId) {
+      text
+    }
+  }
+`;
+
+export const SET_AI_ENABLED = gql`
+  mutation SetAiEnabled($enabled: Boolean!) {
+    setAiEnabled(enabled: $enabled) {
+      ...OrganizationFields
+    }
+  }
+  ${ORGANIZATION_FIELDS}
+`;
+
+const AI_STATUS_FIELDS = `
+  configured
+  enabled
+  available
+  provider
+  model
+  baseUrl
+  apiKeyLast4
+  verifiedAt
+  lastError
+  usedThisMonth
+  limit
+  draftsGenerated
+  draftsSentUnchanged
+  draftsSentEdited
+`;
+
+export const SAVE_AI_PROVIDER = gql`
+  mutation SaveAiProvider($input: AiProviderInput!) {
+    saveAiProvider(input: $input) {
+      ${AI_STATUS_FIELDS}
+    }
+  }
+`;
+
+export const REMOVE_AI_PROVIDER = gql`
+  mutation RemoveAiProvider {
+    removeAiProvider {
+      ${AI_STATUS_FIELDS}
+    }
+  }
+`;
+
+export const TEST_AI_PROVIDER = gql`
+  mutation TestAiProvider {
+    testAiProvider {
+      ok
+      message
+    }
+  }
+`;
+
+export const AI_MODELS = gql`
+  mutation AiModels($input: AiModelsInput!) {
+    aiModels(input: $input) {
+      id
+      name
+    }
+  }
+`;

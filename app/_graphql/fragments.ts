@@ -19,6 +19,7 @@ export const ORGANIZATION_FIELDS = gql`
       slaFirstResponseMinutes
       passwordMinLength
       sessionHours
+      aiEnabled
     }
   }
 `;
@@ -200,6 +201,7 @@ export const MESSAGE_FIELDS = gql`
     isInternal
     content
     deliveryStatus
+    aiAssisted
     createdAt
     attachments {
       url
@@ -253,6 +255,7 @@ export const PLAN_FIELDS = gql`
     conversationLimit
     integrations
     whatsapp
+    aiRequestsPerMonth
     features
   }
 `;

@@ -67,6 +67,7 @@ export const useSendMessage = () => {
     conversationId: string;
     content: string;
     isInternal?: boolean;
+    aiDraftId?: string | null;
     attachments?: { url: string; name: string; contentType?: string | null; size?: number | null }[];
   }) => (await mutate({ variables: { input } })).data?.sendMessage;
   return { sendMessage, ...rest };

@@ -8,12 +8,14 @@ import {
   LockClosedIcon,
   PaperAirplaneIcon,
   PaperClipIcon,
+  SparklesIcon,
   UserCircleIcon,
   UserPlusIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useReactiveVar } from "@apollo/client/react";
 import { currentTokenVar } from "~/_graphql/cache/auth";
+import { AiComposerTools } from "~/components/conversations/ai-assist";
 import { AttachmentList, PendingAttachments } from "~/components/conversations/attachments";
 import { Avatar, Badge, ChannelBadge, EmptyState, Spinner } from "~/components/core";
 import { ACCEPTED_FILE_TYPES, uploadFile } from "~/lib/uploads";
@@ -118,6 +120,11 @@ const MessageBubble: FC<{ message: Message; customerName: string }> = ({ message
           <span>
             {name} · {formatTime(message.createdAt)}
           </span>
+          {message.aiAssisted && (
+            <span className="inline-flex items-center gap-0.5 text-fuchsia-700 dark:text-phosphor" title="Started from an AI draft">
+              · <SparklesIcon className="h-3 w-3" /> AI-assisted
+            </span>
+          )}
           {outgoing && message.deliveryStatus && (
             <>
               <span>·</span>
@@ -197,6 +204,8 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
   const [mode, setMode] = useState<"reply" | "note">("reply");
   const [text, setText] = useState("");
   const [files, setFiles] = useState<PendingFile[]>([]);
+  // Set while the box holds an AI draft, so we can learn whether drafts are sent as-is.
+  const [draftId, setDraftId] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const token = useReactiveVar(currentTokenVar);
   const { sendMessage, loading } = useSendMessage();
@@ -209,6 +218,7 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
     setText("");
     setMode("reply");
     setFiles([]);
+    setDraftId(null);
   }, [conversation.id]);
 
   const addFiles = (list: FileList | File[] | null) => {
@@ -230,9 +240,16 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
     const content = text.trim();
     if ((!content && !ready.length) || loading || uploading) return;
     try {
-      await sendMessage({ conversationId: conversation.id, content, isInternal: note, attachments: ready });
+      await sendMessage({
+        conversationId: conversation.id,
+        content,
+        isInternal: note,
+        attachments: ready,
+        aiDraftId: note ? null : draftId,
+      });
       setText("");
       setFiles([]);
+      setDraftId(null);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -256,14 +273,14 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
 
   return (
     <div className="border-t border-line bg-surface p-3 sm:p-4">
-      <div className="mb-2 flex items-center gap-1">
+      <div className="mb-2 flex flex-wrap items-center gap-x-1 gap-y-1.5">
         {(["reply", "note"] as const).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => setMode(m)}
             className={cn(
-              "rounded-md px-2.5 py-1 text-xs font-medium transition",
+              "whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition",
               mode === m
                 ? m === "note"
                   ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
@@ -274,7 +291,16 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
             {m === "reply" ? "Reply" : "Internal note"}
           </button>
         ))}
-        <span className="ml-auto hidden text-[11px] text-ink-muted sm:inline">
+        <div className="ml-2">
+          <AiComposerTools
+            conversationId={conversation.id}
+            text={text}
+            setText={setText}
+            onDraft={setDraftId}
+            note={note}
+          />
+        </div>
+        <span className="ml-auto hidden text-[11px] text-ink-muted 2xl:inline">
           {note ? "Only your team can see notes" : channelHint} · ⌘/Ctrl+Enter to send
         </span>
       </div>

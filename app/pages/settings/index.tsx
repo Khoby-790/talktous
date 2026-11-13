@@ -5,6 +5,7 @@ import { Card } from "~/components/core";
 import { useOrganization } from "~/hooks/data";
 import { requireRoles } from "~/lib/session";
 import { cn } from "~/lib/utils";
+import { AiSection } from "./sections/ai";
 import { BillingSection } from "./sections/billing";
 import { ConversationsSection } from "./sections/conversations";
 import { GeneralSection } from "./sections/general";
@@ -25,6 +26,7 @@ const SECTIONS = [
   { id: "general", label: "General" },
   { id: "billing", label: "Billing" },
   { id: "conversations", label: "Conversations" },
+  { id: "ai", label: "AI" },
   { id: "roles", label: "Roles" },
   { id: "security", label: "Security" },
 ] as const;
@@ -56,6 +58,7 @@ const SettingsPage: FC = () => {
         </nav>
         <div className="min-w-0 flex-1">
           {section === "billing" && <BillingSection />}
+          {section === "ai" && <AiSection />}
           {section === "roles" && <RolesSection />}
           {["general", "conversations", "security"].includes(section) &&
             (loading && !organization ? (

@@ -607,6 +607,10 @@ Used in:
 
 ---
 
+## AI Assist
+
+Agent-facing only (phase 1): a human always sends. Bring your own key: each org connects its own provider (Anthropic, OpenAI, Gemini, or any OpenAI-compatible API) in Settings → AI; the API stores the key encrypted and never returns it. `components/conversations/ai-assist.tsx` has `AiComposerTools` (Draft reply, Rewrite, Undo — in the inbox composer) and `AiSummaryCard` (customer sidebar). Data hooks in `hooks/data/use-ai.ts`. Pass the draft's id as `aiDraftId` when sending so the API can record whether drafts are sent unchanged. Settings → AI (`pages/settings/sections/ai.tsx`) turns it on per org and shows usage and draft quality. Hide AI UI unless `aiStatus.available`.
+
 ## Environment Variables
 
 | Variable | Purpose |

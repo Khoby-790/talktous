@@ -23,6 +23,7 @@ export type OrganizationSettings = {
   slaFirstResponseMinutes: number | null;
   passwordMinLength: number;
   sessionHours: number;
+  aiEnabled: boolean;
 };
 
 export type Organization = {
@@ -208,6 +209,7 @@ export type Message = {
   content: string;
   attachments: Attachment[];
   deliveryStatus: "pending" | "sent" | "failed" | null;
+  aiAssisted: boolean;
   createdAt: string;
   sender: { id: string | null; name: string; avatarUrl: string | null } | null;
 };
@@ -240,8 +242,40 @@ export type ConversationSummary = {
 /** Kept for older imports: a conversation as listed. */
 export type Conversation = ConversationSummary;
 
+export type AiSummary = { text: string | null; generatedAt: string | null; stale: boolean };
+
+export type AiProviderId = "anthropic" | "openai" | "gemini" | "openai_compatible";
+
+export type AiProviderInfo = {
+  id: AiProviderId;
+  name: string;
+  keyUrl: string;
+  keyHint: string;
+  needsBaseUrl: boolean;
+};
+
+export type AiStatus = {
+  configured: boolean;
+  enabled: boolean;
+  available: boolean;
+  provider: AiProviderId | null;
+  model: string | null;
+  baseUrl: string | null;
+  apiKeyLast4: string | null;
+  verifiedAt: string | null;
+  lastError: string | null;
+  usedThisMonth: number;
+  limit: number | null;
+  draftsGenerated: number;
+  draftsSentUnchanged: number;
+  draftsSentEdited: number;
+};
+
+export type AiRewriteStyle = "friendlier" | "shorter" | "formal" | "fix" | "translate";
+
 export type ConversationDetail = ConversationSummary & {
   customer: Customer;
+  aiSummary: AiSummary | null;
   messages: { items: Message[]; hasMore: boolean };
 };
 
@@ -346,6 +380,7 @@ export type PlanInfo = {
   conversationLimit: number | null;
   integrations: boolean;
   whatsapp: boolean;
+  aiRequestsPerMonth: number | null;
   features: string[];
 };
 
