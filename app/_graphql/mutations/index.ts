@@ -548,3 +548,13 @@ export const STOP_AI_AUTO_REPLY = gql`
     }
   }
 `;
+
+export const SUMMARIZE_INSIGHTS = gql`
+  mutation SummarizeInsights($rangeDays: Int) {
+    summarizeInsights(rangeDays: $rangeDays) {
+      text
+      rangeDays
+      generatedAt
+    }
+  }
+`;

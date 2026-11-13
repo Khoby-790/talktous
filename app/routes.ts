@@ -26,6 +26,7 @@ export default [
 
   layout("layouts/app/route.tsx", [
     route("dashboard", "pages/dashboard/index.tsx"),
+    route("insights", "pages/insights/index.tsx"),
     route("inbox", "pages/inbox/index.tsx"),
     route("conversations", "pages/conversations/index.tsx"),
     route("conversations/:id", "pages/conversations/view.tsx"),

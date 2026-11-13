@@ -541,3 +541,29 @@ export type AiDraft = {
   knowledge: AiKnowledgeUse;
   sources: KnowledgeSourceRef[];
 };
+
+/* ── Insights ───────────────────────────────────────────────────────── */
+export type InsightTopic = { tag: string; count: number; previous: number; negative: number; examples: string[] };
+
+export type KnowledgeGap = {
+  conversationId: string;
+  customerName: string;
+  question: string;
+  intent: string | null;
+  source: "assistant" | "draft";
+  at: string;
+};
+
+export type Insights = {
+  rangeDays: number;
+  conversations: number;
+  previousConversations: number;
+  triaged: number;
+  negative: number;
+  answeredByAi: number;
+  handedOffByAi: number;
+  topics: InsightTopic[];
+  languages: { language: string; count: number }[];
+  gapCount: number;
+  gaps: KnowledgeGap[];
+};

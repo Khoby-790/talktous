@@ -336,9 +336,11 @@ const KnowledgePage: FC = () => {
     setId(sourceId);
     setModal(name);
   };
+  const [, setSuggestedTitle] = useUrlState("title");
   const close = () => {
     setModal(null);
     setId(null);
+    setSuggestedTitle(null);
   };
 
   const upload = async (files: FileList | null) => {

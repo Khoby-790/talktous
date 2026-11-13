@@ -14,6 +14,7 @@ import {
   MoonIcon,
   PuzzlePieceIcon,
   BookOpenIcon,
+  LightBulbIcon,
   RectangleStackIcon,
   SunIcon,
   UserCircleIcon,
@@ -45,7 +46,13 @@ type NavItem = {
 };
 
 const navSections: { label: string; items: NavItem[] }[] = [
-  { label: "General", items: [{ label: "Dashboard", path: "/dashboard", icon: HomeIcon }] },
+  {
+    label: "General",
+    items: [
+      { label: "Dashboard", path: "/dashboard", icon: HomeIcon },
+      { label: "Insights", path: "/insights", icon: LightBulbIcon, roles: ["admin", "supervisor"] },
+    ],
+  },
   {
     label: "Support",
     items: [

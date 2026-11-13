@@ -1,4 +1,5 @@
 import { type FC, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { TextInput } from "~/components/core";
@@ -42,11 +43,14 @@ const ArticleModal: FC<{ open: boolean; id: string | null; onClose: () => void }
     },
   });
 
+  // From Insights: "Write article" for a question the knowledge base didn't cover.
+  const [params] = useSearchParams();
+  const suggestedTitle = id ? null : params.get("title");
   const { resetForm } = form;
   useEffect(() => {
     if (!open) return;
-    resetForm({ values: { title: source?.title ?? "", content: source?.content ?? "" } });
-  }, [open, source, resetForm]);
+    resetForm({ values: { title: source?.title ?? suggestedTitle ?? "", content: source?.content ?? "" } });
+  }, [open, source, suggestedTitle, resetForm]);
 
   const contentError = form.touched.content && form.errors.content;
 
