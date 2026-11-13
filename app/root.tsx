@@ -38,6 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="https://talktous-api.fly.dev/widget.js" data-app-key="pk_live_N2LaFkw3HVRhKLRHTbcsSMyn" async></script>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Meta />
         <Links />
