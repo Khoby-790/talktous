@@ -63,7 +63,7 @@ const OverviewTab: FC<{ app: SupportApp }> = ({ app }) => {
               </div>
               <ChannelBadge channel={c.channel} className="hidden sm:inline-flex" />
               <Badge status={c.status} />
-              <span className="hidden w-24 text-right text-[11px] text-ink-muted sm:block">
+              <span className="hidden w-24 text-right text-xs text-ink-muted sm:block">
                 {formatRelative(c.lastMessageAt)}
               </span>
             </Link>

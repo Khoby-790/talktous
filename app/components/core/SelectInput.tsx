@@ -27,13 +27,16 @@ const selectStyles: StylesConfig<Option, boolean> = {
   control: (base, state) => ({
     ...base,
     background: "var(--field)",
-    borderColor: state.isFocused ? "var(--color-primary-500)" : "var(--line)",
+    borderColor: "var(--control)",
     borderRadius: "6px",
-    boxShadow: state.isFocused ? "0 0 0 4px color-mix(in srgb, var(--color-primary-500) 15%, transparent)" : "none",
-    minHeight: "42px",
-    fontSize: "0.875rem",
-    transition: "border-color .15s, box-shadow .15s",
-    "&:hover": { borderColor: state.isFocused ? "var(--color-primary-500)" : "var(--line-strong)" },
+    boxShadow: "none",
+    // The same ring every other control gets.
+    outline: state.isFocused ? "2px solid var(--focus)" : "none",
+    outlineOffset: "2px",
+    minHeight: "36px",
+    fontSize: "0.9375rem",
+    transition: "border-color 150ms ease-out",
+    "&:hover": { borderColor: "var(--ink-soft)" },
   }),
   menu: (base) => ({
     ...base,
@@ -51,7 +54,7 @@ const selectStyles: StylesConfig<Option, boolean> = {
       ? "var(--surface-2)"
       : "transparent",
     color: "var(--ink)",
-    fontSize: "0.875rem",
+    fontSize: "0.9375rem",
     cursor: "pointer",
     "&:active": { background: "color-mix(in srgb, var(--color-primary-500) 25%, transparent)" },
   }),
@@ -68,11 +71,11 @@ const selectStyles: StylesConfig<Option, boolean> = {
     borderRadius: "0 4px 4px 0",
     "&:hover": { background: "color-mix(in srgb, var(--color-primary-500) 30%, transparent)", color: "var(--ink)" },
   }),
-  placeholder: (base) => ({ ...base, color: "var(--ink-muted)", fontSize: "0.875rem" }),
+  placeholder: (base) => ({ ...base, color: "var(--ink-muted)", fontSize: "0.9375rem" }),
   input: (base) => ({ ...base, color: "var(--ink)" }),
   indicatorSeparator: (base) => ({ ...base, background: "var(--line)" }),
-  dropdownIndicator: (base) => ({ ...base, color: "var(--ink-muted)", "&:hover": { color: "var(--ink-soft)" } }),
-  clearIndicator: (base) => ({ ...base, color: "var(--ink-muted)", "&:hover": { color: "var(--ink-soft)" } }),
+  dropdownIndicator: (base) => ({ ...base, padding: 6, color: "var(--ink-muted)", "&:hover": { color: "var(--ink-soft)" } }),
+  clearIndicator: (base) => ({ ...base, padding: 6, color: "var(--ink-muted)", "&:hover": { color: "var(--ink-soft)" } }),
 };
 
 const SelectInput: FC<SelectInputProps> = ({
@@ -97,7 +100,7 @@ const SelectInput: FC<SelectInputProps> = ({
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label className="text-sm font-medium text-ink-soft">{label}</label>
+      <label htmlFor={id} className="type-label text-ink">{label}</label>
       <ReactSelect
         inputId={id}
         options={options}
@@ -116,7 +119,7 @@ const SelectInput: FC<SelectInputProps> = ({
         styles={selectStyles}
         classNamePrefix="react-select"
       />
-      {!!hasError && <p className="text-xs text-red-400">{String(errors[id])}</p>}
+      {!!hasError && <p className="type-caption text-red-700 dark:text-red-300">{String(errors[id])}</p>}
     </div>
   );
 };

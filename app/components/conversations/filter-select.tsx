@@ -12,11 +12,11 @@ export const FilterSelect: FC<{
   className?: string;
 }> = ({ label, value, options, onChange, className }) => (
   <label className={cn("flex flex-col gap-1", className)}>
-    <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">{label}</span>
+    <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-muted">{label}</span>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-9 rounded-md border border-line bg-field px-2.5 text-sm text-ink outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15"
+      className="type-body h-9 w-full rounded-md border border-control bg-field pl-2.5 text-ink transition-colors duration-150 hover:border-ink-soft"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

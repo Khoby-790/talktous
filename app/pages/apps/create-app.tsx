@@ -150,7 +150,7 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
                   <Icon className="h-5 w-5" />
                 </span>
                 {locked && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-ink-soft">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-soft">
                     <LockClosedIcon className="h-3 w-3" /> Growth plan
                   </span>
                 )}

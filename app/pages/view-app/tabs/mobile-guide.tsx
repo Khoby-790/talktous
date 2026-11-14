@@ -166,7 +166,7 @@ export const MobileGuide: FC<{ app: SupportApp; appUrl: string }> = ({ app, appU
             onClick={() => setTab(t.id)}
             className={cn(
               "rounded-md px-3 py-1.5 text-xs font-medium transition",
-              t.id === tab ? "bg-primary-600 text-white" : "bg-surface-2 text-ink-soft hover:text-ink",
+              t.id === tab ? "bg-primary text-on-primary" : "bg-surface-2 text-ink-soft hover:text-ink",
             )}
           >
             {t.label}

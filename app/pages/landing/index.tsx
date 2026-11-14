@@ -1,5 +1,5 @@
-import { type CSSProperties, type FC, type ReactNode, useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
+import { type FC, type ReactNode, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router";
 import {
   ArrowRightIcon,
   ArrowUpRightIcon,
@@ -19,20 +19,23 @@ import { MessageCircle } from "lucide-react";
 import { BrandLogo } from "~/components/brand";
 import { cn } from "~/lib/utils";
 import { formatPlanPrice, usePricing } from "~/hooks/data";
-import { FluidBackdrop, IMG, ParticleSphere, Voice } from "~/components/fluid";
+import { FluidBackdrop, IMG, Voice } from "~/components/fluid";
+import { Footage, Grain, Slate, Still, Subtitle } from "./cinema";
 import { Molecule } from "./molecule";
 
 /*
- * Marketing site — Auros, made fluid and human.
+ * Marketing site — cinematic.
  *
  * One idea runs through the page: AI writes the facts, people add the feeling.
- * It's carried by type — AI text is plain Inter, the human voice is Instrument
- * Serif italic in flowing aurora — and performed live in the hero, where a real
- * conversation plays out from "Hi!" to five stars.
+ * It's told as a short film in scenes. The opening shot is a customer, Ama,
+ * waiting on an answer; scene 01 plays the reply being written (AI text in
+ * plain Inter, the human voice in Instrument Serif italic); the scenes after
+ * it introduce the team, the product, and the customer's side again.
  *
- * Fluid layer: drifting aurora blobs, liquid (morphing) portrait masks, a glass
- * stage over the particle orb, a pointer-following glow, and blur-in reveals.
- * Everything settles to a static frame under prefers-reduced-motion.
+ * Footage and stills live in /public/landing and are placed with the pieces in
+ * ./cinema: looping clips that play only on screen, a shared film grain, a
+ * slow push-in, and numbered chapter markers. Everything settles to still
+ * frames under prefers-reduced-motion.
  */
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -65,9 +68,9 @@ const channels = [
 ];
 
 const people = [
-  { name: "Kwame", role: "Agent", where: "Accra", img: IMG.kwame, body: "Claims a conversation, gets an AI head start, and answers in his own voice.", delay: "0s" },
-  { name: "Mei", role: "Supervisor", where: "Singapore", img: IMG.mei, body: "Sees every queue, reassigns in one click, coaches with real CSAT.", delay: "-5s" },
-  { name: "Rafael", role: "Admin", where: "Lisbon", img: IMG.rafael, body: "Sets up channels, the knowledge base, and who can see what.", delay: "-9s" },
+  { name: "Kwame", role: "Agent", where: "Accra", img: IMG.kwame, focus: "62% 30%", body: "Claims a conversation, gets an AI head start, and answers in his own voice." },
+  { name: "Mei", role: "Supervisor", where: "Singapore", img: IMG.mei, focus: "45% 35%", body: "Sees every queue, reassigns in one click, coaches with real CSAT." },
+  { name: "Rafael", role: "Admin", where: "Lisbon", img: IMG.rafael, focus: "50% 30%", body: "Sets up channels, the knowledge base, and who can see what." },
 ];
 
 const aiFeatures = [
@@ -115,12 +118,48 @@ const testimonials = [
   },
 ];
 
-/** Prices come from the API (the Paystack plans), so they always match what customers pay. */
+/**
+ * Prices, what each plan includes and the trial length all come from the API
+ * (the Paystack plans), so this page can't drift from what customers actually
+ * get. The lists below are only what shows until it answers, or if it can't be
+ * reached — keep them in step with the API's plan definitions.
+ */
 const plans = [
-  { id: "starter", name: "Starter", features: ["3 agent seats", "1 support app", "500 conversations / mo", "Web chat & email"], cta: "Start free trial", highlight: false },
-  { id: "growth", name: "Growth", features: ["15 agent seats", "5 support apps", "5,000 conversations / mo", "WhatsApp channel", "Integrations & webhooks"], cta: "Start with Growth", highlight: true },
-  { id: "enterprise", name: "Enterprise", features: ["Unlimited seats", "Unlimited apps", "Unlimited conversations", "All channels & integrations", "Priority support"], cta: "Get Enterprise", highlight: false },
+  {
+    id: "starter",
+    name: "Starter",
+    features: ["5 agent seats", "2 support apps", "1,500 conversations / month", "Web chat, email & WhatsApp", "AI assist (bring your own key)"],
+    cta: "Start free trial",
+    highlight: false,
+  },
+  {
+    id: "growth",
+    name: "Growth",
+    features: ["15 agent seats", "5 support apps", "10,000 conversations / month", "Web chat, email & WhatsApp", "Integrations & webhooks", "AI assist (bring your own key)"],
+    cta: "Start with Growth",
+    highlight: true,
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    features: ["Unlimited seats", "Unlimited apps", "Unlimited conversations", "All channels & integrations", "AI assist (bring your own key)", "Priority support"],
+    cta: "Get Enterprise",
+    highlight: false,
+  },
 ];
+
+const footerLinks = [
+  { label: "Product", href: "#product" },
+  { label: "AI assist", href: "#ai" },
+  { label: "People", href: "#people" },
+  { label: "Pricing", href: "#pricing" },
+];
+
+const footerLink = "text-[10px] uppercase tracking-[0.15em] text-silver transition hover:text-white";
+
+const DEFAULT_TRIAL_DAYS = 30;
+/** The trial length arrives with the prices; the default shows until then. */
+const useTrialDays = () => usePricing().pricing?.trialDays || DEFAULT_TRIAL_DAYS;
 
 // ─── Motion helpers ───────────────────────────────────────────────────────────
 
@@ -165,12 +204,15 @@ const H2: FC<{ children: ReactNode; className?: string }> = ({ children, classNa
   <h2 className={cn("text-[clamp(2.2rem,4.8vw,4rem)] leading-[1.02] tracking-display text-white", className)}>{children}</h2>
 );
 
-/** Signature CTA: brand ember with a warm glow. */
+/**
+ * The filled accent: the main call to action, one per screen. Text is
+ * on-accent — white on this orange is about 2.6:1.
+ */
 const AuroraLink: FC<{ to: string; children: ReactNode; size?: "md" | "lg"; className?: string }> = ({ to, children, size = "md", className }) => (
   <Link
     to={to}
     className={cn(
-      "inline-flex items-center justify-center gap-2 rounded-full bg-ember text-[13px] font-medium uppercase tracking-[0.08em] text-white shadow-[0_0_40px_-8px_rgba(255,122,26,0.75)] transition duration-300 hover:-translate-y-px hover:bg-[#ff8a33] hover:shadow-[0_0_60px_-4px_rgba(255,122,26,0.85)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ember/30",
+      "inline-flex items-center justify-center gap-2 rounded-full bg-accent text-[13px] font-medium uppercase tracking-[0.08em] text-on-accent shadow-[0_0_40px_-8px_rgba(255,122,26,0.75)] transition duration-300 hover:-translate-y-px hover:bg-[#ff8a33] hover:shadow-[0_0_60px_-4px_rgba(255,122,26,0.85)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ember/30",
       size === "lg" ? "px-7 py-4" : "px-5 py-2.5",
       className
     )}
@@ -185,8 +227,37 @@ const GhostLink: FC<{ to: string; children: ReactNode; className?: string }> = (
   </Link>
 );
 
+const TrialCta: FC = () => {
+  const days = useTrialDays();
+  return (
+    <AuroraLink to="/sign-up" size="lg">
+      Try it free for {days} days
+      <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
+    </AuroraLink>
+  );
+};
+
+/**
+ * Opens Asotie's own support chat (the widget.js embed in root.tsx) — the
+ * product, used the way customers will use it. If the chat hasn't loaded,
+ * falls back to starting a trial rather than doing nothing.
+ */
+const TalkToUs: FC<{ children: ReactNode; className?: string }> = ({ children, className }) => {
+  const navigate = useNavigate();
+  const open = () => {
+    const widget = (window as unknown as { Asotie?: { open: () => void } }).Asotie;
+    if (widget) widget.open();
+    else navigate("/sign-up");
+  };
+  return (
+    <button type="button" onClick={open} className={cn("inline-flex items-center gap-2 text-silver transition hover:text-white", className)}>
+      {children}
+    </button>
+  );
+};
+
 const Face: FC<{ src: string; alt?: string; className?: string }> = ({ src, alt = "", className }) => (
-  <img src={src} alt={alt} loading="lazy" className={cn("rounded-full object-cover", className)} />
+  <img loading="lazy" decoding="async" src={src} alt={alt} className={cn("rounded-full object-cover", className)} />
 );
 
 const Initials: FC<{ name: string; className?: string }> = ({ name, className }) => (
@@ -207,19 +278,11 @@ const Stars: FC<{ className?: string }> = ({ className }) => (
   </span>
 );
 
-/** A portrait inside a slowly morphing liquid mask. */
-const LiquidPortrait: FC<{ src: string; alt: string; className?: string; delay?: string }> = ({ src, alt, className, delay }) => (
-  <div className={cn("relative", className)}>
-    <div className="liquid absolute -inset-3 bg-gradient-to-br from-primary-300/30 via-transparent to-ember/30 blur-xl" style={{ animationDelay: delay }} />
-    <div className="liquid relative overflow-hidden ring-1 ring-white/10" style={{ animationDelay: delay }}>
-      <img src={src} alt={alt} loading="lazy" className="aspect-square w-full scale-105 object-cover" />
-    </div>
-  </div>
-);
-
 /** A small photo set inline with display type. */
 const InlinePhoto: FC<{ src: string; alt: string }> = ({ src, alt }) => (
   <img
+    loading="lazy"
+    decoding="async"
     src={src}
     alt={alt}
     className="mx-[0.12em] inline-block h-[0.82em] w-[1.6em] rounded-full object-cover align-[-0.08em] ring-2 ring-ember/40"
@@ -348,96 +411,95 @@ const LiveConversation: FC = () => {
   );
 };
 
-const Hero: FC = () => {
-  const ref = useRef<HTMLElement>(null);
-  const onMove = (e: React.PointerEvent) => {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    el.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    el.style.setProperty("--my", `${e.clientY - r.top}px`);
-  };
-
+/**
+ * Site header: 64px, pinned. Transparent over the hero, then a ground fill
+ * and a hairline once the page scrolls. Its button is the quiet primary —
+ * the orange call to action belongs to the hero below it.
+ */
+const SiteHeader: FC = () => {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   return (
-    <section ref={ref} onPointerMove={onMove} className="relative overflow-hidden" style={{ "--mx": "70%", "--my": "35%" } as CSSProperties}>
-      <FluidBackdrop />
-      {/* Bioluminescent orb */}
-      <div className="pointer-events-none absolute -right-[18%] top-[2%] aspect-square w-[min(120vw,980px)] opacity-90 md:-right-[8%]">
-        <div className="orb-glow absolute inset-[18%] rounded-full bg-primary-600/25 blur-[90px]" />
-        <ParticleSphere className="absolute inset-0" />
-      </div>
-      {/* Pointer glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 transition-opacity"
-        style={{ background: "radial-gradient(520px circle at var(--mx) var(--my), rgba(203,255,252,0.07), transparent 60%)" }}
-      />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-abyss" />
-      {/* Ember sparks, from the brand banner */}
-      <span className="float-a pointer-events-none absolute right-[6%] top-[14%] h-3.5 w-3.5 rounded-full bg-ember shadow-[0_0_24px_rgba(255,122,26,0.9)]" />
-      <span className="float-b pointer-events-none absolute bottom-[22%] left-[3%] h-2.5 w-2.5 rounded-full bg-ember/80 shadow-[0_0_18px_rgba(255,122,26,0.8)]" />
-      <span className="float-c pointer-events-none absolute right-[30%] top-[62%] h-2 w-2 rounded-full bg-ember/60" />
-
-      {/* Nav */}
-      <header className="relative z-20">
-        <nav className="mx-auto flex h-20 max-w-[1280px] items-center justify-between px-5 md:px-10">
-          <Link to="/" aria-label="Asotie — home">
-            <BrandLogo tone="light" className="h-8" />
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-40 border-b transition-colors duration-[250ms] ease-out",
+        scrolled ? "border-white/10 bg-abyss/90 backdrop-blur-md" : "border-transparent",
+      )}
+    >
+      <nav aria-label="Main" className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 md:px-10">
+        <Link to="/" aria-label="Asotie — home">
+          <BrandLogo tone="light" className="h-8" />
+        </Link>
+        <div className="hidden items-center gap-8 md:flex">
+          {navLinks.map((l) => (
+            <a key={l.label} href={l.href} className="label-caps font-normal text-silver transition-colors duration-150 hover:text-white">
+              {l.label}
+            </a>
+          ))}
+        </div>
+        <div className="flex items-center gap-6">
+          <Link to="/sign-in" className="label-caps hidden font-normal text-silver transition-colors duration-150 hover:text-white sm:block">
+            Sign in
           </Link>
-          <div className="hidden items-center gap-8 md:flex">
-            {navLinks.map((l) => (
-              <a key={l.label} href={l.href} className="label-caps font-normal text-silver transition hover:text-white">
-                {l.label}
-              </a>
-            ))}
-          </div>
-          <div className="flex items-center gap-6">
-            <Link to="/sign-in" className="label-caps hidden font-normal text-silver transition hover:text-white sm:block">
-              Sign in
-            </Link>
-            <AuroraLink to="/sign-up">Start free trial</AuroraLink>
-          </div>
-        </nav>
-      </header>
+          <Link
+            to="/sign-up"
+            className="inline-flex h-9 items-center rounded-full bg-mist px-4 text-[13px] font-medium uppercase tracking-[0.08em] text-deep transition-colors duration-150 hover:bg-white"
+          >
+            Start free trial
+          </Link>
+        </div>
+      </nav>
+    </header>
+  );
+};
 
-      <div className="relative z-10 mx-auto max-w-[1280px] px-5 pb-24 pt-6 md:px-10 md:pb-32">
-        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_240px]">
-          <div className="fade-up-2">
-            <LiveConversation />
-          </div>
-          {/* The two people in this conversation */}
-          <div className="fade-up-4 hidden flex-col items-center gap-6 lg:flex">
-            <figure className="w-[150px] text-center">
-              <LiquidPortrait src={IMG.customer} alt="Ama, the customer" delay="-3s" />
-              <figcaption className="mt-4 text-[12px] text-silver">
-                <span className="text-white">Ama</span> · Kumasi
-              </figcaption>
-            </figure>
-            <span className="h-14 w-px bg-gradient-to-b from-primary-300/60 via-ember/70 to-transparent" />
-            <figure className="w-[190px] text-center">
-              <LiquidPortrait src={IMG.kwame} alt="Kwame, the support agent" />
-              <figcaption className="mt-4 text-[12px] text-silver">
-                <span className="text-white">Kwame</span> · Accra · <span className="text-online">online</span>
-              </figcaption>
-            </figure>
-          </div>
+const Hero: FC = () => {
+  const trialDays = useTrialDays();
+  return (
+    <section className="letterbox relative overflow-hidden bg-black">
+      {/* The opening shot: Ama, waiting on an answer. She sits on the right of
+          the frame; the left is kept dark for the title. */}
+      <div className="shot-in absolute inset-0">
+        <Footage name="hero" priority focus="84% center" />
+      </div>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/70 to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-b from-transparent via-abyss/70 to-abyss" />
+      <Grain />
+
+      {/* On phones her message sits at the top of the frame and the title at
+          the bottom, so neither covers her face; from md up they stack at the
+          bottom-left, clear of her on the right. */}
+      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[1280px] flex-col justify-between px-5 pb-16 pt-24 md:justify-end md:px-10 md:pb-28 md:pt-32">
+        <div>
+          <p className="fade-up-1 flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.2em] text-white/70">
+            <span className="live-dot h-2 w-2 rounded-full bg-online" /> Kumasi · 6:42 pm · WhatsApp
+          </p>
+          {/* Her message, set like a subtitle. */}
+          <Subtitle className="fade-up-2 mt-4 max-w-[230px] text-[1.15rem] sm:max-w-[560px] md:text-[clamp(1.2rem,2vw,1.6rem)]">
+            “Hi! Has my order shipped yet? It’s a birthday gift.”
+          </Subtitle>
         </div>
 
-        {/* Caption */}
-        <div className="mt-14 grid grid-cols-1 items-end gap-10 lg:grid-cols-[1.4fr_1fr]">
+        <div className="mt-10 grid grid-cols-1 items-end gap-10 lg:grid-cols-[1.4fr_1fr]">
           <h1 className="fade-up-3 text-[clamp(2.6rem,6vw,5.25rem)] leading-[0.98] tracking-display text-white">
             AI writes the facts.
             <br />
             <Voice>People add the feeling.</Voice>
           </h1>
           <div className="fade-up-5">
-            <p className="max-w-[440px] text-[16px] leading-[1.6] text-silver">
+            <p className="max-w-[440px] text-[16px] leading-[1.6] text-white/80">
               Asotie is the support inbox where real people answer every customer, on chat, email, WhatsApp and your app,
               with AI doing the searching and drafting beside them.
             </p>
             <div className="mt-8 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-8">
               <AuroraLink to="/sign-up" size="lg">
-                Try it free for 30 days
+                Try it free for {trialDays} days
                 <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
               </AuroraLink>
               <GhostLink to="/sign-in">
@@ -448,6 +510,14 @@ const Hero: FC = () => {
           </div>
         </div>
       </div>
+
+      <a
+        href="#reply"
+        className="absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/50 transition-colors duration-150 hover:text-white md:flex"
+      >
+        Scroll
+        <span aria-hidden="true" className="cue block h-7 w-px bg-white/60" />
+      </a>
     </section>
   );
 };
@@ -520,7 +590,7 @@ const ToneDial: FC = () => {
             className={cn(
               "rounded-full px-4 py-2 text-[13px] transition",
               tone.id === t.id
-                ? "bg-ember text-white shadow-[0_0_30px_-6px_rgba(255,122,26,0.7)]"
+                ? "bg-mist text-deep"
                 : "bg-white/[0.04] text-silver ring-1 ring-white/10 hover:bg-white/[0.08] hover:text-white"
             )}
           >
@@ -531,7 +601,7 @@ const ToneDial: FC = () => {
 
       <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-5">
         <span className="flex items-center gap-2.5 text-[12.5px] text-silver">
-          <Face src={IMG.mei} className="h-8 w-8" /> Mei reviews, then sends
+          <Face src={IMG.meiFace} className="h-8 w-8" /> Mei reviews, then sends
         </span>
         <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-primary-200">
           <ShieldCheckIcon className="h-4 w-4 text-ember" strokeWidth={1.75} /> A human always sends
@@ -551,12 +621,12 @@ const conversations = [
 ];
 
 const InboxPreview: FC = () => (
-  <div className="overflow-hidden rounded-[28px] bg-deep ring-1 ring-white/[0.06] shadow-[0_60px_120px_-50px_rgba(0,130,124,0.55)]">
+  <div className="overflow-hidden rounded-[28px] bg-deep ring-1 ring-white/[0.06] shadow-[0_60px_120px_-50px_rgb(var(--orb-far)/0.55)]">
     <div className="flex items-center justify-between border-b border-white/5 px-6 py-3.5">
       <span className="label-caps text-silver">Asotie · Inbox</span>
       <span className="flex items-center gap-3">
         <span className="flex -space-x-2">
-          {[IMG.kwame, IMG.mei, IMG.rafael].map((s) => (
+          {[IMG.kwameFace, IMG.meiFace, IMG.rafaelFace].map((s) => (
             <Face key={s} src={s} className="h-6 w-6 ring-2 ring-deep" />
           ))}
         </span>
@@ -580,7 +650,7 @@ const InboxPreview: FC = () => (
                 <span
                   className={cn(
                     "shrink-0 rounded-[4px] px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em]",
-                    c.urgent ? "bg-ember text-white" : "bg-primary-500/20 text-primary-200"
+                    c.urgent ? "bg-red-500/20 text-red-200" : "bg-primary-500/20 text-primary-200"
                   )}
                 >
                   {c.urgent ? "urgent" : c.ch}
@@ -600,12 +670,12 @@ const InboxPreview: FC = () => (
             </div>
           </div>
           <span className="flex items-center gap-2 text-[12px] text-silver">
-            <Face src={IMG.kwame} className="h-7 w-7" /> Kwame
+            <Face src={IMG.kwameFace} className="h-7 w-7" /> Kwame
           </span>
         </div>
         <div className="flex flex-1 flex-col gap-3 p-6 text-[13px] leading-[1.5]">
           <p className="max-w-[320px] rounded-2xl rounded-tl-[4px] bg-kelp px-4 py-2.5 text-mist">Hi! Has my order shipped yet? It's a birthday gift 🎁</p>
-          <p className="ml-auto max-w-[320px] rounded-2xl rounded-tr-[4px] bg-primary-600 px-4 py-2.5 text-white">
+          <p className="ml-auto max-w-[320px] rounded-2xl rounded-tr-[4px] bg-primary px-4 py-2.5 text-on-primary">
             Hi Ama! Kwame here, checking that for you now.
           </p>
         </div>
@@ -628,58 +698,149 @@ const InboxPreview: FC = () => (
   </div>
 );
 
-const PlanPrice: FC<{ id: string; highlight: boolean }> = ({ id, highlight }) => {
-  const { pricing } = usePricing();
-  const plan = pricing?.plans.find((p) => p.id === id);
-  const price = plan ? formatPlanPrice(plan) : null;
-  return (
-    <p className="mt-10 flex min-h-[61px] items-baseline gap-2">
-      {price && (
-        <>
-          <span className={cn("text-[61px] font-medium leading-none tracking-display", highlight ? "text-ember" : "text-white")}>{price.amount}</span>
-          {price.per && <span className="text-sm text-silver">/ {price.per}</span>}
-        </>
-      )}
-    </p>
-  );
-};
-
 const Section: FC<{ id?: string; className?: string; fluid?: boolean; children: ReactNode }> = ({ id, className, fluid, children }) => (
-  <section id={id} className={cn("relative scroll-mt-10 px-5 py-24 md:px-10 md:py-[140px]", fluid && "overflow-hidden", className)}>
+  <section id={id} className={cn("relative scroll-mt-16 px-5 py-24 md:px-10 md:py-[140px]", fluid && "overflow-hidden", className)}>
     {fluid && <FluidBackdrop intensity="soft" />}
     <div className="relative mx-auto max-w-[1280px]">{children}</div>
   </section>
 );
 
+// ─── Pricing ─────────────────────────────────────────────────────────────────
+
+const PricingSection: FC = () => {
+  const { pricing, loading } = usePricing();
+  const trialDays = pricing?.trialDays || DEFAULT_TRIAL_DAYS;
+  return (
+    <Section id="pricing" className="bg-deep">
+      <Reveal className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
+        <div>
+          <Slate n="07">Pricing</Slate>
+          <H2 className="mt-6">
+            {trialDays} days free. <Voice>Then flow with it.</Voice>
+          </H2>
+        </div>
+        <p className="max-w-[340px] text-base leading-[1.45] text-silver">
+          Every plan starts with a {trialDays}-day free trial. No setup fees, no per-seat surprises. Change plans any time.
+        </p>
+      </Reveal>
+      <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-3">
+        {plans.map((p, i) => {
+          const live = pricing?.plans.find((plan) => plan.id === p.id);
+          const price = live ? formatPlanPrice(live) : null;
+          const features = live?.features?.length ? live.features : p.features;
+          return (
+            <Reveal key={p.name} delay={i * 110}>
+              <div
+                className={cn(
+                  "flex h-full flex-col rounded-[28px] p-9",
+                  p.highlight ? "bg-kelp shadow-[0_0_80px_-30px_rgba(255,122,26,0.45)] ring-1 ring-ember/35" : "bg-abyss ring-1 ring-white/[0.04]"
+                )}
+              >
+                {/* Fixed height so the "Most popular" pill doesn't push this card's contents down. */}
+                <div className="flex h-[26px] items-center justify-between">
+                  <span className="label-caps text-mist">{p.name}</span>
+                  {p.highlight && <span className="rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] text-[#ff9a4d] ring-1 ring-ember/50">Most popular</span>}
+                </div>
+                <p className="mt-10 flex min-h-[61px] items-baseline gap-2">
+                  {price ? (
+                    <>
+                      <span className={cn("text-[61px] font-medium leading-none tracking-display", p.highlight ? "text-ember" : "text-white")}>{price.amount}</span>
+                      {price.per && <span className="text-sm text-silver">/ {price.per}</span>}
+                    </>
+                  ) : loading ? (
+                    <span className="h-[52px] w-40 animate-pulse self-center rounded-2xl bg-white/[0.06]" aria-label="Loading price" />
+                  ) : (
+                    // The price couldn't be fetched: say what's certain rather than leave a gap.
+                    <span className={cn("self-center text-[30px] leading-[1.1] tracking-[-0.03em]", p.highlight ? "text-ember" : "text-white")}>
+                      Free for {trialDays} days
+                    </span>
+                  )}
+                </p>
+                <ul className="mb-10 mt-10 flex-1 space-y-3.5">
+                  {features.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-[15px] leading-snug text-silver">
+                      <CheckIcon className={cn("mt-0.5 h-4 w-4 shrink-0", p.highlight ? "text-ember" : "text-primary-300")} strokeWidth={1.75} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                {p.highlight ? (
+                  <AuroraLink to="/sign-up" className="w-full py-3.5">
+                    {p.cta}
+                  </AuroraLink>
+                ) : (
+                  <Link
+                    to="/sign-up"
+                    className="inline-flex w-full items-center justify-center rounded-full bg-kelp px-5 py-3.5 text-[13px] uppercase tracking-[0.08em] text-white transition hover:bg-kelp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300/30"
+                  >
+                    {p.cta}
+                  </Link>
+                )}
+              </div>
+            </Reveal>
+          );
+        })}
+      </div>
+    </Section>
+  );
+};
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 const LandingPage: FC = () => (
-  <div className="min-h-screen overflow-x-clip bg-abyss font-sans text-silver antialiased selection:bg-ember selection:text-white">
+  <div className="dark min-h-screen overflow-x-clip bg-abyss font-sans text-silver antialiased selection:bg-ember selection:text-on-accent">
+    <SiteHeader />
     <Hero />
+
+    {/* ── 01 · The reply: what happens in the two minutes after Ama's message ── */}
+    <Section id="reply" className="!pb-10 !pt-20 md:!pb-14 md:!pt-28">
+      <Reveal>
+        <Slate n="01">The reply</Slate>
+        <p className="mt-6 max-w-[900px] text-[clamp(1.7rem,3.4vw,2.9rem)] leading-[1.12] tracking-[-0.03em] text-white">
+          Two minutes later, Ama has her answer. <span className="text-silver/50">Here is what happened in between.</span>
+        </p>
+      </Reveal>
+      <Reveal className="mt-12" delay={120}>
+        <LiveConversation />
+      </Reveal>
+    </Section>
     <Marquee />
 
-    {/* ── Manifesto + people ── */}
+    {/* ── 02 · The people ── */}
     <Section id="people">
       <Reveal>
-        <p className="max-w-[1100px] text-[clamp(2rem,4.6vw,4rem)] leading-[1.12] tracking-[-0.035em] text-white">
+        <Slate n="02">The people</Slate>
+        <p className="mt-8 max-w-[1100px] text-[clamp(2rem,4.6vw,4rem)] leading-[1.12] tracking-[-0.035em] text-white">
           <span className="text-silver/45">Software doesn't care about your customers. </span>
-          <Voice>People do.</Voice> Asotie is built for the <InlinePhoto src={IMG.kwame} alt="Kwame" /> agents who answer,
-          the <InlinePhoto src={IMG.mei} alt="Mei" /> leads who coach them, and the{" "}
-          <InlinePhoto src={IMG.rafael} alt="Rafael" /> people who keep it all running.
+          <Voice>People do.</Voice> Asotie is built for the <InlinePhoto src={IMG.kwameFace} alt="Kwame" /> agents who answer,
+          the <InlinePhoto src={IMG.meiFace} alt="Mei" /> leads who coach them, and the{" "}
+          <InlinePhoto src={IMG.rafaelFace} alt="Rafael" /> people who keep it all running.
         </p>
       </Reveal>
 
-      <div className="mt-24 grid grid-cols-1 gap-16 sm:grid-cols-3 sm:gap-10">
+      {/* Three stills, each caught mid-work rather than posed. */}
+      <div className="mt-20 grid grid-cols-1 gap-5 sm:grid-cols-3">
         {people.map((p, i) => (
           <Reveal key={p.name} delay={i * 140}>
-            <LiquidPortrait src={p.img} alt={`${p.name}, ${p.role.toLowerCase()}`} delay={p.delay} className="mx-auto max-w-[300px]" />
-            <div className="mt-8 text-center">
-              <p className="text-[26px] leading-none tracking-[-0.02em] text-white">
-                {p.name} <Voice className="text-[1.1em]">· {p.role}</Voice>
-              </p>
-              <p className="mt-2 text-[10px] uppercase tracking-[0.15em] text-silver/60">{p.where}</p>
-              <p className="mx-auto mt-4 max-w-[280px] text-[15px] leading-[1.55] text-silver">{p.body}</p>
-            </div>
+            <figure className="group relative aspect-[3/4] overflow-hidden rounded-[24px] bg-black ring-1 ring-white/[0.06]">
+              <img
+                loading="lazy"
+                decoding="async"
+                src={p.img}
+                alt={`${p.name}, ${p.role.toLowerCase()}, at work in ${p.where}`}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-[2400ms] ease-out group-hover:scale-[1.06]"
+                style={{ objectPosition: p.focus }}
+              />
+              <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 via-[36%] to-transparent to-[62%]" />
+              <Grain />
+              <figcaption className="absolute inset-x-0 bottom-0 p-6 md:p-7">
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/60">{p.where}</p>
+                <p className="mt-2.5 text-[26px] leading-none tracking-[-0.02em] text-white">
+                  {p.name} <Voice className="text-[1.1em]">· {p.role}</Voice>
+                </p>
+                <p className="mt-3 max-w-[300px] text-[14.5px] leading-[1.5] text-white/75">{p.body}</p>
+              </figcaption>
+            </figure>
           </Reveal>
         ))}
       </div>
@@ -687,12 +848,24 @@ const LandingPage: FC = () => (
 
     {/* ── AI assist ── */}
     <Section id="ai" className="bg-deep" fluid>
+      <Reveal className="relative mb-20 md:mb-28">
+        <Still
+          src={IMG.hands}
+          alt="Hands typing a reply on a phone in warm lamp light"
+          focus="70% center"
+          caption={
+            <>
+              <Slate n="03">AI assist</Slate>
+              <Subtitle className="mt-4 max-w-[440px] text-[clamp(1.3rem,2.4vw,1.9rem)]">
+                Every reply still starts with someone who wants to help.
+              </Subtitle>
+            </>
+          }
+        />
+      </Reveal>
       <div className="relative grid grid-cols-1 items-center gap-16 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
         <Reveal>
-          <Eyebrow className="flex items-center gap-2 text-primary-200">
-            <SparklesIcon className="h-4 w-4" strokeWidth={1.75} /> AI assist
-          </Eyebrow>
-          <H2 className="mt-6">
+          <H2>
             One answer.
             <br />
             <Voice>Any voice.</Voice>
@@ -722,7 +895,7 @@ const LandingPage: FC = () => (
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1.1fr_1fr] lg:gap-24">
         <div>
           <Reveal>
-            <Eyebrow>Every channel</Eyebrow>
+            <Slate n="04">Every channel</Slate>
             <H2 className="mt-6 max-w-[620px]">
               Many streams.
               <br />
@@ -753,29 +926,32 @@ const LandingPage: FC = () => (
       </Reveal>
     </Section>
 
-    {/* ── The customer's side ── */}
-    <Section className="bg-deep" fluid>
-      <div className="relative grid grid-cols-1 items-center gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24">
-        <Reveal className="relative mx-auto w-full max-w-[460px]">
-          <LiquidPortrait src={IMG.customer} alt="Ama smiling at her phone" delay="-6s" />
-          <div className="float-a absolute -right-2 top-[12%] max-w-[220px] rounded-2xl rounded-tr-[4px] bg-primary-600 px-4 py-3 text-[13.5px] text-white shadow-[0_20px_50px_-20px_rgba(0,130,124,0.8)] sm:-right-8">
-            Thank you, Kwame! That was so fast 💛
-          </div>
-          <div className="float-b absolute -left-2 bottom-[10%] rounded-2xl bg-kelp/80 p-4 ring-1 ring-white/10 backdrop-blur-xl sm:-left-8">
-            <Stars />
-            <p className="mt-1.5 text-[13px] text-white">Rated 5/5 by Ama</p>
-            <p className="text-[11px] text-silver">Resolved in 3 minutes</p>
-          </div>
+    {/* ── 05 · The other side of the screen: a customer, mid-day, getting his answer ── */}
+    <section className="relative overflow-hidden bg-black">
+      {/* He stands on the left of the frame; the words take the right. */}
+      <Footage name="tailor" focus="26% center" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-l from-black/90 via-black/65 via-[45%] to-black/5" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-abyss to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-abyss to-transparent" />
+      <Grain />
+
+      <div className="relative mx-auto grid min-h-[92svh] max-w-[1280px] grid-cols-1 items-end gap-10 px-5 py-28 md:px-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+        {/* What he says back, as a subtitle beside him. */}
+        <Reveal className="hidden self-end pb-6 lg:block">
+          <Subtitle className="max-w-[320px] text-[1.45rem]">“Thank you, Kwame! That was so fast.”</Subtitle>
+          <p className="mt-4 flex items-center gap-2.5 text-[12px] text-white/70">
+            <Stars /> Rated 5 out of 5 · resolved in 3 minutes
+          </p>
         </Reveal>
         <Reveal delay={120}>
-          <Eyebrow>The other side of the screen</Eyebrow>
+          <Slate n="05">The other side of the screen</Slate>
           <H2 className="mt-6">
             From <Voice>hello</Voice> to five stars in three minutes.
           </H2>
-          <p className="mt-7 max-w-[480px] text-[16.5px] leading-[1.6] text-silver">
+          <p className="mt-7 max-w-[480px] text-[16.5px] leading-[1.6] text-white/80">
             Your customers never see the AI. They see a fast answer from someone who knows their name and wants to help.
           </p>
-          <div className="mt-14 grid grid-cols-3 gap-6 border-t border-white/10 pt-10">
+          <div className="mt-14 grid grid-cols-3 gap-6 border-t border-white/15 pt-10">
             {stats.map((s) => (
               <div key={s.label}>
                 <p className="text-[clamp(2.4rem,4.6vw,4rem)] font-medium leading-none tracking-kinetic text-warm tabular-nums">{s.value}</p>
@@ -785,14 +961,19 @@ const LandingPage: FC = () => (
           </div>
         </Reveal>
       </div>
-    </Section>
+    </section>
 
-    {/* ── Testimonials ── */}
+    {/* ── 06 · From support teams ── */}
     <Section id="customers">
       <Reveal>
-        <Eyebrow>From support teams</Eyebrow>
+        <Still
+          src={IMG.team}
+          alt="Three colleagues on a support team laughing together around a laptop"
+          focus="center 35%"
+          caption={<Slate n="06">From support teams</Slate>}
+        />
       </Reveal>
-      <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
         {testimonials.map((t, i) => (
           <Reveal key={t.name} delay={i * 140}>
             <figure className="flex h-full flex-col justify-between rounded-[28px] bg-kelp/70 p-9 ring-1 ring-white/[0.05] md:p-12">
@@ -807,91 +988,36 @@ const LandingPage: FC = () => (
       </div>
     </Section>
 
-    {/* ── Pricing ── */}
-    <Section id="pricing" className="bg-deep">
-      <Reveal className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
-        <div>
-          <Eyebrow>Pricing</Eyebrow>
-          <H2 className="mt-6">
-            30 days free. <Voice>Then flow with it.</Voice>
-          </H2>
-        </div>
-        <p className="max-w-[340px] text-base leading-[1.45] text-silver">
-          Every plan starts with a 30-day free trial. No setup fees, no per-seat surprises. Change plans any time.
-        </p>
-      </Reveal>
-      <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-3">
-        {plans.map((p, i) => (
-          <Reveal key={p.name} delay={i * 110}>
-            <div
-              className={cn(
-                "flex h-full flex-col rounded-[28px] p-9",
-                p.highlight ? "bg-kelp shadow-[0_0_80px_-30px_rgba(255,122,26,0.45)] ring-1 ring-ember/35" : "bg-abyss ring-1 ring-white/[0.04]"
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <span className="label-caps text-mist">{p.name}</span>
-                {p.highlight && <span className="rounded-full bg-ember px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] text-white">Most popular</span>}
-              </div>
-              <PlanPrice id={p.id} highlight={p.highlight} />
-              <ul className="mb-10 mt-10 flex-1 space-y-3.5">
-                {p.features.map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-[15px] text-silver">
-                    <CheckIcon className={cn("h-4 w-4 shrink-0", p.highlight ? "text-ember" : "text-primary-300")} strokeWidth={1.75} />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              {p.highlight ? (
-                <AuroraLink to="/sign-up" className="w-full py-3.5">
-                  {p.cta}
-                </AuroraLink>
-              ) : (
-                <Link
-                  to="/sign-up"
-                  className="inline-flex w-full items-center justify-center rounded-full bg-kelp px-5 py-3.5 text-[13px] uppercase tracking-[0.08em] text-white transition hover:bg-surface-2"
-                >
-                  {p.cta}
-                </Link>
-              )}
-            </div>
-          </Reveal>
-        ))}
-      </div>
-    </Section>
+    <PricingSection />
 
-    {/* ── Final CTA ── */}
-    <section className="px-5 py-24 md:px-10">
-      <div className="relative mx-auto max-w-[1280px] overflow-hidden rounded-[36px] bg-deep px-6 py-[120px] text-center">
-        <FluidBackdrop intensity="soft" />
-        <div className="pointer-events-none absolute -bottom-[45%] left-1/2 aspect-square w-[min(110vw,760px)] -translate-x-1/2 opacity-70">
-          <ParticleSphere density={900} />
+    {/* ── Closing shot: the city at dusk, and the invitation ── */}
+    <section className="relative flex min-h-[92svh] items-center overflow-hidden bg-black px-5 py-32 text-center md:px-10">
+      <Footage name="city" focus="center 60%" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-black/55" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_50%,transparent,rgba(0,0,0,0.55))]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-deep to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-deep to-transparent" />
+      <Grain />
+      <Reveal className="relative mx-auto w-full max-w-[900px]">
+        <div className="flex justify-center -space-x-3">
+          {[IMG.kwameFace, IMG.meiFace, IMG.customerFace, IMG.rafaelFace].map((s) => (
+            <Face key={s} src={s} className="h-12 w-12 ring-4 ring-black/60" />
+          ))}
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_40%,rgba(1,29,28,0.9),transparent_80%)]" />
-        <Reveal className="relative">
-          <div className="flex justify-center -space-x-3">
-            {[IMG.kwame, IMG.mei, IMG.customerFace, IMG.rafael].map((s) => (
-              <Face key={s} src={s} className="h-12 w-12 ring-4 ring-deep" />
-            ))}
-          </div>
-          <h2 className="mx-auto mt-10 max-w-[820px] text-[clamp(2.4rem,6vw,5rem)] leading-[1] tracking-display text-white">
-            Be the reply they <Voice>remember.</Voice>
-          </h2>
-          <p className="mx-auto mt-6 max-w-[460px] text-[16px] leading-[1.6] text-silver">
-            Set up your inbox, invite your people and send your first AI-assisted reply this afternoon.
-          </p>
-          <div className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10">
-            <AuroraLink to="/sign-up" size="lg">
-              Try it free for 30 days
-              <ArrowRightIcon className="h-4 w-4" strokeWidth={1.5} />
-            </AuroraLink>
-            <GhostLink to="/sign-in">
-              Talk to sales
-              <ArrowUpRightIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
-            </GhostLink>
-          </div>
-        </Reveal>
-      </div>
+        <h2 className="mx-auto mt-10 max-w-[820px] text-[clamp(2.4rem,6vw,5rem)] leading-[1] tracking-display text-white">
+          Be the reply they <Voice>remember.</Voice>
+        </h2>
+        <p className="mx-auto mt-6 max-w-[460px] text-[16px] leading-[1.6] text-white/80">
+          Set up your inbox, invite your people and send your first AI-assisted reply this afternoon.
+        </p>
+        <div className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10">
+          <TrialCta />
+          <TalkToUs className="label-caps">
+            Talk to us
+            <ArrowUpRightIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
+          </TalkToUs>
+        </div>
+      </Reveal>
     </section>
 
     {/* ── Footer ── */}
@@ -904,13 +1030,20 @@ const LandingPage: FC = () => (
               Customer support with a human heart and an <Voice className="text-[1.1em]">AI head start.</Voice>
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-x-16 gap-y-3 sm:grid-cols-3">
-            {["Product", "Pricing", "Integrations", "Changelog", "Privacy", "Terms", "Security", "Status", "Support"].map((l) => (
-              <a key={l} href="#" className="text-[10px] uppercase tracking-[0.15em] text-silver transition hover:text-white">
-                {l}
+          <nav aria-label="Footer" className="grid grid-cols-2 content-start gap-x-16 gap-y-3 sm:grid-cols-3">
+            {footerLinks.map((l) => (
+              <a key={l.label} href={l.href} className={footerLink}>
+                {l.label}
               </a>
             ))}
-          </div>
+            <Link to="/sign-in" className={footerLink}>
+              Sign in
+            </Link>
+            <Link to="/sign-up" className={footerLink}>
+              Start free trial
+            </Link>
+            <TalkToUs className={cn(footerLink, "text-left")}>Support</TalkToUs>
+          </nav>
         </div>
         <div className="mt-20 flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-[12px] text-silver/70 sm:flex-row">
           <span>© 2026 Asotie</span>

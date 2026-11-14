@@ -221,7 +221,7 @@ const CustomerViewPage: FC = () => {
                     </div>
                   </div>
                   <Badge status={c.status} />
-                  <span className="hidden w-16 text-right text-[11px] text-ink-muted sm:block">{formatShort(c.lastMessageAt)}</span>
+                  <span className="hidden w-16 text-right text-xs text-ink-muted sm:block">{formatShort(c.lastMessageAt)}</span>
                 </Link>
               ))}
               {count > PAGE_SIZE && (

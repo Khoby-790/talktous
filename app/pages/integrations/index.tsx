@@ -25,7 +25,7 @@ export function meta() {
 const LOGO_TONES: Record<string, string> = {
   slack: "bg-[#4A154B] text-white",
   discord: "bg-[#5865F2] text-white",
-  webhook: "bg-primary-600 text-white",
+  webhook: "bg-primary text-on-primary",
   zapier: "bg-[#FF4F00] text-white",
 };
 
@@ -46,7 +46,7 @@ const IntegrationCard: FC<{ integration: Integration; onOpen: () => void }> = ({
           </div>
         </div>
         {locked ? (
-          <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-ink-soft">
+          <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-soft">
             <LockClosedIcon className="h-3 w-3" /> Growth plan
           </span>
         ) : (

@@ -86,7 +86,7 @@ const ArticleModal: FC<{ open: boolean; id: string | null; onClose: () => void }
             onChange={form.handleChange}
             onBlur={form.handleBlur}
             placeholder={PLACEHOLDER}
-            className="w-full rounded-md border border-line bg-field px-3 py-2 font-mono text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-muted focus:border-primary-500"
+            className="w-full rounded-md border border-control bg-field px-3 py-2 font-mono text-[13px] leading-relaxed text-ink placeholder:text-ink-muted"
           />
           {contentError ? (
             <p className="text-xs text-red-600 dark:text-red-400">{contentError}</p>

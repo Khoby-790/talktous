@@ -675,7 +675,7 @@ const EmailProviderGuide: FC<{ app: SupportApp }> = ({ app }) => {
             onClick={() => setProvider(p.id)}
             className={cn(
               "rounded-md px-3 py-1.5 text-xs font-medium transition",
-              p.id === provider ? "bg-primary-600 text-white" : "bg-surface-2 text-ink-soft hover:text-ink",
+              p.id === provider ? "bg-primary text-on-primary" : "bg-surface-2 text-ink-soft hover:text-ink",
             )}
           >
             {p.name}

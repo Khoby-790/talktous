@@ -1,7 +1,7 @@
 import { type FC, useState } from "react";
 import { Link } from "react-router";
 import { useReactiveVar } from "@apollo/client/react";
-import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { currentOrgVar } from "~/_graphql/cache/auth";
 import { Callout } from "~/components/guides";
 import { useGettingStarted } from "~/hooks/data";
@@ -15,7 +15,10 @@ const storageKey = (orgId: string) => `talktous:getting-started:dismissed:${orgI
 /**
  * First-run checklist for admins. Every item is checked against real data
  * (a channel exists, a message arrived, someone was invited…), so it can't
- * drift from what's actually set up. Hidden once done, or when dismissed.
+ * drift from what's actually set up. While essentials are outstanding it's the
+ * full checklist; once they're done it folds down to one line (the optional
+ * extras open on request) so the numbers below get the page back. Hidden when
+ * everything is done, or when dismissed.
  */
 export const GettingStarted: FC = () => {
   const isAdmin = useHasRole(["admin"]);
@@ -28,6 +31,7 @@ export const GettingStarted: FC = () => {
       return false;
     }
   });
+  const [expanded, setExpanded] = useState(false);
 
   if (!isAdmin || !g || !org || dismissed) return null;
 
@@ -97,60 +101,96 @@ export const GettingStarted: FC = () => {
     setDismissed(true);
   };
 
+  const ready = completed === required.length;
+  const pending = items.filter((i) => !i.done);
+  const shown = ready ? pending : items;
+  const listOpen = !ready || expanded;
+
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-surface">
-      <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
-        <div>
-          <h2 className="text-base font-medium text-ink">Getting started</h2>
+    <section className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
+      <div className="flex items-center gap-3.5 px-5 py-4">
+        {ready && (
+          <span className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-600 sm:flex dark:text-emerald-400">
+            <CheckCircleIcon className="h-5 w-5" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[15px] font-medium text-ink">{ready ? "You're ready for customers" : "Getting started"}</h2>
           <p className="mt-0.5 text-sm text-ink-soft">
-            {completed} of {required.length} essentials done — finish these and you&apos;re ready for customers.
+            {ready
+              ? `All ${required.length} essentials are done. ${pending.length} optional ${pending.length === 1 ? "extra" : "extras"} left.`
+              : `${completed} of ${required.length} essentials done — finish these and you're ready for customers.`}
           </p>
         </div>
+        {ready && (
+          <button
+            type="button"
+            onClick={() => setExpanded((open) => !open)}
+            aria-expanded={expanded}
+            aria-label={expanded ? "Hide optional extras" : "Show optional extras"}
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line px-2 text-xs font-medium text-ink transition hover:bg-surface-2 sm:px-3"
+          >
+            <span className="hidden sm:inline">{expanded ? "Hide extras" : "Show extras"}</span>
+            <ChevronDownIcon className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
+          </button>
+        )}
         <button
+          type="button"
           onClick={dismiss}
-          className="rounded-md p-1 text-ink-muted hover:bg-surface-2 hover:text-ink"
+          className="-mr-1.5 shrink-0 rounded-md p-1.5 text-ink-muted transition hover:bg-surface-2 hover:text-ink"
           aria-label="Hide getting started"
           title="Hide"
         >
           <XMarkIcon className="h-5 w-5" />
         </button>
       </div>
-      <div className="h-1 bg-surface-2">
-        <div className="h-full bg-emerald-500 transition-all" style={{ width: `${(completed / required.length) * 100}%` }} />
-      </div>
-      <ul className="divide-y divide-line">
-        {items.map((item, i) => (
-          <li key={item.id} className="flex items-center gap-4 px-5 py-3.5">
-            {item.done ? (
-              <CheckCircleIcon className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            ) : (
-              <span
-                className={cn(
-                  "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-medium",
-                  item.optional ? "border-dashed border-line-strong text-ink-muted" : "border-primary-500/40 text-primary-700 dark:text-primary-300",
-                )}
-              >
-                {i + 1}
-              </span>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className={cn("text-sm font-medium", item.done ? "text-ink-muted line-through" : "text-ink")}>
-                {item.title}
-                {item.optional && !item.done && <span className="ml-2 text-xs font-normal text-ink-muted no-underline">Optional</span>}
-              </p>
-              {!item.done && <p className="text-xs text-ink-soft">{item.detail}</p>}
-            </div>
-            {!item.done && (
-              <Link
-                to={item.to}
-                className="shrink-0 rounded-md border border-line px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface-2"
-              >
-                {item.cta}
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
+      {!ready && (
+        <div
+          className="h-1 bg-surface-2"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={required.length}
+          aria-valuenow={completed}
+          aria-label="Essentials completed"
+        >
+          <div className="h-full bg-emerald-500 transition-all" style={{ width: `${(completed / required.length) * 100}%` }} />
+        </div>
+      )}
+      {listOpen && (
+        <ul className="divide-y divide-line border-t border-line">
+          {shown.map((item) => (
+            <li key={item.id} className="flex items-center gap-4 px-5 py-3.5">
+              {item.done ? (
+                <CheckCircleIcon className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <span
+                  className={cn(
+                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-medium tabular-nums",
+                    item.optional ? "border-dashed border-line-strong text-ink-muted" : "border-primary-500/40 text-primary-700 dark:text-primary-300",
+                  )}
+                >
+                  {items.indexOf(item) + 1}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-sm font-medium", item.done ? "text-ink-muted line-through" : "text-ink")}>
+                  {item.title}
+                  {item.optional && !item.done && <span className="ml-2 text-xs font-normal text-ink-muted no-underline">Optional</span>}
+                </p>
+                {!item.done && <p className="mt-0.5 text-xs text-ink-soft">{item.detail}</p>}
+              </div>
+              {!item.done && (
+                <Link
+                  to={item.to}
+                  className="shrink-0 rounded-md border border-line px-3 py-1.5 text-xs font-medium text-ink transition hover:bg-surface-2"
+                >
+                  {item.cta}
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
       {!g.emailSendingConfigured && (
         <div className="border-t border-line px-5 py-4">
           <Callout tone="warning" title="Emails aren't being sent yet">
