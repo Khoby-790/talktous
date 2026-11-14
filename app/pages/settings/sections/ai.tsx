@@ -38,7 +38,7 @@ const COMPATIBLE_PRESETS = [
 ];
 
 const field =
-  "h-[42px] w-full rounded-md border border-line bg-field px-3.5 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15";
+  "h-9 w-full rounded-md border border-control bg-field px-3.5 type-body text-ink transition-colors duration-150 placeholder:text-ink-muted";
 
 /** Connect the organization's own AI provider: provider → key → model → save (verified). */
 const ProviderForm: FC<{ status: AiStatus }> = ({ status }) => {
@@ -135,7 +135,7 @@ const ProviderForm: FC<{ status: AiStatus }> = ({ status }) => {
                 onClick={() => setBaseUrl(preset.url)}
                 className={cn(
                   "rounded-md px-2.5 py-1 text-xs font-medium transition",
-                  baseUrl === preset.url ? "bg-primary-600 text-white" : "bg-surface-2 text-ink-soft hover:text-ink",
+                  baseUrl === preset.url ? "bg-primary text-on-primary" : "bg-surface-2 text-ink-soft hover:text-ink",
                 )}
               >
                 {preset.name}
@@ -438,7 +438,7 @@ const AutoReplyCard: FC<{ available: boolean }> = ({ available }) => {
               value={handoff}
               disabled={!available || off}
               onChange={(e) => setHandoff(e.target.value)}
-              className="w-full rounded-md border border-line bg-field px-3 py-2 text-sm text-ink outline-none focus:border-primary-500 disabled:opacity-60"
+              className="w-full rounded-md border border-control bg-field px-3 py-2 type-body text-ink disabled:opacity-60"
             />
             {handoff.trim() !== saved.handoffMessage && (
               <div className="flex justify-end">

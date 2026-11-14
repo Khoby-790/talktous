@@ -10,12 +10,21 @@ import { cn } from "~/lib/utils";
 
 export { ParticleSphere } from "./particle-sphere";
 
+/*
+ * The people of the site. Each has a tall still of them at work (the People
+ * section) and a square face crop for avatars; Ama, the customer, appears in
+ * the opening footage and as an avatar. `hands` and `team` are wide stills.
+ */
 export const IMG = {
-  customer: "/landing/customer.jpg",
   customerFace: "/landing/customer-face.jpg",
   kwame: "/landing/kwame.jpg",
+  kwameFace: "/landing/kwame-face.jpg",
   mei: "/landing/mei.jpg",
+  meiFace: "/landing/mei-face.jpg",
   rafael: "/landing/rafael.jpg",
+  rafaelFace: "/landing/rafael-face.jpg",
+  hands: "/landing/hands.jpg",
+  team: "/landing/team.jpg",
 };
 
 /** The human voice: serif italic in flowing ember — the orange at the heart of the logo. */

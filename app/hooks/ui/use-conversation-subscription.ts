@@ -21,8 +21,9 @@ export type OrgEventPayload = {
 };
 
 /**
- * Subscribe to the organization's realtime channel. Returns whether realtime
- * is live, so callers can fall back to polling when it isn't.
+ * Subscribe to the organization's realtime channel. Returns whether events are
+ * actually flowing right now — not merely whether we subscribed — so callers
+ * can fall back to polling while the connection is down.
  *
  *   useConversationSubscription(["message.created"], (event, data) => { … })
  */
@@ -40,12 +41,18 @@ export const useConversationSubscription = (
     if (!org?.id) return;
     let cancelled = false;
     let cleanup = () => {};
-    void getRealtime().then((realtime) => {
-      if (cancelled || !realtime) return;
-      cleanup = realtime.subscribe(`private-org-${org.id}`, (event, data) => {
+    void getRealtime().then((client) => {
+      if (cancelled || !client) return;
+      const unsubscribe = client.subscribe(`private-org-${org.id}`, (event, data) => {
         if (events.includes(event as OrgEvent)) handlerRef.current(event as OrgEvent, data as OrgEventPayload);
       });
-      setRealtime(true);
+      const unwatch = client.onStatus((connected) => {
+        if (!cancelled) setRealtime(connected);
+      });
+      cleanup = () => {
+        unsubscribe();
+        unwatch();
+      };
     });
     return () => {
       cancelled = true;
@@ -58,8 +65,9 @@ export const useConversationSubscription = (
 };
 
 /**
- * Keep a view fresh: refetch on matching realtime events (debounced), or poll
- * every `pollInterval` when realtime isn't available.
+ * Keep a view fresh: refetch on matching realtime events (debounced), poll
+ * every `pollInterval` while realtime is unavailable or disconnected, and
+ * refetch once when it reconnects to pick up whatever was missed.
  */
 export const useLiveRefetch = (
   refetch: () => unknown,
@@ -82,6 +90,14 @@ export const useLiveRefetch = (
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => void refetchRef.current(), 250);
   });
+
+  // Events sent while we were disconnected are gone; catch up on reconnect.
+  const wasLive = useRef(false);
+  useEffect(() => {
+    if (!realtime) return;
+    if (wasLive.current) void refetchRef.current();
+    wasLive.current = true;
+  }, [realtime]);
 
   useEffect(() => {
     if (realtime) return;

@@ -2,7 +2,7 @@ import { type FC } from "react";
 import { Link, useParams } from "react-router";
 import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "~/components/buttons";
-import { Card, EmptyState, Tabs } from "~/components/core";
+import { Card, EmptyState, ErrorState, Tabs } from "~/components/core";
 import { AppStatusBadge, appTypeIcons, appTypeLabel } from "~/components/forms/app";
 import { Header, PageShimmer } from "~/components/layouts";
 import { useApp } from "~/hooks/data";
@@ -25,14 +25,21 @@ const ViewAppPage: FC = () => {
   const canManage = useHasRole(["admin"]);
   const [tab, setTab] = useUrlState("tab");
   const [modal, setModal] = useUrlState("modal");
-  const { app, loading, error } = useApp(id);
+  const { app, loading, error, refetch } = useApp(id);
 
   if (loading && !app) return <PageShimmer />;
+  if (!app && error && getErrorCode(error) !== "NOT_FOUND") {
+    return (
+      <Card>
+        <ErrorState title="We couldn't load this app" onRetry={() => void refetch()} />
+      </Card>
+    );
+  }
   if (!app) {
     return (
       <Card>
         <EmptyState
-          title={getErrorCode(error) === "NOT_FOUND" || !error ? "App not found" : "Couldn't load this app"}
+          title="App not found"
           description="It may have been deleted, or you may not have access."
           action={
             <Link to="/apps" className="text-sm font-medium text-primary-600 dark:text-primary-300">
@@ -68,8 +75,13 @@ const ViewAppPage: FC = () => {
         description={app.description ?? appTypeLabel(app.type)}
         action={
           canManage && (
-            <PrimaryButton variant="secondary" onClick={() => setModal("delete")}>
-              <TrashIcon className="h-4 w-4" /> Delete
+            <PrimaryButton
+              variant="ghost"
+              size="sm"
+              onClick={() => setModal("delete")}
+              className="text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            >
+              <TrashIcon className="h-4 w-4" /> Delete app
             </PrimaryButton>
           )
         }

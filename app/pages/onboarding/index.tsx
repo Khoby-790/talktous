@@ -112,7 +112,7 @@ const StepRail: FC<{ step: number }> = ({ step }) => (
         <span
           className={cn(
             "relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] transition duration-500",
-            i < step && "bg-ember text-white",
+            i < step && "bg-accent text-on-accent",
             i === step && "bg-abyss text-white ring-2 ring-ember shadow-[0_0_24px_-4px_rgba(255,122,26,0.8)]",
             i > step && "bg-abyss text-silver/60 ring-1 ring-white/15",
           )}
@@ -199,7 +199,7 @@ const WorkspacePreview: FC<{ preview: Preview; step: number }> = ({ preview, ste
                 <p className="text-[11px] opacity-80">We usually reply in a few minutes</p>
                 <div className="mt-2.5 flex items-center gap-2">
                   <span className="flex -space-x-1.5">
-                    {[IMG.kwame, IMG.mei, IMG.rafael].map((s) => (
+                    {[IMG.kwameFace, IMG.meiFace, IMG.rafaelFace].map((s) => (
                       <img key={s} src={s} alt="" className="h-5 w-5 rounded-full object-cover ring-2 ring-white/40" />
                     ))}
                   </span>
@@ -596,7 +596,7 @@ const OnboardingPage: FC = () => {
   };
 
   return (
-    <div className="dark relative min-h-screen overflow-hidden bg-abyss font-sans text-silver antialiased selection:bg-ember selection:text-white">
+    <div className="dark relative min-h-screen overflow-hidden bg-abyss font-sans text-silver antialiased selection:bg-ember selection:text-on-accent">
       <FluidBackdrop intensity="soft" />
       {/* Progress current across the top */}
       <div className="fixed inset-x-0 top-0 z-20 h-[3px] bg-white/5">

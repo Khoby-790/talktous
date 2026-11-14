@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* EXPERIMENT: the same interface without the teal. Opt-in; see the file. */
+@import "./palette-neutral.css";
 
 /* Toggle dark mode via a `.dark` class on <html> (class strategy, not media). */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -7,6 +9,12 @@
    Auros — abyssal terminal with bioluminescent data orbs.
    Depth comes from the teal surface stack (deep → abyss → kelp), never from
    shadows. Weights are 400/500 only. Radii: 16px cards, 6px everything small.
+
+   The Asotie design language ("Support that listens first") sets the rules;
+   Auros sets the look. Its roles are mapped onto Auros values below — accent,
+   on-accent, accent-soft, accent-ink, focus, control — and its interface type
+   roles are the `type-*` utilities. Where the two disagree on look (palette,
+   weights, uppercase labels, radii, flat cards) Auros wins. See CLAUDE.md.
    ════════════════════════════════════════════════════════════════════════════ */
 
 @theme {
@@ -26,6 +34,7 @@
   --color-slate-deep: #707777;
   --color-phosphor: #fde9ff;
   --color-arrow: rgba(3, 81, 75, 0.5);
+  --color-kelp-hover: #0a4642;
 
   /* ── Warm "human" palette (marketing site) ───────────────────────────── */
   --font-serif: "Instrument Serif", ui-serif, Georgia, Cambria, serif;
@@ -49,19 +58,18 @@
   --color-primary-800: #004c47;
   --color-primary-900: #003734;
 
-  /* ── Semantic surface/text tokens (resolve to runtime vars below) ──────── */
-  --color-app: var(--app);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-sidebar: var(--sidebar);
-  --color-field: var(--field);
-  --color-line: var(--line);
-  --color-line-strong: var(--line-strong);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-ink-muted: var(--ink-muted);
-  --color-figure: var(--figure);
-  --color-accent: var(--color-primary-600);
+
+  /* ── Design-language roles ─────────────────────────────────────────────
+     accent      the one spark: unread, the Inbox count, the site's main CTA.
+                 A fill or graphic only — never text on a light ground.
+     on-accent   text and icons on an accent fill (white fails contrast).
+     accent-ink  orange for text and small icons.
+     accent-soft tinted ground for the selected row.
+     focus       the keyboard focus ring, 2px with a 2px offset, everywhere.
+     control     borders of inputs, selects and secondary buttons; holds 3:1
+                 against every ground (`line` is for hairlines only). */
+  --color-accent: var(--color-ember);
+  --color-on-accent: #011d1c;
 
   /* ── Status palette (stable across themes) ─────────────────────────────── */
   --color-status-open: #2bbab1;
@@ -76,13 +84,57 @@
   --radius-card: 16px;
   --radius-small: 6px;
 
-  /* No elevation in Auros — kept as tokens so existing usages resolve. */
-  --shadow-card: none;
-  --shadow-pop: none;
+  /* Auros: depth comes from the surface stack, never from shadows — so
+     cards, buttons and everything in the page flow are flat (shadow-card is
+     `none`, kept as a token so usages resolve). The one exception is floating
+     layers — menus, dialogs, toasts — which sit above the page rather than in
+     it and were already lifted with shadow-lg; shadow-pop is that, themed. */
 
   /* Display tracking */
   --tracking-display: -0.04em;
   --tracking-label: 0.12em;
+}
+
+/*
+ * Semantic tokens. `inline` makes each utility read the runtime variable
+ * where it is used (bg-field → var(--field)) rather than a copy resolved once
+ * at the page root. That is what lets a subtree set its own theme: the auth
+ * and onboarding screens are always dark (`.dark` on their wrapper) even when
+ * the dashboard is in light mode. Without it their fields rendered white.
+ */
+@theme inline {
+  --color-app: var(--app);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sidebar: var(--sidebar);
+  --color-field: var(--field);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-figure: var(--figure);
+  --color-nav-active: var(--nav-active);
+
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-focus: var(--focus);
+  --color-control: var(--control);
+
+  /* The filled main action and what sits on it; the "information" tone (an
+     open conversation); the main chart series. Roles, not hues, so a palette
+     can change them without touching a component. */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-on-primary: var(--on-primary);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-chart: var(--chart-main);
+
+  --shadow-card: var(--card-shadow);
+  --shadow-pop: var(--pop-shadow);
+  --shadow-nav: var(--nav-shadow);
 }
 
 /* ── Light theme ("Mist" — the same teal stack, inverted for daylight) ──── */
@@ -99,6 +151,33 @@
   --ink-muted: #687c7a;
   --figure: #012624;
   --pop-border: #b5cbc9;
+  --nav-active: #dcefec;
+  --card-shadow: none;
+  --pop-shadow: 0 0 0 1px rgba(1, 38, 36, 0.03), 0 4px 10px -4px rgba(1, 38, 36, 0.1),
+    0 18px 40px -12px rgba(1, 38, 36, 0.22);
+  --primary: #00827c;
+  --primary-hover: #00675f;
+  --primary-active: #004c47;
+  --on-primary: #ffffff;
+  --info: #00675f;
+  --info-soft: color-mix(in srgb, #0a9d95 10%, transparent);
+  --nav-shadow: none;
+  /* Marketing canvas colours as RGB triples (the particle orb reads these). */
+  --orb-far: 0 130 124;
+  --orb-near: 203 255 252;
+  --flow-cool: #2bbab1;
+  --control: #6f8f8c;
+  --focus: #00827c;
+  /* Charts: one main series, comparisons in ink-muted. Parts of a whole step
+     in lightness so they can be told apart without relying on hue. */
+  --chart-main: #00827c;
+  --series-1: #004c47;
+  --series-2: #00827c;
+  --series-3: #2bbab1;
+  --series-4: #9cefe9;
+  --accent-ink: #b84a00;
+  --accent-soft: #fff1e6;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23687c7a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
   color-scheme: light;
 }
 
@@ -116,6 +195,27 @@
   --ink-muted: #8a9e9c;
   --figure: #fde9ff; /* Lavender Phosphor — statistics */
   --pop-border: rgba(237, 255, 254, 0.16);
+  --nav-active: #003734;
+  --card-shadow: none;
+  --pop-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28), 0 10px 20px -8px rgba(0, 0, 0, 0.45),
+    0 28px 56px -16px rgba(0, 0, 0, 0.6);
+  --primary: #00827c;
+  --primary-hover: #00675f;
+  --primary-active: #004c47;
+  --on-primary: #ffffff;
+  --info: #5fd8d0;
+  --info-soft: color-mix(in srgb, #0a9d95 15%, transparent);
+  --nav-shadow: none;
+  --control: #6b8a87;
+  --focus: #5fd8d0;
+  --chart-main: #5fd8d0;
+  --series-1: #cbfffc;
+  --series-2: #5fd8d0;
+  --series-3: #0a9d95;
+  --series-4: #00675f;
+  --accent-ink: #ff9a4d;
+  --accent-soft: color-mix(in srgb, #ff7a1a 17%, #003734);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%238a9e9c' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
   color-scheme: dark;
 }
 
@@ -139,6 +239,46 @@ body {
   }
 }
 
+/* One focus ring for every interactive element: 2px, 2px offset, `focus`
+   colour. Nothing draws its own. A bare input inside a composite box (search,
+   the composer) hides its outline and the box takes `focus-within-ring`. */
+@layer base {
+  :where(a, button, input, select, textarea, summary, [role="tab"], [role="button"], [role="switch"], [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary-400) 35%, transparent);
+  }
+}
+
+/* Native selects: our own chevron instead of the platform's, which sits
+   flush against the border and differs per OS. Unlayered so it holds
+   whatever padding utilities a select carries. */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: var(--chevron);
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+  padding-right: 1.9rem;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+/* Inside the dashboard the support chat opens from the sidebar ("Help &
+   support"), so the floating launcher that widget.js draws is hidden — it sat
+   on top of Send in the inbox and the last column of every table. The chat
+   panel drops into the space the launcher occupied. */
+html[data-app-shell] body > button[style*="2147483647"] {
+  display: none !important;
+}
+html[data-app-shell] body > iframe[style*="2147483646"] {
+  bottom: 20px !important;
+  max-height: calc(100vh - 40px) !important;
+}
+
 /* Themed scrollbars so panels feel native in both modes */
 * {
   scrollbar-width: thin;
@@ -153,6 +293,52 @@ body {
   border-radius: 6px;
   border: 3px solid transparent;
   background-clip: content-box;
+}
+
+/* ── Interface type roles (design language, at Auros weights) ───────────────
+   title-lg page title · title-md panel and dialog titles · title-sm card
+   titles · body the default · label controls, nav, form labels · caption
+   timestamps, badges, helper text. Caption (12px) is the floor: nothing in
+   the dashboard is set smaller. Named `type-*`, not `text-*`, so cn() never
+   mistakes one for a colour and drops it. */
+@utility type-title-lg {
+  font-size: 1.75rem;
+  line-height: 2.125rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+@utility type-title-md {
+  font-size: 1.25rem;
+  line-height: 1.625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+@utility type-title-sm {
+  font-size: 1rem;
+  line-height: 1.375rem;
+  font-weight: 500;
+}
+@utility type-body {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+@utility type-label {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  font-weight: 500;
+}
+@utility type-caption {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+}
+
+/* Focus ring for a box that wraps a bare input. */
+@utility focus-within-ring {
+  &:has(:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
 }
 
 /* ── Signature utilities ────────────────────────────────────────────────── */
@@ -205,6 +391,127 @@ body {
 @utility tracking-kinetic {
   letter-spacing: -0.046em;
 }
+
+/* ── Interface motion ───────────────────────────────────────────────────────
+   Motion confirms, it does not perform: 150ms for hover and press, 250ms for
+   panels and menus, ease-out. Nothing in the dashboard loops or bounces, so
+   loading placeholders are still blocks. Under reduced motion every entrance
+   becomes an opacity change. */
+.skeleton {
+  background-color: var(--surface-2);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Page content settling in on navigation. */
+.rise-in { animation: rise-in 250ms ease-out both; }
+/* Menus and popovers. */
+.pop-in { animation: pop-in 250ms ease-out both; }
+.toast-in { animation: rise-in 250ms ease-out both; }
+
+/* ── Cinema (marketing site) ────────────────────────────────────────────────
+   Footage and stills share one texture and one slow camera move. See
+   pages/landing/cinema.tsx. */
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+  mix-blend-mode: overlay;
+  opacity: 0.16;
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+/* The camera's slow push-in, eased both ways so it never snaps back. */
+.kenburns {
+  animation: kenburns 26s ease-in-out infinite alternate;
+  transform-origin: 60% 42%;
+  will-change: transform;
+}
+/* The opening shot: the frame settles from a slightly tighter, darker one. */
+@keyframes shot-in {
+  from {
+    transform: scale(1.1);
+    filter: brightness(0.55);
+  }
+  to {
+    transform: none;
+    filter: none;
+  }
+}
+.shot-in { animation: shot-in 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+/* …while the letterbox bars pull back to the edges. */
+@keyframes bar-open {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0);
+  }
+}
+.letterbox::before,
+.letterbox::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  z-index: 20;
+  height: 13vh;
+  background: #000;
+  pointer-events: none;
+  animation: bar-open 1.5s cubic-bezier(0.7, 0, 0.2, 1) 0.25s both;
+}
+.letterbox::before { top: 0; transform-origin: top; }
+.letterbox::after { bottom: 0; transform-origin: bottom; }
+/* "Scroll" cue under the opening shot. */
+@keyframes cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+.cue { animation: cue 2.6s cubic-bezier(0.6, 0, 0.3, 1) infinite; }
 
 /* ── Landing page motion ────────────────────────────────────────────────── */
 @keyframes fade-up {
@@ -350,7 +657,7 @@ body {
   }
 }
 .flow-fill {
-  background-image: linear-gradient(90deg, #ff7a1a, #ffb27a, #2bbab1, #ff7a1a);
+  background-image: linear-gradient(90deg, #ff7a1a, #ffb27a, var(--flow-cool), #ff7a1a);
   background-size: 200% 100%;
   animation: flow-x 4s linear infinite;
 }
@@ -384,20 +691,20 @@ body {
   pointer-events: none;
   background:
     radial-gradient(circle at var(--x) var(--y), rgba(255, 122, 26, 0.55), transparent 35%),
-    radial-gradient(circle at 70% 30%, rgba(43, 186, 177, 0.35), transparent 50%),
-    #012624;
+    radial-gradient(circle at 70% 30%, rgb(var(--orb-far) / 0.4), transparent 50%),
+    var(--color-abyss);
   animation: bloom 0.75s cubic-bezier(0.7, 0, 0.2, 1) both;
   transition: opacity 0.6s ease;
 }
 .enter-bloom.is-out { opacity: 0; }
 
-/* Fields inside the fluid auth + onboarding screens: taller, softer, ember focus.
-   Scoped by re-pointing the theme variables the core inputs already use. */
+/* Fields inside the fluid auth + onboarding screens: taller and softer.
+   Scoped by re-pointing the theme variables the core inputs already use.
+   Focus is the standard ring: orange is kept for the one call to action. */
 .fluid-fields {
   --field: rgba(237, 255, 254, 0.035);
   --line: rgba(237, 255, 254, 0.1);
   --line-strong: rgba(237, 255, 254, 0.2);
-  --color-primary-500: #ff7a1a;
   --surface: #012e2b;
   --pop-border: rgba(237, 255, 254, 0.12);
 }
@@ -406,9 +713,6 @@ body {
   border-radius: 14px;
   padding-inline: 16px;
   font-size: 15px;
-}
-.fluid-fields input:not([type="color"]):focus {
-  box-shadow: 0 0 0 4px rgba(255, 122, 26, 0.14), 0 0 28px -6px rgba(255, 122, 26, 0.45);
 }
 .fluid-fields label {
   font-size: 13px;
@@ -452,6 +756,22 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .rise-in,
+  .pop-in,
+  .toast-in {
+    animation-name: fade-in;
+  }
+  .kenburns,
+  .shot-in,
+  .cue,
+  .letterbox::before,
+  .letterbox::after {
+    animation: none;
+  }
+  .letterbox::before,
+  .letterbox::after {
+    display: none;
+  }
   .orbit,
   .orbit-rev,
   .orbit > *,

@@ -29,7 +29,7 @@ export const Card: FC<{
 }> = ({ className, children, as: Tag = "div" }) => (
   <Tag
     className={cn(
-      "rounded-2xl border border-line bg-surface",
+      "rounded-2xl border border-line bg-surface shadow-card",
       className
     )}
   >
@@ -52,7 +52,7 @@ type BadgeVariant =
   | "draft";
 
 const badgeStyles: Record<BadgeVariant, string> = {
-  open: "bg-primary-500/10 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300",
+  open: "bg-info-soft text-info",
   pending: "bg-amber-500/12 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
   resolved: "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
   closed: "bg-slate-500/12 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300",
@@ -86,7 +86,7 @@ export const Badge: FC<{ status: BadgeVariant | string; label?: string; classNam
 }) => (
   <span
     className={cn(
-      "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium capitalize",
+      "type-caption inline-flex h-[22px] items-center whitespace-nowrap rounded-md px-2 capitalize",
       badgeStyles[status as BadgeVariant] ?? extraBadgeStyles[status] ?? badgeStyles.closed,
       className
     )}
@@ -97,10 +97,10 @@ export const Badge: FC<{ status: BadgeVariant | string; label?: string; classNam
 
 // ─── StatusDot ───────────────────────────────────────────────────────────────
 const dotStyles: Record<string, string> = {
-  online: "bg-emerald-500",
-  offline: "bg-gray-400",
-  busy: "bg-red-500",
-  away: "bg-amber-400",
+  online: "bg-online",
+  offline: "bg-offline",
+  busy: "bg-busy",
+  away: "bg-away",
 };
 
 export const StatusDot: FC<{ status: string; className?: string }> = ({
@@ -110,7 +110,7 @@ export const StatusDot: FC<{ status: string; className?: string }> = ({
   <span
     className={cn(
       "inline-block h-2.5 w-2.5 rounded-full",
-      dotStyles[status] || "bg-gray-400",
+      dotStyles[status] || "bg-offline",
       className
     )}
   />
@@ -124,18 +124,39 @@ const sizeMap = {
   xl: "h-14 w-14 text-lg",
 };
 
+/*
+ * Initials avatars take one of four tints, chosen from the name, so the same
+ * person is always the same tone and a list of people can be scanned by it as
+ * well as by letters. Every tint comes from the palette's own ramp; none is
+ * orange, which is kept for what needs attention.
+ */
+const avatarTints = [
+  "bg-primary-100 text-primary-800 dark:bg-primary-400/20 dark:text-primary-200",
+  "bg-primary-800 text-primary-100 dark:bg-mist/12 dark:text-mist",
+  "bg-phosphor text-fuchsia-900 dark:bg-phosphor/12 dark:text-phosphor",
+  "bg-surface-2 text-ink-soft",
+];
+
+const tintFor = (name: string) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return avatarTints[hash % avatarTints.length];
+};
+
 export const Avatar: FC<{
   name: string;
   src?: string | null;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }> = ({ name, src, size = "md", className }) => {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  const initials =
+    name
+      .trim()
+      .split(/\s+/)
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
 
   return src ? (
     <img
@@ -146,10 +167,12 @@ export const Avatar: FC<{
   ) : (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full bg-primary-100 font-medium text-primary-700 dark:bg-primary-500/20 dark:text-primary-300",
+        "inline-flex shrink-0 select-none items-center justify-center rounded-full font-medium",
+        tintFor(name),
         sizeMap[size],
         className
       )}
+      title={name}
     >
       {initials}
     </span>
@@ -184,8 +207,15 @@ interface InputProps {
   handleBlur?: React.FocusEventHandler<HTMLInputElement>;
 }
 
+/* 36px controls with a `control` border (3:1 on every ground). Focus is the
+   global ring; nothing here draws its own. */
 const fieldBase =
-  "w-full rounded-md border bg-field px-3.5 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 disabled:cursor-not-allowed disabled:opacity-60";
+  "type-body w-full rounded-md border bg-field px-3 text-ink transition-colors duration-150 placeholder:text-ink-muted disabled:cursor-not-allowed disabled:opacity-60";
+const fieldBorder = (hasError: boolean) =>
+  hasError ? "border-red-600 dark:border-red-400" : "border-control hover:border-ink-soft";
+const fieldLabel = "type-label text-ink";
+const fieldError = "type-caption text-red-700 dark:text-red-300";
+const fieldHint = "type-caption text-ink-muted";
 
 export const TextInput: FC<InputProps> = ({
   id,
@@ -209,7 +239,7 @@ export const TextInput: FC<InputProps> = ({
   const hasError = Boolean(touched[id] && errors[id]);
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={id} className="text-sm font-medium text-ink-soft">
+      <label htmlFor={id} className={fieldLabel}>
         {label}
         {required && (
           <span className="ml-0.5 text-red-500" aria-hidden="true">
@@ -228,6 +258,7 @@ export const TextInput: FC<InputProps> = ({
         disabled={disabled}
         aria-required={required || undefined}
         aria-invalid={hasError || undefined}
+        aria-describedby={hasError || hint ? `${id}-help` : undefined}
         inputMode={inputMode}
         autoComplete={secret ? "off" : autoComplete}
         autoCorrect={secret ? "off" : undefined}
@@ -241,14 +272,14 @@ export const TextInput: FC<InputProps> = ({
         style={secret ? ({ WebkitTextSecurity: "disc" } as React.CSSProperties) : undefined}
         className={cn(
           fieldBase,
-          "h-[42px]",
-          hasError ? "border-red-400 focus:border-red-400 focus:ring-red-500/15" : "border-line"
+          "h-9",
+          fieldBorder(hasError)
         )}
       />
       {hasError ? (
-        <p className="text-xs text-red-500">{String(errors[id])}</p>
+        <p id={`${id}-help`} className={fieldError}>{String(errors[id])}</p>
       ) : (
-        hint && <p className="text-xs text-ink-muted">{hint}</p>
+        hint && <p id={`${id}-help`} className={fieldHint}>{hint}</p>
       )}
     </div>
   );
@@ -277,7 +308,7 @@ export const TextArea: FC<TextAreaProps> = ({
   const hasError = Boolean(touched[id] && errors[id]);
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={id} className="text-sm font-medium text-ink-soft">
+      <label htmlFor={id} className={fieldLabel}>
         {label}
       </label>
       <textarea
@@ -289,14 +320,16 @@ export const TextArea: FC<TextAreaProps> = ({
         onChange={handleChange}
         onBlur={handleBlur}
         disabled={disabled}
+        aria-invalid={hasError || undefined}
+        aria-describedby={hasError ? `${id}-help` : undefined}
         className={cn(
           fieldBase,
-          "py-2.5",
-          hasError ? "border-red-400 focus:border-red-400 focus:ring-red-500/15" : "border-line"
+          "py-2",
+          fieldBorder(hasError)
         )}
       />
       {hasError && (
-        <p className="text-xs text-red-500">{String(errors[id])}</p>
+        <p id={`${id}-help`} className={fieldError}>{String(errors[id])}</p>
       )}
     </div>
   );
@@ -319,21 +352,21 @@ export const Toggle: FC<{
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary-500/20",
-        checked ? "bg-primary-600" : "bg-line-strong",
+        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-150 ease-out",
+        checked ? "bg-primary" : "bg-line-strong",
         disabled && "cursor-not-allowed opacity-50"
       )}
     >
       <span
         className={cn(
-          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white ring-0 transition duration-200 ease-in-out",
-          checked ? "translate-x-5" : "translate-x-0"
+          "pointer-events-none inline-block h-5 w-5 transform rounded-full ring-0 transition duration-150 ease-out",
+          checked ? "translate-x-5 bg-on-primary" : "translate-x-0 bg-white"
         )}
       />
     </button>
     <label
       htmlFor={id}
-      className="cursor-pointer text-sm font-medium text-ink-soft"
+      className={cn(fieldLabel, "cursor-pointer")}
     >
       {label}
     </label>
@@ -352,25 +385,26 @@ export const Paginator: FC<{
   const end = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 text-sm text-ink-soft">
-      <span>
-        Showing {start}–{end} of {total} results
+    <div className="type-label flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 font-normal text-ink-soft">
+      <span className="tabular-nums">
+        Showing <span className="font-medium text-ink">{start}–{end}</span> of{" "}
+        <span className="font-medium text-ink">{total}</span>
       </span>
       <div className="flex items-center gap-2">
         <button
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="rounded-md px-3 py-1.5 font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent"
+          className="type-label h-8 rounded-md border border-control px-3 text-ink transition-colors duration-150 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent"
         >
           Previous
         </button>
-        <span className="font-medium text-ink">
-          {page} / {totalPages}
+        <span className="px-1 tabular-nums text-ink-muted">
+          Page <span className="font-medium text-ink">{page}</span> of {Math.max(totalPages, 1)}
         </span>
         <button
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="rounded-md px-3 py-1.5 font-medium transition hover:bg-surface-2 disabled:opacity-40 disabled:hover:bg-transparent"
+          className="type-label h-8 rounded-md border border-control px-3 text-ink transition-colors duration-150 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent"
         >
           Next
         </button>
@@ -387,7 +421,22 @@ export const CopyButton: FC<{ text: string; className?: string }> = ({
   const [copied, setCopied] = React.useState(false);
 
   const copy = async () => {
-    await navigator.clipboard.writeText(text);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Clipboard API is unavailable on insecure origins or when permission is
+      // denied; fall back to the selection-based copy.
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.setAttribute("readonly", "");
+      el.style.position = "fixed";
+      el.style.opacity = "0";
+      document.body.appendChild(el);
+      el.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(el);
+      if (!ok) return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -397,49 +446,68 @@ export const CopyButton: FC<{ text: string; className?: string }> = ({
       type="button"
       onClick={copy}
       className={cn(
-        "rounded-md px-2.5 py-1 text-xs font-medium transition",
+        "type-caption rounded-md px-2.5 py-1 transition-colors duration-150",
         copied
           ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
           : "bg-surface-2 text-ink-soft hover:text-ink",
         className
       )}
     >
-      {copied ? "Copied!" : "Copy"}
+      {copied ? "Copied" : "Copy"}
     </button>
   );
 };
 
 // ─── EmptyState ──────────────────────────────────────────────────────────────
+/**
+ * Nothing here yet: one sentence saying what will appear, and one action to
+ * make it happen. No illustration — the page stays quiet.
+ */
 export const EmptyState: FC<{
   title: string;
-  description?: string;
+  description?: ReactNode;
   action?: ReactNode;
   className?: string;
 }> = ({ title, description, action, className }) => (
+  <div className={cn("flex flex-col items-center justify-center px-6 py-12 text-center", className)}>
+    <h3 className="type-body font-medium text-ink">{title}</h3>
+    {description && <div className="type-body mt-1 max-w-md text-ink-muted">{description}</div>}
+    {action && <div className="mt-4">{action}</div>}
+  </div>
+);
+
+// ─── ErrorState ──────────────────────────────────────────────────────────────
+/**
+ * A request failed: an inline banner saying what failed, with a retry. Never
+ * show an EmptyState for this — "No apps yet" on a failed request tells people
+ * their data is gone.
+ */
+export const ErrorState: FC<{
+  title?: string;
+  description?: ReactNode;
+  onRetry?: () => void;
+  className?: string;
+}> = ({ title = "We couldn't load this.", description = "Check your connection and try again.", onRetry, className }) => (
   <div
+    role="alert"
     className={cn(
-      "flex flex-col items-center justify-center py-16 text-center",
+      "m-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-md border border-red-500/25 bg-red-500/10 px-4 py-3",
       className
     )}
   >
-    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-2">
-      <svg
-        className="h-8 w-8 text-ink-muted"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-        />
-      </svg>
+    <div className="type-body min-w-0">
+      <p className="font-medium text-ink">{title}</p>
+      <div className="text-ink-soft">{description}</div>
     </div>
-    <h3 className="text-sm font-medium text-ink">{title}</h3>
-    {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
-    {action && <div className="mt-4">{action}</div>}
+    {onRetry && (
+      <button
+        type="button"
+        onClick={onRetry}
+        className="type-label inline-flex h-9 shrink-0 items-center rounded-md border border-control bg-surface px-4 text-ink transition-colors duration-150 hover:bg-surface-2"
+      >
+        Try again
+      </button>
+    )}
   </div>
 );
 
@@ -463,7 +531,7 @@ export const CodeBlock: FC<{ value: string; className?: string; secret?: boolean
     <div className={cn("flex items-start gap-2 rounded-md border border-line bg-field p-2.5", className)}>
       <code
         className={cn(
-          "min-w-0 flex-1 font-mono text-xs leading-relaxed text-ink",
+          "min-w-0 flex-1 font-mono text-[13px] leading-5 text-ink",
           multiline ? "overflow-x-auto whitespace-pre" : "truncate",
           !revealed && "select-none blur-[3px]"
         )}
@@ -474,7 +542,7 @@ export const CodeBlock: FC<{ value: string; className?: string; secret?: boolean
         <button
           type="button"
           onClick={() => setRevealed((v) => !v)}
-          className="rounded-md bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink"
+          className="type-caption rounded-md bg-surface-2 px-2.5 py-1 text-ink-soft transition-colors duration-150 hover:text-ink"
         >
           {revealed ? "Hide" : "Show"}
         </button>
@@ -548,7 +616,7 @@ export const Tabs: FC<{
         aria-selected={tab.value === value}
         onClick={() => onChange(tab.value)}
         className={cn(
-          "-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition",
+          "type-label -mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 transition-colors duration-150",
           tab.value === value
             ? "border-primary-600 text-ink dark:border-primary-300"
             : "border-transparent text-ink-muted hover:text-ink"
@@ -556,7 +624,7 @@ export const Tabs: FC<{
       >
         {tab.label}
         {tab.count !== undefined && (
-          <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[10px] tabular-nums text-ink-soft">{tab.count}</span>
+          <span className="type-caption rounded-md bg-surface-2 px-1.5 tabular-nums text-ink-soft">{tab.count}</span>
         )}
       </button>
     ))}

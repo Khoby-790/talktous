@@ -8,35 +8,39 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "~/lib/utils";
 import { Spinner } from "~/components/core";
 
+/*
+ * One primary button per view. Sizes follow the design language's controls:
+ * md is 36px (the dashboard default), lg is 44px (website and touch).
+ * Focus is the global ring.
+ */
 export const primaryButtonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition focus:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-50",
+  "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition duration-150 ease-out enabled:active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45",
   {
     variants: {
       variant: {
-        primary:
-          "bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500/25 active:bg-primary-800",
-        secondary:
-          "border border-line bg-surface text-ink hover:bg-surface-2 focus-visible:ring-primary-500/15",
+        // The main action: the `primary` role (teal in Auros, ink in the neutral palette).
+        primary: "bg-primary text-on-primary hover:bg-primary-hover active:bg-primary-active",
+        // Other actions beside a primary.
+        secondary: "border border-control bg-surface text-ink hover:bg-surface-2",
+        // Destructive: outlined, and always behind a confirmation.
         danger:
-          "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500/25",
-        ghost:
-          "text-ink-soft hover:bg-surface-2 hover:text-ink focus-visible:ring-primary-500/15",
-        success:
-          "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-500/25",
+          "border border-red-600 bg-surface text-red-700 hover:bg-red-500/10 dark:border-red-400 dark:text-red-300",
+        // Low emphasis, such as Cancel.
+        ghost: "text-ink hover:bg-surface-2",
         // Signature CTA — the aurora sweep. One per screen, at most.
-        aurora:
-          "bg-aurora uppercase tracking-[0.08em] text-[#222222] hover:brightness-105 focus-visible:ring-primary-200/40",
-        // Brand ember with a warm glow — the human accent (auth, onboarding, marketing).
+        aurora: "bg-aurora uppercase tracking-[0.08em] text-[#222222] hover:brightness-105",
+        // The filled accent: the single call to action on the front door (auth,
+        // onboarding, marketing). Never inside the dashboard. Text is on-accent;
+        // white on orange fails contrast.
         ember:
-          "rounded-full bg-ember text-white shadow-[0_0_36px_-8px_rgba(255,122,26,0.75)] hover:-translate-y-px hover:bg-[#ff8a33] hover:shadow-[0_0_52px_-6px_rgba(255,122,26,0.85)] focus-visible:ring-ember/30",
+          "rounded-full bg-accent text-on-accent shadow-[0_0_36px_-8px_rgba(255,122,26,0.75)] hover:bg-[#ff8a33] hover:shadow-[0_0_52px_-6px_rgba(255,122,26,0.85)]",
         // Auros "filled action": kelp lift with platinum text.
-        kelp:
-          "bg-kelp text-white hover:bg-[#0a4642] focus-visible:ring-primary-500/25",
+        kelp: "bg-kelp text-white hover:bg-kelp-hover",
       },
       size: {
-        sm: "h-8 px-3.5 text-xs",
-        md: "h-10 px-5 text-sm",
-        lg: "h-12 px-7 text-base",
+        sm: "type-label h-8 px-3",
+        md: "type-label h-9 px-4",
+        lg: "type-body h-11 px-6",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },
@@ -116,9 +120,11 @@ export const ActionButton: FC<ActionButtonProps> = ({
 }) => (
   <button
     {...props}
+    type={props.type ?? "button"}
     title={tooltip || action}
+    aria-label={props["aria-label"] ?? tooltip ?? action}
     className={cn(
-      "inline-flex items-center justify-center rounded-md p-1.5 transition",
+      "inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors duration-150",
       actionColors[action],
       className
     )}

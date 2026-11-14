@@ -133,7 +133,7 @@ const IntegrationForm: FC<IntegrationFormProps> = ({ form, fields, eventTypes, p
                 className="h-4 w-4 accent-[var(--color-primary-600)]"
               />
               <span>{EVENT_LABELS[event] ?? event}</span>
-              <code className="ml-auto hidden font-mono text-[10px] text-ink-muted sm:inline">{event}</code>
+              <code className="ml-auto hidden font-mono text-xs text-ink-muted sm:inline">{event}</code>
             </label>
           ))}
         </div>

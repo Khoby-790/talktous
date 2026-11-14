@@ -55,7 +55,7 @@ const DeliveryStatus: FC<{ status: Message["deliveryStatus"] }> = ({ status }) =
   if (!status) return null;
   if (status === "failed") {
     return (
-      <span className="inline-flex items-center gap-1 text-red-500">
+      <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-300">
         <ExclamationTriangleIcon className="h-3 w-3" /> Not delivered
       </span>
     );
@@ -67,7 +67,7 @@ const MessageBubble: FC<{ message: Message; customerName: string }> = ({ message
   if (message.senderType === "system") {
     return (
       <div className="flex justify-center py-1">
-        <p className="max-w-md text-center text-[11px] text-ink-muted">
+        <p className="max-w-md text-center text-xs text-ink-muted">
           {message.content} · {formatShort(message.createdAt)}
         </p>
       </div>
@@ -82,14 +82,14 @@ const MessageBubble: FC<{ message: Message; customerName: string }> = ({ message
     return (
       <div className="flex justify-end">
         <div className="max-w-[85%] sm:max-w-[70%]">
-          <div className="rounded-2xl rounded-br-md border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm text-ink">
-            <p className="mb-1 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider text-amber-700 dark:text-amber-300">
+          <div className="type-body rounded-2xl rounded-br-md border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-ink">
+            <p className="mb-1 flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-amber-700 dark:text-amber-300">
               <LockClosedIcon className="h-3 w-3" /> Internal note
             </p>
             {message.content && <p className="whitespace-pre-wrap break-words">{message.content}</p>}
             <AttachmentList attachments={message.attachments} className={cn(message.content && "mt-2")} />
           </div>
-          <p className="mt-1 text-right text-[11px] text-ink-muted" title={formatDateTime(message.createdAt)}>
+          <p className="mt-1 text-right text-xs text-ink-muted" title={formatDateTime(message.createdAt)}>
             {name} · {formatTime(message.createdAt)}
           </p>
         </div>
@@ -103,11 +103,11 @@ const MessageBubble: FC<{ message: Message; customerName: string }> = ({ message
       <div className="max-w-[85%] sm:max-w-[70%]">
         <div
           className={cn(
-            "rounded-2xl px-4 py-2.5 text-sm",
+            "type-body rounded-2xl px-4 py-2.5",
             isBot
               ? "rounded-br-md border border-fuchsia-500/30 bg-fuchsia-500/10 text-ink"
               : outgoing
-                ? "rounded-br-md bg-primary-600 text-white"
+                ? "rounded-br-md bg-primary text-on-primary"
                 : "rounded-bl-md border border-line bg-surface text-ink",
           )}
         >
@@ -119,7 +119,7 @@ const MessageBubble: FC<{ message: Message; customerName: string }> = ({ message
           />
         </div>
         <p
-          className={cn("mt-1 flex gap-1.5 text-[11px] text-ink-muted", outgoing && "justify-end")}
+          className={cn("mt-1 flex gap-1.5 text-xs text-ink-muted", outgoing && "justify-end")}
           title={formatDateTime(message.createdAt)}
         >
           <span>
@@ -168,7 +168,7 @@ const TagsEditor: FC<{ conversation: ConversationDetail }> = ({ conversation }) 
       {conversation.tags.map((tag) => (
         <span
           key={tag}
-          className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-xs text-ink-soft"
+          className="inline-flex h-6 items-center gap-1 rounded-md bg-surface-2 px-2 text-xs text-ink-soft"
         >
           #{tag}
           <button
@@ -194,7 +194,7 @@ const TagsEditor: FC<{ conversation: ConversationDetail }> = ({ conversation }) 
         onBlur={add}
         placeholder="+ Add tag"
         maxLength={50}
-        className="w-24 rounded-md bg-transparent px-1 py-0.5 text-xs text-ink outline-none placeholder:text-ink-muted focus:bg-field"
+        className="h-6 w-24 rounded-md bg-transparent px-1.5 text-xs text-ink transition-colors duration-150 placeholder:text-ink-muted hover:bg-surface-2/60 focus:bg-field"
         aria-label="Add tag"
       />
     </div>
@@ -287,7 +287,7 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
             type="button"
             onClick={() => setMode(m)}
             className={cn(
-              "whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition",
+              "type-label whitespace-nowrap rounded-md px-2.5 py-1 transition-colors duration-150",
               mode === m
                 ? m === "note"
                   ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
@@ -308,7 +308,7 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
             onGrounding={setGrounding}
           />
         </div>
-        <span className="ml-auto hidden text-[11px] text-ink-muted 2xl:inline">
+        <span className="ml-auto hidden text-xs text-ink-muted 2xl:inline">
           {note ? "Only your team can see notes" : channelHint} · ⌘/Ctrl+Enter to send
         </span>
       </div>
@@ -322,10 +322,9 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
       <PendingAttachments items={files} onRemove={(key) => setFiles((current) => current.filter((f) => f.key !== key))} />
       <div
         className={cn(
-          "flex items-end gap-2 rounded-xl border p-2 transition",
-          note
-            ? "border-amber-500/40 bg-amber-500/5 focus-within:border-amber-500"
-            : "border-line bg-field focus-within:border-primary-500",
+          "focus-within-ring flex items-end gap-2 rounded-xl border p-2 transition-colors duration-150",
+          // Notes keep their amber ground so nobody mistakes one for a reply.
+          note ? "border-amber-600 bg-amber-500/5 dark:border-amber-400" : "border-control bg-field",
         )}
       >
         <input
@@ -360,7 +359,7 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
           onKeyDown={onKeyDown}
           rows={3}
           placeholder={note ? "Write a note for your team…" : `Reply to ${conversation.customer.name}…`}
-          className="max-h-48 min-h-[3rem] flex-1 resize-y bg-transparent px-2 py-1 text-sm text-ink outline-none placeholder:text-ink-muted"
+          className="type-body max-h-48 min-h-[3.25rem] flex-1 resize-none bg-transparent px-1.5 py-1.5 text-ink outline-none placeholder:text-ink-muted"
           aria-label={note ? "Internal note" : "Reply"}
         />
         <PrimaryButton
@@ -368,10 +367,9 @@ const Composer: FC<{ conversation: ConversationDetail }> = ({ conversation }) =>
           onClick={() => void send()}
           loading={loading}
           disabled={(!text.trim() && !ready.length) || uploading}
-          className={cn(note && "bg-amber-600 hover:bg-amber-700")}
         >
           {!loading && <PaperAirplaneIcon className="h-4 w-4" />}
-          {note ? "Add note" : "Send"}
+          {note ? "Add note" : "Send reply"}
         </PrimaryButton>
       </div>
     </div>
@@ -501,14 +499,14 @@ const ConversationThread: FC<ConversationThreadProps> = ({
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 to={`/customers/${conversation.customer.id}`}
-                className="truncate text-base font-medium text-ink hover:underline"
+                className="type-title-sm truncate text-ink hover:underline"
               >
                 {conversation.customer.name}
               </Link>
               <Badge status={conversation.status} />
               <ChannelBadge channel={conversation.channel} appName={conversation.app?.name} />
             </div>
-            <p className="mt-0.5 truncate text-xs text-ink-muted">
+            <p className="type-caption mt-0.5 truncate font-normal text-ink-muted">
               {conversation.subject ? `${conversation.subject} · ` : ""}
               {conversation.app?.name ?? "Unknown app"} · started {formatShort(conversation.createdAt)}
             </p>
@@ -528,11 +526,13 @@ const ConversationThread: FC<ConversationThreadProps> = ({
             ) : (
               <PrimaryButton
                 size="sm"
-                variant="success"
+                variant="secondary"
                 loading={updating}
                 onClick={() => void update({ status: "resolved" })}
               >
-                <CheckCircleIcon className="h-4 w-4" /> Resolve
+                <CheckCircleIcon className="h-4 w-4" />
+                <span className="sm:hidden">Resolve</span>
+                <span className="hidden sm:inline">Mark as resolved</span>
               </PrimaryButton>
             )}
             {onToggleSidebar && (
@@ -548,42 +548,50 @@ const ConversationThread: FC<ConversationThreadProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-          <button
-            type="button"
-            onClick={() => setModal("assign")}
-            className="flex h-9 items-center gap-2 rounded-md border border-line bg-field px-2.5 text-sm text-ink transition hover:border-line-strong"
-          >
-            {conversation.assignedAgent ? (
-              <>
-                <Avatar name={conversation.assignedAgent.name} src={conversation.assignedAgent.avatarUrl} size="sm" className="h-5 w-5 text-[9px]" />
-                <span className="max-w-[9rem] truncate">{conversation.assignedAgent.name}</span>
-              </>
-            ) : (
-              <>
-                <UserPlusIcon className="h-4 w-4 text-ink-muted" />
-                <span className="text-ink-soft">Unassigned</span>
-              </>
-            )}
-          </button>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:flex sm:flex-wrap sm:items-end">
+          <div className="col-span-2 flex min-w-0 flex-col gap-1">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-ink-muted">Assignee</span>
+            <button
+              type="button"
+              onClick={() => setModal("assign")}
+              aria-label={
+                conversation.assignedAgent
+                  ? `Assigned to ${conversation.assignedAgent.name}. Change assignee`
+                  : "Unassigned. Assign this conversation"
+              }
+              className="flex h-9 min-w-0 items-center gap-2 rounded-md border border-control bg-field px-2.5 type-body text-ink transition-colors duration-150 hover:border-ink-soft"
+            >
+              {conversation.assignedAgent ? (
+                <>
+                  <Avatar name={conversation.assignedAgent.name} src={conversation.assignedAgent.avatarUrl} size="sm" className="h-5 w-5 text-[9px]" />
+                  <span className="max-w-[9rem] truncate">{conversation.assignedAgent.name}</span>
+                </>
+              ) : (
+                <>
+                  <UserPlusIcon className="h-4 w-4 text-ink-muted" />
+                  <span className="text-ink-soft">Unassigned</span>
+                </>
+              )}
+            </button>
+          </div>
           <FilterSelect
             label="Status"
             value={conversation.status}
             options={STATUS_OPTIONS}
             onChange={(v) => void update({ status: v as ConversationStatus })}
-            className="w-32"
+            className="sm:w-32"
           />
           <FilterSelect
             label="Priority"
             value={conversation.priority}
             options={PRIORITY_OPTIONS}
             onChange={(v) => void update({ priority: v as ConversationPriority })}
-            className="w-28"
+            className="sm:w-28"
           />
-          <div className="min-w-0 flex-1 pb-1.5">
-            <TagsEditor conversation={conversation} />
-          </div>
         </div>
+        {/* Tags get the full width: sharing the row with the controls above
+            squeezed them under the customer panel on laptop-width screens. */}
+        <TagsEditor conversation={conversation} />
       </div>
 
       {/* Messages */}
@@ -593,7 +601,7 @@ const ConversationThread: FC<ConversationThreadProps> = ({
             <button
               onClick={() => setLimit((l) => Math.min(l + 100, 200))}
               disabled={limit >= 200}
-              className="rounded-md px-3 py-1 text-xs font-medium text-primary-600 hover:bg-surface-2 disabled:text-ink-muted dark:text-primary-300"
+              className="type-label rounded-md px-3 py-1 text-primary-700 hover:bg-surface-2 disabled:text-ink-muted dark:text-primary-300"
             >
               {limit >= 200 ? "Showing the latest 200 messages" : loading ? <Spinner className="h-3 w-3" /> : "Load earlier messages"}
             </button>
