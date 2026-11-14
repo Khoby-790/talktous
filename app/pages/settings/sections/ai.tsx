@@ -393,8 +393,8 @@ const AutoReplyCard: FC<{ available: boolean }> = ({ available }) => {
         <ul className="space-y-2 text-sm text-ink-soft">
           {[
             <>Answers <strong className="text-ink">only from your knowledge base</strong>, in the customer&apos;s language. It never promises refunds, discounts or anything it can&apos;t see.</>,
-            <>Hands over — with your message below — when it isn&apos;t covered, the customer asks for a person, is upset, or needs something looked up.</>,
-            <>Stops the moment an agent replies, and after {3} answers at most. Customers always see it&apos;s the <strong className="text-ink">AI assistant</strong>.</>,
+            <>Hands over — with your message below — when a question isn&apos;t covered, the customer is upset, or something needs looking up. It still answers a later question your knowledge base does cover.</>,
+            <>Stops for good the moment an agent replies or the customer asks for a person, and after {3} answers at most. Customers always see it&apos;s the <strong className="text-ink">AI assistant</strong>.</>,
           ].map((item, i) => (
             <li key={i} className="flex gap-2.5">
               <SparklesIcon className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-600 dark:text-phosphor" />
@@ -402,6 +402,12 @@ const AutoReplyCard: FC<{ available: boolean }> = ({ available }) => {
             </li>
           ))}
         </ul>
+        {saved.enabled && (
+          <p className="type-caption text-ink-muted">
+            To try it, start a new conversation from your widget. The assistant stays out of conversations a teammate
+            has already replied in.
+          </p>
+        )}
         <div className={cn("space-y-4 border-t border-line pt-4", off && "opacity-50")}>
           <div>
             <p className="text-sm font-medium text-ink-soft">Answer on</p>
