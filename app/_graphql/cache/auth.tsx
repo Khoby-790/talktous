@@ -6,7 +6,7 @@ import type { CurrentOrg, CurrentUser } from "~/utils/types";
  * user and organization are cached for instant paint and refreshed from
  * `me` on every app load (see lib/session.ts).
  */
-const TOKEN_KEY = "talktous:auth:token";
+export const TOKEN_KEY = "talktous:auth:token";
 const USER_KEY = "talktous:auth:user";
 const ORG_KEY = "talktous:auth:org";
 

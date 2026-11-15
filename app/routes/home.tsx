@@ -1,5 +1,6 @@
-import { redirect } from "react-router";
-import { isLoggedInVar } from "~/_graphql/cache/auth";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
+import { isLoggedInVar, TOKEN_KEY } from "~/_graphql/cache/auth";
 import LandingPage from "~/pages/landing";
 import type { Route } from "./+types/home";
 
@@ -14,11 +15,24 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function clientLoader() {
-  if (isLoggedInVar()) throw redirect("/dashboard");
-  return null;
-}
+/**
+ * Signed-in visitors go to the dashboard. This page is prerendered to static
+ * HTML (react-router.config.ts) so it can't use a clientLoader for that — a
+ * clientLoader makes the prerender show the loading fallback instead of the
+ * page. The inline script redirects before the page paints on a fresh load;
+ * the effect covers in-app navigation back to "/".
+ */
+const redirectScript = `try{if(localStorage.getItem(${JSON.stringify(TOKEN_KEY)}))location.replace("/dashboard")}catch(e){}`;
 
 export default function Home() {
-  return <LandingPage />;
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (isLoggedInVar()) navigate("/dashboard", { replace: true });
+  }, [navigate]);
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{ __html: redirectScript }} />
+      <LandingPage />
+    </>
+  );
 }
