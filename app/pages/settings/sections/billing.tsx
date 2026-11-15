@@ -3,9 +3,10 @@ import { CheckIcon } from "@heroicons/react/20/solid";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Badge, Card } from "~/components/core";
 import { ConfirmModal, PageShimmer } from "~/components/layouts";
-import { PrimaryButton } from "~/components/buttons";
+import { PrimaryButton, primaryButtonVariants } from "~/components/buttons";
 import { SettingsCard } from "~/components/forms/settings";
 import {
+  DEFAULT_SALES_URL,
   formatMoney,
   formatPlanPrice,
   useBilling,
@@ -20,7 +21,7 @@ import { cn } from "~/lib/utils";
 import { formatDate } from "~/utils/date";
 import type { Billing, PlanInfo, PlanType } from "~/utils/types";
 
-const ORDER: PlanType[] = ["starter", "growth", "enterprise"];
+const ORDER: PlanType[] = ["starter", "growth", "business", "enterprise"];
 const DAY = 86_400_000;
 
 const Meter: FC<{ label: string; used: number; limit: number | null }> = ({ label, used, limit }) => {
@@ -325,7 +326,7 @@ export const BillingSection: FC = () => {
         </div>
       </SettingsCard>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {billing.plans.map((plan) => {
           const index = ORDER.indexOf(plan.id);
           const current = isCurrent(plan);
@@ -345,7 +346,7 @@ export const BillingSection: FC = () => {
                   <span className="text-sm font-normal text-ink-muted"> / {formatPlanPrice(plan).per}</span>
                 )}
               </p>
-              {mode === "trial" && (
+              {mode === "trial" && !plan.contactSales && (
                 <p className="mt-1 text-xs text-ink-muted">{billing.trialDays} days free, then billed monthly</p>
               )}
               <ul className="mt-4 flex-1 space-y-2">
@@ -356,14 +357,24 @@ export const BillingSection: FC = () => {
                   </li>
                 ))}
               </ul>
-              <PrimaryButton
-                className="mt-5 w-full"
-                variant={canResume || (!current && index > currentIndex) || mode === "trial" ? "primary" : "secondary"}
-                disabled={current && !canResume}
-                onClick={() => setTarget(plan)}
-              >
-                {buttonLabel(plan, index)}
-              </PrimaryButton>
+              {plan.contactSales && !current ? (
+                // Set up with our team, not through checkout.
+                <a
+                  href={plan.salesUrl ?? DEFAULT_SALES_URL}
+                  className={cn(primaryButtonVariants({ variant: "secondary" }), "mt-5 w-full")}
+                >
+                  Contact sales
+                </a>
+              ) : (
+                <PrimaryButton
+                  className="mt-5 w-full"
+                  variant={canResume || (!current && index > currentIndex) || mode === "trial" ? "primary" : "secondary"}
+                  disabled={current && !canResume}
+                  onClick={() => setTarget(plan)}
+                >
+                  {buttonLabel(plan, index)}
+                </PrimaryButton>
+              )}
             </Card>
           );
         })}

@@ -11,7 +11,7 @@ import { currentOrgVar } from "~/_graphql/cache/auth";
 import { CodeBlock, FormError, SelectInput, TextInput } from "~/components/core";
 import { Shimmer } from "~/components/shimmer";
 import { PrimaryButton } from "~/components/buttons";
-import { formatMoney, formatPlanPrice, useBilling, useChangePlan, useCompleteOnboarding, useCreateApp } from "~/hooks/data";
+import { DEFAULT_SALES_URL, formatMoney, formatPlanPrice, useBilling, useChangePlan, useCompleteOnboarding, useCreateApp } from "~/hooks/data";
 import { useCheckoutReturn } from "~/hooks/ui/use-checkout-return";
 import { toast } from "~/hooks/ui/use-toast";
 import { applyFormErrors, getErrorMessage } from "~/lib/errors";
@@ -343,7 +343,10 @@ const PlanStep: FC<{ onBack: () => void; onDone: () => void; onPreview: (p: Part
   const firstCharge =
     billing?.trialEndsAt && new Date(billing.trialEndsAt).getTime() > Date.now()
       ? billing.trialEndsAt
-      : new Date(Date.now() + (billing?.trialDays ?? 30) * 86_400_000).toISOString();
+      : new Date(Date.now() + (billing?.trialDays ?? 14) * 86_400_000).toISOString();
+  // Contact-sales plans (Enterprise) aren't picked here, unless the org is already on one.
+  const selfServePlans = billing?.plans.filter((p) => !p.contactSales || p.id === billing.plan) ?? [];
+  const salesPlan = billing?.plans.find((p) => p.contactSales && p.id !== billing.plan);
   const selectedPlan = billing?.plans.find((p) => p.id === current);
   const selectedName = selectedPlan?.name;
   useEffect(() => onPreview({ plan: selectedName }), [selectedName, onPreview]);
@@ -369,7 +372,7 @@ const PlanStep: FC<{ onBack: () => void; onDone: () => void; onPreview: (p: Part
         title={
           payments ? (
             <>
-              {billing?.trialDays ?? 30} days, <Voice>on us.</Voice>
+              {billing?.trialDays ?? 14} days, <Voice>on us.</Voice>
             </>
           ) : (
             <>
@@ -391,7 +394,7 @@ const PlanStep: FC<{ onBack: () => void; onDone: () => void; onPreview: (p: Part
         </div>
       ) : (
         <div className="space-y-3" role="radiogroup" aria-label="Plan">
-          {billing?.plans.map((plan) => {
+          {selfServePlans.map((plan) => {
             const on = current === plan.id;
             const price = formatPlanPrice(plan);
             return (
@@ -437,6 +440,14 @@ const PlanStep: FC<{ onBack: () => void; onDone: () => void; onPreview: (p: Part
               </button>
             );
           })}
+          {salesPlan && (
+            <p className="px-1 pt-1 text-[12.5px] text-silver">
+              Need more than {selfServePlans[selfServePlans.length - 1]?.name ?? "this"}?{" "}
+              <a href={salesPlan.salesUrl ?? DEFAULT_SALES_URL} className="text-white underline-offset-4 hover:underline">
+                Contact sales about {salesPlan.name}
+              </a>
+            </p>
+          )}
         </div>
       )}
       {billing && !payments && (

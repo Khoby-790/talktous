@@ -92,8 +92,21 @@ export const formatMoney = (amount: number, currency: string) => {
   }
 };
 
-/** "GH₵1,200" + "mo" from the Paystack plan; the USD list price when payments aren't set up. */
+/** Display names by plan id ("starter" is sold as Launch). */
+const PLAN_NAMES: Record<PlanType, string> = {
+  starter: "Launch",
+  growth: "Growth",
+  business: "Business",
+  enterprise: "Enterprise",
+};
+export const planName = (plan: PlanType | null | undefined) => PLAN_NAMES[plan ?? "starter"] ?? plan;
+
+/** Where "Contact sales" goes when the API hasn't said (it sends salesUrl on contact-sales plans). */
+export const DEFAULT_SALES_URL = "mailto:sales@asotie.com";
+
+/** "GH₵1,200" + "mo" from the Paystack plan; the list price when payments aren't set up. */
 export const formatPlanPrice = (plan: PlanInfo): { amount: string; per: string } => {
+  if (plan.contactSales) return { amount: "Custom", per: "" };
   if (plan.price) {
     return {
       amount: formatMoney(plan.price.amount, plan.price.currency),
@@ -101,7 +114,7 @@ export const formatPlanPrice = (plan: PlanInfo): { amount: string; per: string }
     };
   }
   if (plan.priceMonthly === 0) return { amount: "Free", per: "" };
-  return { amount: `$${plan.priceMonthly}`, per: "mo" };
+  return { amount: formatMoney(plan.priceMonthly, plan.currency), per: "mo" };
 };
 
 /** Paystack's return: `?checkout=success&reference=…` (it also adds `trxref`). */

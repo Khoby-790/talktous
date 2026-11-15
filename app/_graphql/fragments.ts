@@ -287,6 +287,7 @@ export const PLAN_FIELDS = gql`
     id
     name
     priceMonthly
+    currency
     price {
       amount
       currency
@@ -297,7 +298,10 @@ export const PLAN_FIELDS = gql`
     conversationLimit
     integrations
     whatsapp
+    api
     aiRequestsPerMonth
+    contactSales
+    salesUrl
     features
   }
 `;

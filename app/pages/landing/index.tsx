@@ -18,7 +18,7 @@ import { CheckCircleIcon, StarIcon } from "@heroicons/react/20/solid";
 import { MessageCircle } from "lucide-react";
 import { BrandLogo } from "~/components/brand";
 import { cn } from "~/lib/utils";
-import { formatPlanPrice, usePricing } from "~/hooks/data";
+import { DEFAULT_SALES_URL, formatPlanPrice, usePricing } from "~/hooks/data";
 import { FluidBackdrop, IMG, Voice } from "~/components/fluid";
 import { Footage, Grain, Slate, Still, Subtitle } from "./cinema";
 import { Molecule } from "./molecule";
@@ -53,10 +53,9 @@ const footerLinks = [
   { label: "Product", href: "#product" },
   { label: "AI assist", href: "#ai" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Sign in", href: "/sign-in" },
   { label: "Privacy", href: "/privacy" },
   { label: "Terms", href: "/terms" },
-  { label: "Support", href: "mailto:support@asotie.com" },
+  // Sign in, Start free trial and Support (opens the chat) are rendered beside these in the footer.
 ];
 
 const chatter: { name: string; text: string; ch: string; face?: string }[] = [
@@ -137,37 +136,42 @@ const testimonials = [
 const plans = [
   {
     id: "starter",
-    name: "Starter",
-    features: ["5 agent seats", "2 support apps", "1,500 conversations / month", "Web chat, email & WhatsApp", "AI assist (bring your own key)"],
+    name: "Launch",
+    features: ["2 agent seats", "1 support app", "500 conversations / month", "Web chat & email", "Customer profiles & history", "AI assist (bring your own key)", "Knowledge base", "Insights & reports"],
     cta: "Start free trial",
     highlight: false,
+    contactSales: false,
   },
   {
     id: "growth",
     name: "Growth",
-    features: ["15 agent seats", "5 support apps", "10,000 conversations / month", "Web chat, email & WhatsApp", "Integrations & webhooks", "AI assist (bring your own key)"],
+    features: ["5 agent seats", "3 support apps", "3,000 conversations / month", "Web chat, email & WhatsApp", "Automatic assignment", "Integrations & webhooks", "AI assist (bring your own key)", "Knowledge base", "Insights & reports"],
     cta: "Start with Growth",
     highlight: true,
+    contactSales: false,
+  },
+  {
+    id: "business",
+    name: "Business",
+    features: ["15 agent seats", "10 support apps", "10,000 conversations / month", "All channels, including API", "Automatic assignment", "Integrations & webhooks", "AI assist (bring your own key)", "Knowledge base", "Insights & reports", "Priority support"],
+    cta: "Start with Business",
+    highlight: false,
+    contactSales: false,
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    features: ["Unlimited seats", "Unlimited apps", "Unlimited conversations", "All channels & integrations", "AI assist (bring your own key)", "Priority support"],
-    cta: "Get Enterprise",
+    features: ["Custom seats and apps", "Negotiated conversation allowance", "All channels & integrations", "Custom integrations", "Dedicated onboarding", "SLA & dedicated account manager"],
+    cta: "Contact sales",
     highlight: false,
+    // Set up with our team: links to sales instead of sign-up, and has no list price.
+    contactSales: true,
   },
-];
-
-const footerLinks = [
-  { label: "Product", href: "#product" },
-  { label: "AI assist", href: "#ai" },
-  { label: "People", href: "#people" },
-  { label: "Pricing", href: "#pricing" },
 ];
 
 const footerLink = "text-[10px] uppercase tracking-[0.15em] text-silver transition hover:text-white";
 
-const DEFAULT_TRIAL_DAYS = 30;
+const DEFAULT_TRIAL_DAYS = 14;
 /** The trial length arrives with the prices; the default shows until then. */
 const useTrialDays = () => usePricing().pricing?.trialDays || DEFAULT_TRIAL_DAYS;
 
@@ -717,6 +721,9 @@ const Section: FC<{ id?: string; className?: string; fluid?: boolean; children: 
 
 // ─── Pricing ─────────────────────────────────────────────────────────────────
 
+const secondaryCta =
+  "inline-flex w-full items-center justify-center rounded-full bg-kelp px-5 py-3.5 text-[13px] uppercase tracking-[0.08em] text-white transition hover:bg-kelp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300/30";
+
 const PricingSection: FC = () => {
   const { pricing, loading } = usePricing();
   const trialDays = pricing?.trialDays || DEFAULT_TRIAL_DAYS;
@@ -733,10 +740,10 @@ const PricingSection: FC = () => {
           Every plan starts with a {trialDays}-day free trial. No setup fees, no per-seat surprises. Change plans any time.
         </p>
       </Reveal>
-      <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-3">
+      <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
         {plans.map((p, i) => {
           const live = pricing?.plans.find((plan) => plan.id === p.id);
-          const price = live ? formatPlanPrice(live) : null;
+          const price = p.contactSales ? { amount: "Custom", per: "" } : live ? formatPlanPrice(live) : null;
           const features = live?.features?.length ? live.features : p.features;
           return (
             <Reveal key={p.name} delay={i * 110}>
@@ -778,11 +785,12 @@ const PricingSection: FC = () => {
                   <AuroraLink to="/sign-up" className="w-full py-3.5">
                     {p.cta}
                   </AuroraLink>
+                ) : p.contactSales ? (
+                  <a href={live?.salesUrl ?? DEFAULT_SALES_URL} className={secondaryCta}>
+                    {p.cta}
+                  </a>
                 ) : (
-                  <Link
-                    to="/sign-up"
-                    className="inline-flex w-full items-center justify-center rounded-full bg-kelp px-5 py-3.5 text-[13px] uppercase tracking-[0.08em] text-white transition hover:bg-kelp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-300/30"
-                  >
+                  <Link to="/sign-up" className={secondaryCta}>
                     {p.cta}
                   </Link>
                 )}
@@ -1040,7 +1048,7 @@ const LandingPage: FC = () => (
               Customer support with a human heart and an <Voice className="text-[1.1em]">AI head start.</Voice>
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-x-16 gap-y-3 sm:grid-cols-3">
+          <nav aria-label="Footer" className="grid grid-cols-2 gap-x-16 gap-y-3 sm:grid-cols-3">
             {footerLinks.map((l) => (
               <a key={l.label} href={l.href} className="text-[10px] uppercase tracking-[0.15em] text-silver transition hover:text-white">
                 {l.label}

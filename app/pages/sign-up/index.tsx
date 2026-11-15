@@ -53,7 +53,7 @@ const SignUpPage: FC = () => {
   return (
     <form onSubmit={form.handleSubmit} className="space-y-5" noValidate>
       <AuthHeading
-        eyebrow="Your 30-day free trial"
+        eyebrow="Your 14-day free trial"
         title={
           <>
             Start answering <Voice>like people do.</Voice>

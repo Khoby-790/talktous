@@ -49,6 +49,10 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
   const [created, setCreated] = useState<{ id: string; name: string; secretKey: string } | null>(null);
 
   const whatsappLocked = billing ? !billing.limits.whatsapp : false;
+  const apiLocked = billing ? !billing.limits.api : false;
+  /** The cheapest plan that unlocks a channel, for its lock badge. */
+  const lockedFor = (value: AppType) =>
+    value === "whatsapp" && whatsappLocked ? "Growth" : value === "api" && apiLocked ? "Business" : null;
 
   const form = useFormik<AppFormValues>({
     initialValues: emptyAppValues(me ? [me.id] : []),
@@ -133,7 +137,8 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {APP_TYPES.map((option) => {
           const Icon = appTypeIcons[option.value];
-          const locked = option.value === "whatsapp" && whatsappLocked;
+          const lockedPlan = lockedFor(option.value);
+          const locked = Boolean(lockedPlan);
           return (
             <button
               key={option.value}
@@ -151,7 +156,7 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
                 </span>
                 {locked && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-soft">
-                    <LockClosedIcon className="h-3 w-3" /> Growth plan
+                    <LockClosedIcon className="h-3 w-3" /> {lockedPlan} plan
                   </span>
                 )}
               </div>
@@ -160,9 +165,12 @@ const CreateAppModal: FC<Props> = ({ open, onClose }) => {
             </button>
           );
         })}
-        {whatsappLocked && (
+        {(whatsappLocked || apiLocked) && (
           <p className="text-xs text-ink-muted sm:col-span-2">
-            WhatsApp needs the Growth plan.{" "}
+            {[whatsappLocked && "WhatsApp needs the Growth plan", apiLocked && "API apps need the Business plan"]
+              .filter(Boolean)
+              .join("; ")}
+            .{" "}
             <Link to="/settings/billing" onClick={close} className="font-medium text-primary-600 dark:text-primary-300">
               See plans
             </Link>

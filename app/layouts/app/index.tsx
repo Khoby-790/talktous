@@ -27,7 +27,7 @@ import { CheckIcon } from "@heroicons/react/20/solid";
 import { useApolloClient, useReactiveVar } from "@apollo/client/react";
 import { clearAuth, currentOrgVar, currentUserVar } from "~/_graphql/cache/auth";
 import { Avatar, StatusDot } from "~/components/core";
-import { useInboxCounts, useRecentActivity, useSetStatus } from "~/hooks/data";
+import { planName, useInboxCounts, useRecentActivity, useSetStatus } from "~/hooks/data";
 import { useLiveRefetch } from "~/hooks/ui/use-conversation-subscription";
 import { useDesktopNotifications } from "~/hooks/ui/use-desktop-notifications";
 import { useTheme } from "~/hooks/ui/use-theme";
@@ -284,7 +284,7 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
           <p className="type-caption font-normal text-ink-muted">
             {org?.billingStatus === "incomplete"
               ? "No plan yet"
-              : `${(org?.plan || "starter").replace(/^./, (c) => c.toUpperCase())} plan${org?.billingStatus === "trialing" ? " · trial" : ""}`}
+              : `${planName(org?.plan)} plan${org?.billingStatus === "trialing" ? " · trial" : ""}`}
           </p>
         </div>
       </div>

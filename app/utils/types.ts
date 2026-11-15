@@ -6,7 +6,8 @@
 
 export type AgentRole = "admin" | "supervisor" | "agent";
 export type AgentStatus = "online" | "offline" | "busy" | "away";
-export type PlanType = "starter" | "growth" | "enterprise";
+/** "starter" is shown as Launch. Enterprise is contact-sales. */
+export type PlanType = "starter" | "growth" | "business" | "enterprise";
 export type BillingStatus = "incomplete" | "active" | "trialing" | "past_due" | "canceled";
 
 export type LockReason = "no_payment" | "trial_ended" | "payment_failed" | "canceled";
@@ -436,8 +437,9 @@ export type Integration = {
 export type PlanInfo = {
   id: PlanType;
   name: string;
-  /** USD list price, shown when payments aren't configured. */
+  /** List price per month in `currency`, shown when payments aren't configured. */
   priceMonthly: number;
+  currency: string;
   /** The Paystack plan's price; null when payments aren't configured or the plan is free. */
   price: { amount: number; currency: string; interval: string } | null;
   seatLimit: number | null;
@@ -445,7 +447,12 @@ export type PlanInfo = {
   conversationLimit: number | null;
   integrations: boolean;
   whatsapp: boolean;
+  /** API apps (the REST channel). */
+  api: boolean;
   aiRequestsPerMonth: number | null;
+  /** Set up with the sales team: no checkout; "Contact sales" links to salesUrl. */
+  contactSales: boolean;
+  salesUrl: string | null;
   features: string[];
 };
 
