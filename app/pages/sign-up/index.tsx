@@ -69,6 +69,17 @@ const SignUpPage: FC = () => {
       <PrimaryButton ref={submitRef} type="submit" variant="ember" size="lg" loading={form.isSubmitting} className="w-full !mt-8">
         Create my workspace
       </PrimaryButton>
+      <p className="text-center text-[12px] leading-relaxed text-silver/70">
+        By creating a workspace you agree to our{" "}
+        <Link to="/terms" className={authLinkClass}>
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link to="/privacy" className={authLinkClass}>
+          Privacy Policy
+        </Link>
+        .
+      </p>
       <AuthFooter>
         Already have an account?{" "}
         <Link to="/sign-in" className={authLinkClass}>

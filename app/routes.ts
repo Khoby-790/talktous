@@ -17,6 +17,9 @@ export default [
     route("accept-invite", "pages/accept-invite/index.tsx"),
   ]),
 
+  route("privacy", "pages/legal/privacy.tsx"),
+  route("terms", "pages/legal/terms.tsx"),
+
   route("onboarding", "pages/onboarding/index.tsx"),
   // Non-admins of an organization whose subscription isn't active.
   route("subscription-ended", "pages/subscription-ended/index.tsx"),

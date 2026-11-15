@@ -49,6 +49,16 @@ const navLinks = [
   { label: "Pricing", href: "#pricing" },
 ];
 
+const footerLinks = [
+  { label: "Product", href: "#product" },
+  { label: "AI assist", href: "#ai" },
+  { label: "Pricing", href: "#pricing" },
+  { label: "Sign in", href: "/sign-in" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Support", href: "mailto:support@asotie.com" },
+];
+
 const chatter: { name: string; text: string; ch: string; face?: string }[] = [
   { name: "Ama Mensah", text: "Has my order shipped yet? 🎁", ch: "WhatsApp", face: IMG.customerFace },
   { name: "Lisa Chen", text: "Need help with the API setup", ch: "Email" },
@@ -1030,9 +1040,9 @@ const LandingPage: FC = () => (
               Customer support with a human heart and an <Voice className="text-[1.1em]">AI head start.</Voice>
             </p>
           </div>
-          <nav aria-label="Footer" className="grid grid-cols-2 content-start gap-x-16 gap-y-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-x-16 gap-y-3 sm:grid-cols-3">
             {footerLinks.map((l) => (
-              <a key={l.label} href={l.href} className={footerLink}>
+              <a key={l.label} href={l.href} className="text-[10px] uppercase tracking-[0.15em] text-silver transition hover:text-white">
                 {l.label}
               </a>
             ))}
