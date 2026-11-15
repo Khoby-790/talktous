@@ -53,9 +53,13 @@ const footerLinks = [
   { label: "Product", href: "#product" },
   { label: "AI assist", href: "#ai" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Privacy", href: "/privacy" },
-  { label: "Terms", href: "/terms" },
   // Sign in, Start free trial and Support (opens the chat) are rendered beside these in the footer.
+];
+
+/** In the footer's bottom bar, beside the copyright, where people look for them. */
+const legalLinks = [
+  { label: "Privacy Policy", to: "/privacy" },
+  { label: "Terms of Service", to: "/terms" },
 ];
 
 const chatter: { name: string; text: string; ch: string; face?: string }[] = [
@@ -1063,8 +1067,15 @@ const LandingPage: FC = () => (
             <TalkToUs className={cn(footerLink, "text-left")}>Support</TalkToUs>
           </nav>
         </div>
-        <div className="mt-20 flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-[12px] text-silver/70 sm:flex-row">
-          <span>© 2026 Asotie</span>
+        <div className="mt-20 flex flex-col justify-between gap-3 border-t border-white/10 pt-6 text-[13px] text-silver/70 sm:flex-row sm:items-center">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <span>© 2026 Asotie</span>
+            {legalLinks.map((l) => (
+              <Link key={l.to} to={l.to} className="text-silver underline-offset-4 transition hover:text-white hover:underline">
+                {l.label}
+              </Link>
+            ))}
+          </div>
           <span>Made for support teams everywhere</span>
         </div>
       </div>
