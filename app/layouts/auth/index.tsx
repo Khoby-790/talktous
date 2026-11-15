@@ -30,9 +30,9 @@ const AuthLayout: FC<{ children: ReactNode }> = ({ children }) => (
         <footer className="flex flex-wrap items-center justify-between gap-3 text-[12px] text-silver/60">
           <span>© 2026 Asotie</span>
           <span className="flex gap-5">
-            <a href="#" className="hover:text-white">Privacy</a>
-            <a href="#" className="hover:text-white">Terms</a>
-            <a href="#" className="hover:text-white">Support</a>
+            <Link to="/privacy" className="hover:text-white">Privacy</Link>
+            <Link to="/terms" className="hover:text-white">Terms</Link>
+            <a href="mailto:support@asotie.com" className="hover:text-white">Support</a>
           </span>
         </footer>
       </main>
