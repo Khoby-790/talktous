@@ -53,7 +53,7 @@ export const Molecule: FC<{ className?: string }> = ({ className }) => (
     {/* Messages flowing: channels → inbox (aqua), inbox → agents (ember) */}
     <g className="molecule-pulse">
       {(["web", "email", "wa", "api"] as const).map((id, i) => (
-        <circle key={id} r={3} fill="#cbfffc">
+        <circle key={id} r={3} fill="var(--color-mist)">
           <animateMotion
             dur="2.8s"
             begin={`${i * 0.7}s`}
@@ -81,7 +81,7 @@ export const Molecule: FC<{ className?: string }> = ({ className }) => (
           cx={n.x}
           cy={n.y}
           r={n.r}
-          fill={n.human ? "#ff7a1a" : n.solid ? "#edfffe" : "#012624"}
+          fill={n.human ? "#ff7a1a" : n.solid ? "var(--color-mist)" : "var(--color-abyss)"}
           stroke="#ffffff"
           strokeWidth={n.solid || n.human ? 0 : 1.25}
         />
@@ -90,7 +90,7 @@ export const Molecule: FC<{ className?: string }> = ({ className }) => (
             x={n.x}
             y={n.solid ? n.y + 4 : n.y + n.r + 18}
             textAnchor="middle"
-            fill={n.solid ? "#012624" : n.human ? "#ffa25e" : "#bbc7c6"}
+            fill={n.solid ? "var(--color-abyss)" : n.human ? "#ffa25e" : "var(--color-silver)"}
             fontSize={10}
             fontWeight={500}
             letterSpacing="0.15em"

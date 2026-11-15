@@ -29,7 +29,7 @@ export const Toaster: FC = () => {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed bottom-4 right-4 z-[100] flex w-full max-w-sm flex-col gap-2"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-[100] flex flex-col items-end gap-2 sm:left-auto sm:w-full sm:max-w-sm"
     >
       {toasts.map((t) => {
         const Icon = icons[t.type];
@@ -37,7 +37,7 @@ export const Toaster: FC = () => {
           <div
             key={t.id}
             role={t.type === "error" ? "alert" : "status"}
-            className="pointer-events-auto flex items-start gap-3 rounded-xl border border-[var(--pop-border)] bg-surface px-4 py-3 text-sm text-ink shadow-lg"
+            className="toast-in pointer-events-auto flex w-full items-start gap-3 rounded-xl border border-[var(--pop-border)] bg-surface px-4 py-3 text-sm text-ink shadow-pop"
           >
             <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", tones[t.type])} />
             <p className="flex-1 leading-snug">{t.message}</p>

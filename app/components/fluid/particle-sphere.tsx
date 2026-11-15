@@ -12,8 +12,14 @@ import { cn } from "~/lib/utils";
 
 type Point = { x: number; y: number; z: number; seed: number };
 
+/* Far and near particle colours. These are the defaults; the palette sets
+   --orb-far / --orb-near (RGB triples) and the orb follows. */
 const TEAL = [0, 130, 124];
 const AQUA = [203, 255, 252];
+const triple = (value: string, fallback: number[]) => {
+  const parts = value.trim().split(/[\s,]+/).map(Number);
+  return parts.length === 3 && parts.every((n) => Number.isFinite(n)) ? parts : fallback;
+};
 const EMBER = [255, 138, 51];
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -42,6 +48,9 @@ export const ParticleSphere: FC<{ className?: string; density?: number }> = ({
     if (!canvas || !ctx) return;
 
     const points = buildSphere(density);
+    const styles = getComputedStyle(canvas);
+    const far = triple(styles.getPropertyValue("--orb-far"), TEAL);
+    const near = triple(styles.getPropertyValue("--orb-near"), AQUA);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const tilt = 0.38;
     const cosT = Math.cos(tilt);
@@ -89,12 +98,12 @@ export const ParticleSphere: FC<{ className?: string; density?: number }> = ({
         const sx = cx + x1 * R * wobble * persp;
         const sy = cy + y2 * R * wobble * persp;
 
-        // Teal → aqua by depth, then ember on the upper-right rim.
+        // Far → near colour by depth, then ember on the upper-right rim.
         const rim = Math.max(0, x1 * 0.8 - y2 * 0.6);
         const warm = Math.min(1, rim * rim * 1.8) * (0.5 + depth * 0.5);
-        const r = lerp(lerp(TEAL[0], AQUA[0], depth), EMBER[0], warm);
-        const g = lerp(lerp(TEAL[1], AQUA[1], depth), EMBER[1], warm);
-        const b = lerp(lerp(TEAL[2], AQUA[2], depth), EMBER[2], warm);
+        const r = lerp(lerp(far[0], near[0], depth), EMBER[0], warm);
+        const g = lerp(lerp(far[1], near[1], depth), EMBER[1], warm);
+        const b = lerp(lerp(far[2], near[2], depth), EMBER[2], warm);
         const alpha = 0.12 + depth * 0.78;
         const size = 0.45 + depth * 1.35;
 

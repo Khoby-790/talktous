@@ -4,7 +4,7 @@ import { cn } from "~/lib/utils";
 import { formatRelative } from "~/utils/date";
 import type { ConversationAutoReply, ConversationTriage } from "~/utils/types";
 
-const chip = "inline-flex items-center gap-1 rounded-md px-1.5 py-0 text-[10px] font-medium leading-4";
+const chip = "inline-flex items-center gap-1 rounded-md px-1.5 py-0 text-xs font-medium leading-4";
 
 /** Small flags for the inbox list: upset customers and non-English conversations. */
 export const TriageBadges: FC<{ triage: ConversationTriage | null; className?: string }> = ({ triage, className }) => {
@@ -45,7 +45,7 @@ export const TriageLine: FC<{ triage: ConversationTriage | null }> = ({ triage }
       <SparklesIcon className="h-3.5 w-3.5 shrink-0 text-fuchsia-700 dark:text-phosphor" />
       <span className="min-w-0 break-words">{triage.intent}</span>
       <TriageBadges triage={triage} />
-      {changes.length > 0 && <span className="text-[11px] text-ink-muted">· AI set {changes.length > 1 ? "priority & tags" : triage.appliedPriority ? "priority" : "tags"}</span>}
+      {changes.length > 0 && <span className="text-xs text-ink-muted">· AI set {changes.length > 1 ? "priority & tags" : triage.appliedPriority ? "priority" : "tags"}</span>}
     </p>
   );
 };

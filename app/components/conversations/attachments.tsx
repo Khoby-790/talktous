@@ -26,7 +26,7 @@ export const AttachmentList: FC<{ attachments: Attachment[]; tone?: "light" | "d
             rel="noreferrer"
             className={cn(
               "flex max-w-[260px] items-center gap-2 rounded-lg px-3 py-2 text-xs transition",
-              tone === "dark" ? "bg-white/15 text-white hover:bg-white/25" : "bg-surface-2 text-ink hover:bg-line",
+              tone === "dark" ? "bg-on-primary/15 text-on-primary hover:bg-on-primary/25" : "bg-surface-2 text-ink hover:bg-line",
             )}
           >
             <DocumentIcon className="h-4 w-4 shrink-0" />

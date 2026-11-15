@@ -27,16 +27,16 @@ const moments: Moment[] = [
     ),
     meta: "WhatsApp · just now",
   },
-  { face: IMG.mei, text: "Mei picked up three conversations from the queue", meta: "Live chat · 1m" },
-  { face: IMG.kwame, text: "Kwame sent an AI draft, with his own touch", meta: "Email · 2m" },
-  { face: IMG.rafael, text: "Rafael added “Refund policy” to the knowledge base", meta: "Knowledge · 5m" },
+  { face: IMG.meiFace, text: "Mei picked up three conversations from the queue", meta: "Live chat · 1m" },
+  { face: IMG.kwameFace, text: "Kwame sent an AI draft, with his own touch", meta: "Email · 2m" },
+  { face: IMG.rafaelFace, text: "Rafael added “Refund policy” to the knowledge base", meta: "Knowledge · 5m" },
 ];
 
 /** People on the inner ring; customers on the outer one. Angles in degrees. */
 const inner = [
-  { src: IMG.kwame, angle: 20, size: "h-16 w-16", online: true },
-  { src: IMG.mei, angle: 140, size: "h-14 w-14", online: true },
-  { src: IMG.rafael, angle: 260, size: "h-12 w-12" },
+  { src: IMG.kwameFace, angle: 20, size: "h-16 w-16", online: true },
+  { src: IMG.meiFace, angle: 140, size: "h-14 w-14", online: true },
+  { src: IMG.rafaelFace, angle: 260, size: "h-12 w-12" },
 ];
 const outer = [
   { src: IMG.customerFace, angle: 70, size: "h-12 w-12" },

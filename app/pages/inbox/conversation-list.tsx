@@ -49,22 +49,21 @@ const ListItem: FC<{ conversation: ConversationSummary; active: boolean; onSelec
       onClick={onSelect}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "flex w-full gap-3 border-b border-line px-4 py-3 text-left transition",
-        active ? "bg-primary-500/10 dark:bg-kelp" : "hover:bg-surface-2/60",
+        "flex w-full gap-3 border-b border-line px-4 py-2.5 text-left transition-colors duration-150 focus-visible:-outline-offset-2",
+        // The open conversation sits on the accent-soft ground with ink text.
+        active ? "bg-accent-soft" : "hover:bg-surface-2/50",
       )}
     >
       <Avatar name={c.customer.name} src={c.customer.avatarUrl} size="md" className="shrink-0" />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <p className={cn("truncate text-sm", unread ? "font-medium text-ink" : "text-ink-soft")}>{c.customer.name}</p>
-          <span className={cn("shrink-0 text-[11px]", unread ? "text-primary-600 dark:text-primary-300" : "text-ink-muted")}>
-            {formatShort(c.lastMessageAt)}
-          </span>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="type-body truncate font-medium text-ink">{c.customer.name}</p>
+          <span className="type-caption shrink-0 text-ink-muted">{formatShort(c.lastMessageAt)}</span>
         </div>
-        <p className={cn("mt-0.5 truncate text-xs", unread ? "text-ink" : "text-ink-muted")}>{preview}</p>
-        <div className="mt-1.5 flex items-center gap-2">
-          <ChannelBadge channel={c.channel} appName={c.app?.name} className="px-1.5 py-0 text-[10px]" />
-          {(c.priority === "high" || c.priority === "urgent") && <PriorityBadge priority={c.priority} className="text-[10px]" />}
+        <p className={cn("type-body truncate", unread ? "text-ink" : active ? "text-ink-soft" : "text-ink-muted")}>{preview}</p>
+        <div className="mt-1 flex items-center gap-2">
+          <ChannelBadge channel={c.channel} appName={c.app?.name} />
+          {(c.priority === "high" || c.priority === "urgent") && <PriorityBadge priority={c.priority} />}
           <AutoReplyBadge autoReply={c.aiAutoReply} />
           <TriageBadges triage={c.aiTriage} />
           <span className="flex-1" />
@@ -72,7 +71,11 @@ const ListItem: FC<{ conversation: ConversationSummary; active: boolean; onSelec
             <Avatar name={c.assignedAgent.name} src={c.assignedAgent.avatarUrl} size="sm" className="h-5 w-5 text-[9px]" />
           )}
           {unread && (
-            <span className="rounded-full bg-primary-600 px-1.5 text-[10px] font-medium leading-4 text-white">
+            // Unread: the accent signal in this view.
+            <span
+              className="type-caption flex h-[22px] min-w-[22px] items-center justify-center rounded-md bg-accent px-1.5 tabular-nums text-on-accent"
+              aria-label={`${c.unreadCount} unread`}
+            >
               {c.unreadCount}
             </span>
           )}
@@ -124,7 +127,7 @@ const ConversationList: FC<ConversationListProps> = ({ activeId, onSelect, class
               setLimit(PAGE);
             }}
             aria-label="Status"
-            className="h-8 rounded-md border border-line bg-field px-2 text-xs text-ink outline-none focus:border-primary-500"
+            className="type-label h-8 rounded-md border border-control bg-field pl-2.5 font-normal text-ink transition-colors duration-150 hover:border-ink-soft"
           >
             {STATUSES.map((s) => (
               <option key={s.value} value={s.value}>
@@ -146,13 +149,13 @@ const ConversationList: FC<ConversationListProps> = ({ activeId, onSelect, class
                   setLimit(PAGE);
                 }}
                 className={cn(
-                  "flex items-center justify-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium transition",
-                  view === v.value ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink",
+                  "type-label flex items-center justify-center gap-1.5 rounded px-2 py-1.5 transition-colors duration-150",
+                  view === v.value ? "bg-surface text-ink" : "text-ink-muted hover:text-ink",
                 )}
               >
                 {v.label}
                 {n !== undefined && status === "active" && (
-                  <span className="tabular-nums text-ink-muted">{n}</span>
+                  <span className="font-normal tabular-nums text-ink-muted">{n}</span>
                 )}
               </button>
             );
@@ -189,7 +192,7 @@ const ConversationList: FC<ConversationListProps> = ({ activeId, onSelect, class
                 <button
                   onClick={() => setLimit((l) => Math.min(l + PAGE, 100))}
                   disabled={limit >= 100}
-                  className="text-xs font-medium text-primary-600 hover:underline disabled:text-ink-muted disabled:no-underline dark:text-primary-300"
+                  className="type-label text-primary-700 hover:underline disabled:text-ink-muted disabled:no-underline dark:text-primary-300"
                 >
                   {limit >= 100 ? `Showing 100 of ${count} — refine your search` : `Load more (${count - conversations.length})`}
                 </button>

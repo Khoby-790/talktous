@@ -38,11 +38,11 @@ export const RolesSection: FC = () => (
       <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="bg-surface-2/60">
-            <th className="px-5 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-ink-muted sm:px-6">
+            <th className="px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-ink-muted sm:px-6">
               Permission
             </th>
             {["Admin", "Supervisor", "Agent"].map((r) => (
-              <th key={r} className="w-36 px-3 py-2.5 text-center text-[11px] font-medium uppercase tracking-wider text-ink-muted">
+              <th key={r} className="w-36 px-3 py-2.5 text-center text-xs font-medium uppercase tracking-wider text-ink-muted">
                 {r}
               </th>
             ))}

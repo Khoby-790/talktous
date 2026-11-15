@@ -8,7 +8,7 @@ import {
 } from "react-router";
 import { ApolloProvider } from "@apollo/client/react";
 import { client } from "~/_graphql";
-import { Spinner } from "~/components/core";
+import { BrandMark } from "~/components/brand";
 import { Toaster } from "~/components/core/Toaster";
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
@@ -64,14 +64,15 @@ export default function App() {
 /** Shown while the SPA boots, before any route has loaded. */
 export function HydrateFallback() {
   return (
-    <div className="flex h-screen items-center justify-center bg-app text-primary-600">
-      <Spinner className="h-6 w-6" />
+    <div className="flex h-screen flex-col items-center justify-center gap-6 bg-app" role="status" aria-label="Loading Asotie">
+      <BrandMark className="h-10 w-10 text-ink" />
+      <span className="skeleton h-1 w-24 rounded-full" />
     </div>
   );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
+  let message = "Error";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
 
@@ -86,16 +87,34 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     stack = error.stack;
   }
 
+  const notFound = isRouteErrorResponse(error) && error.status === 404;
   return (
-    <main className="mx-auto max-w-2xl p-6 pt-24 text-ink">
-      <p className="label-caps text-ink-muted">{message}</p>
-      <h1 className="mt-3 text-3xl font-medium tracking-display">Something went wrong</h1>
-      <p className="mt-3 text-sm text-ink-soft">{details}</p>
-      <a href="/" className="mt-6 inline-block text-sm font-medium text-primary-600 dark:text-primary-300">
-        ← Back to safety
-      </a>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-app px-6 py-16 text-center text-ink">
+      <BrandMark className="h-9 w-9 text-ink" />
+      <p className="label-caps mt-8 text-ink-muted">{message}</p>
+      <h1 className="mt-3 text-3xl font-medium tracking-display">
+        {notFound ? "We can't find that page" : "Something went wrong"}
+      </h1>
+      <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-soft">{details}</p>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        {!notFound && (
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-on-primary transition hover:bg-primary-hover"
+          >
+            Reload the page
+          </button>
+        )}
+        <a
+          href="/"
+          className="inline-flex h-10 items-center rounded-md border border-line-strong bg-surface px-4 text-sm font-medium text-ink transition hover:bg-surface-2"
+        >
+          Back to home
+        </a>
+      </div>
       {stack && (
-        <pre className="w-full overflow-x-auto p-4">
+        <pre className="mt-10 max-h-72 w-full max-w-3xl overflow-auto rounded-xl border border-line bg-surface p-4 text-left text-xs leading-relaxed text-ink-soft">
           <code>{stack}</code>
         </pre>
       )}

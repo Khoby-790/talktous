@@ -94,7 +94,7 @@ const AddMenu: FC<{ onArticle: () => void; onUrl: () => void; onFile: () => void
           <PaperClipIcon className="h-4 w-4" /> Upload a document
         </button>
       </MenuItem>
-      <p className="px-2.5 pb-1 pt-2 text-[11px] text-ink-muted">PDF, Word, text, Markdown, CSV or HTML · up to 10 MB</p>
+      <p className="px-2.5 pb-1 pt-2 text-xs text-ink-muted">PDF, Word, text, Markdown, CSV or HTML · up to 10 MB</p>
     </MenuItems>
   </Menu>
 );
@@ -262,7 +262,7 @@ const TestPanel: FC<{ hasSources: boolean }> = ({ hasSources }) => {
           }}
           disabled={!hasSources}
           placeholder="e.g. How long does delivery to Kumasi take?"
-          className="h-[38px] w-full rounded-md border border-line bg-field px-3 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-primary-500 disabled:opacity-50"
+          className="h-9 w-full rounded-md border border-control bg-field px-3 type-body text-ink placeholder:text-ink-muted disabled:opacity-50"
         />
         {aiStatus?.available && (
           <PrimaryButton type="submit" variant="secondary" className="w-full" loading={asking} disabled={question.trim().length < 3}>
@@ -462,7 +462,7 @@ const KnowledgePage: FC = () => {
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                     placeholder="Filter…"
-                    className="h-8 w-48 rounded-md border border-line bg-field px-2.5 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-primary-500"
+                    className="h-8 w-48 rounded-md border border-control bg-field px-2.5 type-body text-ink placeholder:text-ink-muted"
                   />
                 )}
               </div>

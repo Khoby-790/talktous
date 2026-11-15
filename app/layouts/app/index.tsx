@@ -1,4 +1,4 @@
-import { type FC, type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { type FC, type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { BrandMark } from "~/components/brand";
 import { NavLink, useLocation, useNavigate } from "react-router";
 import { Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
@@ -10,6 +10,7 @@ import {
   Cog6ToothIcon,
   HomeIcon,
   InboxIcon,
+  LifebuoyIcon,
   MagnifyingGlassIcon,
   MoonIcon,
   PuzzlePieceIcon,
@@ -22,6 +23,7 @@ import {
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { CheckIcon } from "@heroicons/react/20/solid";
 import { useApolloClient, useReactiveVar } from "@apollo/client/react";
 import { clearAuth, currentOrgVar, currentUserVar } from "~/_graphql/cache/auth";
 import { Avatar, StatusDot } from "~/components/core";
@@ -86,6 +88,26 @@ const STATUSES: { value: AgentStatus; label: string }[] = [
   { value: "offline", label: "Offline" },
 ];
 
+/**
+ * Asotie's own support chat (the widget.js embed in root.tsx). Inside the
+ * dashboard its floating launcher is hidden (see `html[data-app-shell]` in
+ * app.css) and the chat opens from "Help & support" instead.
+ */
+const openSupportChat = () => {
+  const widget = (window as unknown as { Asotie?: { open: () => void } }).Asotie;
+  if (widget) widget.open();
+  else toast.info("Support chat isn't available right now. Please try again in a moment.");
+};
+
+const iconButton =
+  "flex h-9 w-9 items-center justify-center rounded-md text-ink-soft transition-colors duration-150 hover:bg-surface-2 hover:text-ink";
+const menuPanel =
+  "pop-in z-50 rounded-xl border border-[var(--pop-border)] bg-surface shadow-pop outline-none [--anchor-gap:8px]";
+const menuItem =
+  "type-label flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 font-normal text-ink-soft outline-none data-[focus]:bg-surface-2 data-[focus]:text-ink";
+const navItem =
+  "type-label group flex h-9 w-full items-center gap-3 rounded-md px-3 transition-colors duration-150";
+
 const ThemeToggle: FC = () => {
   const { isDark, toggle } = useTheme();
   return (
@@ -93,9 +115,9 @@ const ThemeToggle: FC = () => {
       onClick={toggle}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
       aria-label="Toggle theme"
-      className="flex h-9 w-9 items-center justify-center rounded-md text-ink-soft transition hover:bg-surface-2 hover:text-ink"
+      className={iconButton}
     >
-      {isDark ? <SunIcon className="h-[18px] w-[18px]" /> : <MoonIcon className="h-[18px] w-[18px]" />}
+      {isDark ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
     </button>
   );
 };
@@ -125,20 +147,21 @@ const ActivityBell: FC = () => {
       <PopoverButton
         onClick={markSeen}
         aria-label="Recent activity"
-        className="relative flex h-9 w-9 items-center justify-center rounded-md text-ink-soft outline-none transition hover:bg-surface-2 hover:text-ink"
+        className={cn(iconButton, "relative")}
       >
-        <BellIcon className="h-[18px] w-[18px]" />
-        {unseen > 0 && <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-phosphor" />}
+        <BellIcon className="h-5 w-5" />
+        {unseen > 0 && (
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent ring-2 ring-sidebar" aria-label={`${unseen} new`} />
+        )}
       </PopoverButton>
-      <PopoverPanel
-        anchor="bottom end"
-        className="z-50 mt-2 w-80 rounded-xl border border-[var(--pop-border)] bg-surface shadow-lg [--anchor-gap:8px]"
-      >
+      <PopoverPanel anchor="bottom end" className={cn(menuPanel, "w-80 overflow-hidden")}>
         {({ close }) => (
           <>
-            <p className="label-caps border-b border-line px-4 py-3 text-ink-muted">Recent activity</p>
+            <p className="type-title-sm border-b border-line px-4 py-3 text-ink">Recent activity</p>
             <div className="max-h-96 overflow-y-auto">
-              {activity.length === 0 && <p className="px-4 py-6 text-center text-sm text-ink-muted">Nothing yet.</p>}
+              {activity.length === 0 && (
+                <p className="type-body px-4 py-8 text-center text-ink-muted">New conversations and assignments will show up here.</p>
+              )}
               {activity.map((event) => (
                 <button
                   key={event.id}
@@ -146,10 +169,10 @@ const ActivityBell: FC = () => {
                     close();
                     if (event.conversationId) navigate(`/conversations/${event.conversationId}`);
                   }}
-                  className="flex w-full flex-col gap-0.5 border-b border-line px-4 py-3 text-left last:border-0 hover:bg-surface-2/60"
+                  className="flex w-full flex-col gap-0.5 border-b border-line px-4 py-3 text-left transition-colors last:border-0 hover:bg-surface-2/60 focus-visible:-outline-offset-2"
                 >
-                  <span className="text-sm text-ink">{event.summary}</span>
-                  <span className="text-xs text-ink-muted">{formatRelative(event.createdAt)}</span>
+                  <span className="type-body text-ink">{event.summary}</span>
+                  <span className="type-caption text-ink-muted">{formatRelative(event.createdAt)}</span>
                 </button>
               ))}
             </div>
@@ -178,7 +201,7 @@ const UserMenu: FC<{ onSignOut: () => void; compact?: boolean }> = ({ onSignOut,
     <Menu as="div" className="relative">
       <MenuButton
         className={cn(
-          "flex items-center gap-3 rounded-md text-left outline-none transition hover:bg-surface-2",
+          "flex items-center gap-3 rounded-md text-left transition-colors duration-150 hover:bg-surface-2",
           compact ? "p-1" : "w-full px-2 py-2",
         )}
       >
@@ -188,8 +211,8 @@ const UserMenu: FC<{ onSignOut: () => void; compact?: boolean }> = ({ onSignOut,
         </div>
         {!compact && (
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-ink">{user.name}</p>
-            <p className="text-[11px] capitalize text-ink-muted">
+            <p className="type-label truncate text-ink">{user.name}</p>
+            <p className="type-caption font-normal capitalize text-ink-muted">
               {user.role} · {user.status}
             </p>
           </div>
@@ -197,18 +220,23 @@ const UserMenu: FC<{ onSignOut: () => void; compact?: boolean }> = ({ onSignOut,
       </MenuButton>
       <MenuItems
         anchor={compact ? "bottom end" : "top start"}
-        className="z-50 w-56 rounded-xl border border-[var(--pop-border)] bg-surface p-1.5 shadow-lg outline-none [--anchor-gap:8px]"
+        className={cn(menuPanel, "w-60 p-1.5")}
       >
-        <p className="label-caps px-2.5 pb-1 pt-1.5 text-ink-muted">Availability</p>
+        <div className="px-2.5 pb-2 pt-1.5">
+          <p className="type-body truncate font-medium text-ink">{user.name}</p>
+          <p className="type-caption truncate font-normal text-ink-muted">{user.email}</p>
+        </div>
+        <div className="mb-1.5 h-px bg-line" />
+        <p className="px-2.5 pb-1 pt-1 text-xs font-medium uppercase tracking-[0.08em] text-ink-muted">Availability</p>
         {STATUSES.map((s) => (
           <MenuItem key={s.value}>
             <button
               onClick={() => change(s.value)}
-              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-soft data-[focus]:bg-surface-2 data-[focus]:text-ink"
+              className={menuItem}
             >
               <StatusDot status={s.value} />
               <span className="flex-1 text-left">{s.label}</span>
-              {user.status === s.value && <span className="text-xs text-primary-600 dark:text-primary-300">✓</span>}
+              {user.status === s.value && <CheckIcon className="h-4 w-4 text-ink" aria-label="Current" />}
             </button>
           </MenuItem>
         ))}
@@ -216,7 +244,7 @@ const UserMenu: FC<{ onSignOut: () => void; compact?: boolean }> = ({ onSignOut,
         <MenuItem>
           <NavLink
             to="/profile"
-            className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-soft data-[focus]:bg-surface-2 data-[focus]:text-ink"
+            className={menuItem}
           >
             <UserCircleIcon className="h-4 w-4" /> Profile
           </NavLink>
@@ -224,7 +252,7 @@ const UserMenu: FC<{ onSignOut: () => void; compact?: boolean }> = ({ onSignOut,
         <MenuItem>
           <button
             onClick={onSignOut}
-            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-soft data-[focus]:bg-surface-2 data-[focus]:text-ink"
+            className={menuItem}
           >
             <ArrowLeftStartOnRectangleIcon className="h-4 w-4" /> Sign out
           </button>
@@ -242,8 +270,8 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
   const inboxBadge = counts ? counts.open + counts.pending : 0;
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-line bg-sidebar">
-      <div className="flex items-center gap-3 px-5 py-5">
+    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-line bg-sidebar">
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md">
           {org?.logoUrl ? (
             <img src={org.logoUrl} alt="" className="h-full w-full object-cover" />
@@ -252,8 +280,8 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
           )}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-ink">{org?.name || "Asotie"}</p>
-          <p className="text-[11px] text-ink-muted">
+          <p className="type-label truncate text-ink">{org?.name || "Asotie"}</p>
+          <p className="type-caption font-normal text-ink-muted">
             {org?.billingStatus === "incomplete"
               ? "No plan yet"
               : `${(org?.plan || "starter").replace(/^./, (c) => c.toUpperCase())} plan${org?.billingStatus === "trialing" ? " · trial" : ""}`}
@@ -261,16 +289,16 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
         </div>
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-3">
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-3" aria-label="Main">
         {navSections.map((section) => {
           const items = section.items.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
           if (!items.length) return null;
           return (
             <div key={section.label}>
-              <p className="mb-2 px-3 text-[10px] font-medium uppercase tracking-[0.15em] text-ink-muted">
+              <p className="mb-1 px-3 text-xs font-medium uppercase tracking-[0.08em] text-ink-muted">
                 {section.label}
               </p>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {items.map(({ label, path, icon: Icon, badge }) => (
                   <NavLink
                     key={path}
@@ -278,10 +306,11 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cn(
-                        "group flex items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-all",
-                        isActive
-                          ? "bg-primary-50 text-primary-800 dark:bg-kelp dark:text-white"
-                          : "text-ink-soft hover:bg-surface-2 hover:text-ink",
+                        navItem,
+                        "justify-between",
+                        // The current page lifts onto the surface; no orange here —
+                        // accent is kept for what needs attention.
+                        isActive ? "bg-nav-active text-ink shadow-nav" : "text-ink-soft hover:text-ink",
                       )
                     }
                   >
@@ -290,18 +319,17 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
                         <div className="flex items-center gap-3">
                           <Icon
                             className={cn(
-                              "h-[18px] w-[18px] shrink-0",
-                              isActive ? "text-primary-600 dark:text-primary-300" : "text-ink-muted group-hover:text-ink-soft",
+                              "h-5 w-5 shrink-0 transition-colors duration-150",
+                              isActive ? "text-ink" : "text-ink-muted group-hover:text-ink-soft",
                             )}
                           />
                           {label}
                         </div>
                         {badge === "inbox" && inboxBadge > 0 && (
+                          // The only count in the sidebar, and its one accent fill.
                           <span
-                            className={cn(
-                              "rounded-md px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
-                              isActive ? "bg-phosphor text-abyss" : "bg-surface-2 text-ink-soft",
-                            )}
+                            className="type-caption flex h-[22px] min-w-[22px] items-center justify-center rounded-md bg-accent px-1.5 tabular-nums text-on-accent"
+                            aria-label={`${inboxBadge} open or waiting`}
                           >
                             {inboxBadge > 99 ? "99+" : inboxBadge}
                           </span>
@@ -316,7 +344,15 @@ const Sidebar: FC<{ onNavigate?: () => void; onSignOut: () => void }> = ({ onNav
         })}
       </nav>
 
-      <div className="border-t border-line p-3">
+      <div className="space-y-1 border-t border-line p-3">
+        <button
+          type="button"
+          onClick={openSupportChat}
+          className={cn(navItem, "text-ink-soft hover:text-ink")}
+        >
+          <LifebuoyIcon className="h-5 w-5 shrink-0 text-ink-muted transition-colors duration-150 group-hover:text-ink-soft" />
+          Help &amp; support
+        </button>
         <UserMenu onSignOut={onSignOut} />
       </div>
     </aside>
@@ -349,7 +385,7 @@ const BillingNotice: FC = () => {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b px-4 py-2 text-center text-sm",
+        "flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b px-4 py-2 text-center text-sm",
         status === "past_due"
           ? "border-red-500/20 bg-red-500/10 text-red-800 dark:text-red-200"
           : "border-amber-500/20 bg-amber-500/10 text-amber-900 dark:text-amber-100",
@@ -370,8 +406,28 @@ const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
   const apollo = useApolloClient();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setMobileOpen(false), [location.pathname]);
+
+  // Marks the document as "inside the dashboard" (hides the support launcher; see app.css).
+  useEffect(() => {
+    document.documentElement.setAttribute("data-app-shell", "");
+    return () => document.documentElement.removeAttribute("data-app-shell");
+  }, []);
+
+  // ⌘K / Ctrl+K jumps to search from anywhere.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const signOut = async () => {
     clearAuth();
@@ -390,6 +446,8 @@ const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
 
   // The inbox is a full-height split pane and manages its own scrolling.
   const fullBleed = location.pathname.startsWith("/inbox");
+  const segments = location.pathname.split("/").filter(Boolean);
+  const pageKey = segments.length > 1 ? `${segments[0]}/*` : (segments[0] ?? "");
 
   return (
     <div className="flex h-screen overflow-hidden bg-app">
@@ -400,7 +458,7 @@ const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div className="absolute inset-0 bg-deep/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="relative h-full">
+          <div className="relative h-full shadow-pop">
             <Sidebar onNavigate={() => setMobileOpen(false)} onSignOut={signOut} />
             <button
               onClick={() => setMobileOpen(false)}
@@ -413,28 +471,33 @@ const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-line bg-sidebar px-4 sm:px-6">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-app">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line bg-sidebar px-4 sm:px-6">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <button
               onClick={() => setMobileOpen(true)}
-              className="rounded-md p-2 text-ink-soft hover:bg-surface-2 lg:hidden"
+              className={cn(iconButton, "lg:hidden")}
               aria-label="Open menu"
             >
               <Bars3Icon className="h-5 w-5" />
             </button>
             <form
               onSubmit={search}
-              className="flex h-10 w-full max-w-sm items-center gap-2.5 rounded-md border border-line bg-field px-4 text-ink-muted transition focus-within:border-primary-400"
+              role="search"
+              className="focus-within-ring flex h-9 w-full max-w-sm items-center gap-2.5 rounded-md border border-control bg-field pl-3 pr-2 text-ink-muted transition-colors duration-150 hover:border-ink-soft"
             >
               <MagnifyingGlassIcon className="h-4 w-4 shrink-0" />
               <input
+                ref={searchRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search conversations…"
-                className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
+                className="type-body w-full min-w-0 bg-transparent text-ink outline-none placeholder:text-ink-muted"
                 aria-label="Search conversations"
               />
+              <kbd className="type-caption hidden shrink-0 rounded border border-line bg-surface-2/60 px-1.5 font-sans text-ink-muted sm:block">
+                ⌘K
+              </kbd>
             </form>
           </div>
           <div className="flex items-center gap-1">
@@ -447,8 +510,19 @@ const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
         </header>
         <BillingNotice />
 
-        <main className={cn("flex-1 bg-app", fullBleed ? "overflow-hidden" : "overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-7")}>
-          {fullBleed ? children : <div className="mx-auto max-w-7xl">{children}</div>}
+        <main className={cn("min-h-0 flex-1", fullBleed ? "overflow-hidden" : "overflow-y-auto p-4 sm:p-6")}>
+          {fullBleed ? (
+            children
+          ) : (
+            // Keyed so a page settles in when you move between areas or from a
+            // list into a detail — but not when only the detail's id or a
+            // settings section changes, which would replay it for no reason.
+            // Full height, so a page can pin its header and scroll its own
+            // panes instead of the whole content area ("fit the view").
+            <div key={pageKey} className="rise-in mx-auto h-full max-w-7xl">
+              {children}
+            </div>
+          )}
         </main>
       </div>
     </div>

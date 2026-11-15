@@ -1,0 +1,147 @@
+/*
+ * ════════════════════════════════════════════════════════════════════════════
+ * EXPERIMENT — Asotie without the teal.
+ *
+ * The design language's own palette: near-black, white and one orange, with
+ * its state colours and blue focus ring. Nothing here changes layout, type or
+ * behaviour; it only re-points the colour roles that app.css defines.
+ *
+ * Opt-in. It applies only while <html> carries data-palette="neutral", which
+ * the theme init script (hooks/ui/use-theme.ts) sets from localStorage:
+ *
+ *     ?palette=neutral    turn it on  (sticks until changed)
+ *     ?palette=auros      back to teal
+ *
+ * To drop the experiment: delete this file, its @import in app.css, and the
+ * palette lines in the init script. To adopt it: move these values into
+ * app.css's :root / .dark blocks and the @theme ramp.
+ * ════════════════════════════════════════════════════════════════════════════
+ */
+
+/* ── Palette-level tokens (same in both themes) ─────────────────────────── */
+html[data-palette="neutral"] {
+  /* The always-dark canvas of the marketing, auth and onboarding screens. */
+  --color-abyss: #0f0f10;
+  --color-deep: #0a0a0b;
+  --color-kelp: #1d1d1f;
+  --color-kelp-hover: #2a2a2d;
+  --color-mist: #f5f5f7;
+  --color-silver: #c7c7cc;
+  --color-phosphor: #f5f5f7;
+  --color-slate-deep: #6e6e73;
+  --color-pine: #1d1d1f;
+  --color-pine-ink: #1d1d1f;
+  --color-on-accent: #1d1d1f;
+  --color-status-open: #0a66d8;
+
+  /*
+   * The old brand ramp, as neutrals. Components use it in pairs — 600–800 for
+   * text and icons on light grounds, 200–300 on dark ones, 500 for tints — so
+   * the dark end reads as ink and the light end as inverse ink.
+   */
+  --color-primary-50: #f5f5f7;
+  --color-primary-100: #ebebf0;
+  --color-primary-200: #e5e5ea;
+  --color-primary-300: #d2d2d7;
+  --color-primary-400: #aeaeb2;
+  --color-primary-500: #8e8e93;
+  --color-primary-600: #3a3a3c;
+  --color-primary-700: #1d1d1f;
+  --color-primary-800: #1d1d1f;
+  --color-primary-900: #1d1d1f;
+
+  /* The lavender that marked AI and admin: one orange is the only hue. */
+  --color-fuchsia-500: #8e8e93;
+  --color-fuchsia-600: #636366;
+  --color-fuchsia-700: #3a3a3c;
+  --color-fuchsia-800: #1d1d1f;
+  --color-fuchsia-900: #1d1d1f;
+
+  --orb-far: 110 110 115;
+  --orb-near: 245 245 247;
+  --flow-cool: #f5f5f7;
+}
+
+/* ── Light ──────────────────────────────────────────────────────────────── */
+html[data-palette="neutral"] {
+  --app: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #ececf0;
+  --sidebar: #f5f5f7;
+  --field: #ffffff;
+  --line: #e5e5ea;
+  --line-strong: #d2d2d7;
+  --ink: #1d1d1f;
+  --ink-soft: #48484a;
+  --ink-muted: #6e6e73;
+  --figure: #1d1d1f;
+  --pop-border: #d2d2d7;
+  /* The current page lifts onto the surface. */
+  --nav-active: #ffffff;
+  --nav-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --card-shadow: none;
+  --pop-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03), 0 8px 24px rgba(0, 0, 0, 0.1);
+  --primary: #1d1d1f;
+  --primary-hover: #3a3a3c;
+  --primary-active: #48484a;
+  --on-primary: #ffffff;
+  --info: #0a66d8;
+  --info-soft: #e8f1fd;
+  --control: #86868b;
+  --focus: #0a66d8;
+  --accent-ink: #b84a00;
+  --accent-soft: #fff1e6;
+  --chart-main: #1d1d1f;
+  --series-1: #1d1d1f;
+  --series-2: #6e6e73;
+  --series-3: #aeaeb2;
+  --series-4: #d2d2d7;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236e6e73' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+}
+
+/* ── Dark (also any subtree that forces it: auth, onboarding, marketing) ── */
+html[data-palette="neutral"].dark,
+html[data-palette="neutral"] .dark {
+  --app: #0f0f10;
+  --surface: #1d1d1f;
+  --surface-2: #2a2a2d;
+  --sidebar: #1a1a1c;
+  --field: #1d1d1f;
+  --line: #303033;
+  --line-strong: #48484a;
+  --ink: #f5f5f7;
+  --ink-soft: #c7c7cc;
+  --ink-muted: #a1a1a6;
+  --figure: #f5f5f7;
+  --pop-border: #3a3a3d;
+  --nav-active: #2a2a2d;
+  --nav-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --card-shadow: none;
+  --pop-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.6);
+  --primary: #f5f5f7;
+  --primary-hover: #ffffff;
+  --primary-active: #e5e5ea;
+  --on-primary: #1d1d1f;
+  --info: #6cb2ff;
+  --info-soft: #10263f;
+  --control: #7c7c80;
+  --focus: #6cb2ff;
+  --accent-ink: #ff9a4d;
+  --accent-soft: #3a2414;
+  --chart-main: #f5f5f7;
+  --series-1: #f5f5f7;
+  --series-2: #a1a1a6;
+  --series-3: #636366;
+  --series-4: #3a3a3c;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23a1a1a6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+
+/* The taller fields on the front door. */
+html[data-palette="neutral"] .fluid-fields {
+  --field: rgba(255, 255, 255, 0.04);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --surface: #1d1d1f;
+  --pop-border: rgba(255, 255, 255, 0.12);
+}

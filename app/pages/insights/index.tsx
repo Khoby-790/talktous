@@ -83,7 +83,7 @@ const Briefing: FC<{ rangeDays: number }> = ({ rangeDays }) => {
       {current ? (
         <>
           <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink">{current.text}</p>
-          <p className="mt-2 text-[11px] text-ink-muted">
+          <p className="mt-2 text-xs text-ink-muted">
             Written {formatRelative(current.generatedAt)} from the figures on this page · check before acting on it
           </p>
         </>
@@ -100,14 +100,14 @@ const Briefing: FC<{ rangeDays: number }> = ({ rangeDays }) => {
 /* ─────────────────────────────── Topics ─────────────────────────────── */
 
 const Trend: FC<{ count: number; previous: number }> = ({ count, previous }) => {
-  if (!previous) return <span className="text-[11px] font-medium text-primary-700 dark:text-primary-300">New</span>;
+  if (!previous) return <span className="text-xs font-medium text-primary-700 dark:text-primary-300">New</span>;
   const change = percentChange(count, previous) ?? 0;
-  if (Math.abs(change) < 10) return <span className="text-[11px] text-ink-muted">Steady</span>;
+  if (Math.abs(change) < 10) return <span className="text-xs text-ink-muted">Steady</span>;
   const up = change > 0;
   const Icon = up ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
   return (
     <span
-      className={cn("inline-flex items-center gap-0.5 text-[11px] font-medium", up ? "text-amber-700 dark:text-amber-300" : "text-ink-muted")}
+      className={cn("inline-flex items-center gap-0.5 text-xs font-medium", up ? "text-amber-700 dark:text-amber-300" : "text-ink-muted")}
       title={`${previous} in the previous period`}
     >
       <Icon className="h-3.5 w-3.5" />
@@ -144,18 +144,18 @@ const Topics: FC<{ topics: InsightTopic[]; total: number }> = ({ topics, total }
               <div className="flex items-center gap-3">
                 <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">#{topic.tag}</span>
                 {topic.negative > 0 && (
-                  <span className="inline-flex items-center gap-0.5 text-[11px] text-red-700 dark:text-red-300" title="From upset customers">
+                  <span className="inline-flex items-center gap-0.5 text-xs text-red-700 dark:text-red-300" title="From upset customers">
                     <FaceFrownIcon className="h-3.5 w-3.5" /> {topic.negative}
                   </span>
                 )}
                 <Trend count={topic.count} previous={topic.previous} />
                 <span className="w-16 text-right text-sm tabular-nums text-ink">
                   {topic.count}
-                  <span className="text-[11px] text-ink-muted"> · {Math.round((topic.count / Math.max(total, 1)) * 100)}%</span>
+                  <span className="text-xs text-ink-muted"> · {Math.round((topic.count / Math.max(total, 1)) * 100)}%</span>
                 </span>
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-2">
-                <div className="h-full rounded-full bg-primary-600" style={{ width: `${Math.max((topic.count / max) * 100, 3)}%` }} />
+                <div className="h-full rounded-full bg-chart" style={{ width: `${Math.max((topic.count / max) * 100, 3)}%` }} />
               </div>
               {topic.examples.length > 0 && (
                 <p className="mt-1 truncate text-xs text-ink-muted">e.g. {topic.examples.join(" · ")}</p>
@@ -257,20 +257,17 @@ const InsightsPage: FC = () => {
               label="Upset customers"
               value={i.triaged ? `${Math.round((i.negative / i.triaged) * 100)}%` : "—"}
               hint={i.triaged ? `${i.negative} of ${i.triaged} classified by auto-triage` : "Turn on auto-triage to see this"}
-              accent="var(--color-busy)"
               lowerIsBetter
             />
             <StatCard
               label="Answered by AI"
               value={i.answeredByAi}
               hint={`${i.handedOffByAi} handed to your team`}
-              accent="#c026d3"
             />
             <StatCard
               label="Not in knowledge base"
               value={i.gapCount}
               hint="Questions AI couldn't answer"
-              accent="var(--color-away)"
               lowerIsBetter
             />
           </div>

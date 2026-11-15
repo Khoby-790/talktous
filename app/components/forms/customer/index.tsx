@@ -48,7 +48,7 @@ export const toCustomerInput = (values: CustomerFormValues) => ({
 });
 
 const fieldClass =
-  "h-9 w-full rounded-md border border-line bg-field px-3 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15";
+  "h-9 w-full rounded-md border border-control bg-field px-3 type-body text-ink transition-colors duration-150 placeholder:text-ink-muted";
 
 const CustomerForm: FC<{ form: FormikProps<CustomerFormValues> }> = ({ form }) => {
   const rows = form.values.metadata;

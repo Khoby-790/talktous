@@ -1,8 +1,8 @@
 import { type FC, useState } from "react";
 import { Link } from "react-router";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { ActionButton, PrimaryButton } from "~/components/buttons";
-import { Card, EmptyState } from "~/components/core";
+import { Card, EmptyState, ErrorState } from "~/components/core";
 import { Header } from "~/components/layouts";
 import { CardShimmer } from "~/components/shimmer";
 import { AppStatusBadge, appTypeIcons, appTypeLabel } from "~/components/forms/app";
@@ -37,7 +37,7 @@ const AppCard: FC<{ app: SupportApp; canManage: boolean; onEdit: () => void; onD
 }) => {
   const Icon = appTypeIcons[app.type];
   return (
-    <Card className="flex flex-col p-5 transition hover:border-line-strong">
+    <Card className="flex h-full flex-col p-5 transition-colors hover:border-line-strong">
       <div className="flex items-start justify-between gap-3">
         <Link to={`/apps/${app.id}`} className="flex min-w-0 items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary-500/10 text-primary-600 dark:text-primary-300">
@@ -50,28 +50,34 @@ const AppCard: FC<{ app: SupportApp; canManage: boolean; onEdit: () => void; onD
         </Link>
         <AppStatusBadge app={app} />
       </div>
-      <p className="mt-3 line-clamp-2 min-h-[2.5rem] text-sm text-ink-soft">{app.description || "No description"}</p>
+      <p className={cn("mt-3 line-clamp-2 min-h-[2.5rem] text-sm", app.description ? "text-ink-soft" : "text-ink-muted")}>
+        {app.description || "No description"}
+      </p>
       {!app.setup.firstConversationAt && (
         <Link
           to={`/apps/${app.id}?tab=setup`}
-          className="mt-3 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-500/15 dark:text-amber-200"
+          className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-500/15 dark:text-amber-200"
         >
-          <span>Setup not finished — no messages yet</span>
-          <span>Continue setup →</span>
+          <span className="min-w-0 truncate">No messages yet</span>
+          <span className="inline-flex shrink-0 items-center gap-1">
+            Continue setup <ArrowRightIcon className="h-3 w-3" />
+          </span>
         </Link>
       )}
+      {/* Pushes the figures and footer to the bottom so a row of cards lines up. */}
+      <div className="flex-1" />
       <div className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4 text-center">
         <div>
           <p className="text-xl font-medium tabular-nums text-figure">{app.stats.openConversations}</p>
-          <p className="text-[11px] text-ink-muted">Open</p>
+          <p className="text-xs text-ink-muted">Open</p>
         </div>
         <div>
           <p className="text-xl font-medium tabular-nums text-figure">{app.stats.totalConversations}</p>
-          <p className="text-[11px] text-ink-muted">Total</p>
+          <p className="text-xs text-ink-muted">Total</p>
         </div>
         <div>
           <p className="text-xl font-medium tabular-nums text-figure">{app.agentIds.length}</p>
-          <p className="text-[11px] text-ink-muted">Agents</p>
+          <p className="text-xs text-ink-muted">Agents</p>
         </div>
       </div>
       <div className="mt-4 flex items-center justify-between">
@@ -101,7 +107,7 @@ const AppsPage: FC = () => {
   const [search, setSearch] = useState("");
   const debounced = useDebounce(search);
 
-  const { apps, loading } = useApps({
+  const { apps, loading, error, refetch } = useApps({
     type: (type as AppType) || null,
     status: status || null,
     search: debounced || null,
@@ -138,8 +144,8 @@ const AppsPage: FC = () => {
               key={f.value}
               onClick={() => setType(f.value || null)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium transition",
-                (type ?? "") === f.value ? "bg-surface-2 text-ink" : "text-ink-muted hover:text-ink",
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                (type ?? "") === f.value ? "bg-surface-2 text-ink" : "text-ink-muted hover:bg-surface-2/50 hover:text-ink",
               )}
             >
               {f.label}
@@ -150,7 +156,7 @@ const AppsPage: FC = () => {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as AppStatus | "")}
-            className="h-10 rounded-md border border-line bg-field px-3 text-sm text-ink outline-none focus:border-primary-500"
+            className="h-9 rounded-md border border-control bg-field type-body text-ink transition-colors duration-150 hover:border-ink-soft pl-3"
             aria-label="Filter by status"
           >
             <option value="">Any status</option>
@@ -162,7 +168,8 @@ const AppsPage: FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search apps…"
-            className="h-10 w-full rounded-md border border-line bg-field px-3.5 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-primary-500 sm:w-56"
+            aria-label="Search apps"
+            className="h-9 rounded-md border border-control bg-field type-body text-ink transition-colors duration-150 hover:border-ink-soft w-full px-3 placeholder:text-ink-muted sm:w-56"
           />
         </div>
       </div>
@@ -173,6 +180,10 @@ const AppsPage: FC = () => {
             <CardShimmer key={i} />
           ))}
         </div>
+      ) : error && apps.length === 0 ? (
+        <Card>
+          <ErrorState title="We couldn't load your apps" onRetry={() => void refetch()} />
+        </Card>
       ) : apps.length === 0 ? (
         <Card>
           <EmptyState

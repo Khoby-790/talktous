@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "talktous:theme";
+/** EXPERIMENT (palette-neutral.css): which palette to show. */
+const PALETTE_KEY = "talktous:palette";
 
 /** Read the current theme from the <html> class (set pre-hydration by the
  *  inline script in root.tsx, so this never causes a flash). */
@@ -48,6 +50,13 @@ export const themeInitScript = `
     var t = localStorage.getItem("${STORAGE_KEY}");
     // Auros is dark-first: only opt out when the user explicitly chose light.
     if (t !== "light") document.documentElement.classList.add("dark");
+    // EXPERIMENT: ?palette=neutral shows the interface without the teal;
+    // ?palette=auros goes back. The choice is remembered.
+    var q = new URLSearchParams(location.search).get("palette");
+    if (q === "neutral" || q === "auros") localStorage.setItem("${PALETTE_KEY}", q);
+    if (localStorage.getItem("${PALETTE_KEY}") === "neutral") {
+      document.documentElement.setAttribute("data-palette", "neutral");
+    }
   } catch (e) {}
 })();
 `;

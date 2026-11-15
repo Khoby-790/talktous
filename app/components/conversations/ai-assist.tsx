@@ -87,7 +87,7 @@ export const AiComposerTools: FC<{
     return (
       <Link
         to="/settings/ai"
-        className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-medium text-ink-muted hover:text-primary-600 dark:hover:text-primary-300"
+        className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-ink-muted hover:text-primary-600 dark:hover:text-primary-300"
       >
         <SparklesIcon className="h-3.5 w-3.5" /> {aiStatus.configured ? "Turn on AI assist" : "Set up AI assist"}
       </Link>
@@ -170,11 +170,11 @@ export const AiComposerTools: FC<{
                     rows={3}
                     maxLength={500}
                     placeholder="e.g. Apologise, offer a 10% discount code, and say it ships Friday"
-                    className="w-full rounded-md border border-line bg-field px-2.5 py-2 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-primary-500"
+                    className="w-full rounded-md border border-control bg-field px-2.5 py-2 type-body text-ink placeholder:text-ink-muted"
                   />
                   <button
                     type="submit"
-                    className="w-full rounded-md bg-primary-600 py-1.5 text-xs font-medium text-white hover:bg-primary-700"
+                    className="w-full rounded-md bg-primary py-1.5 text-xs font-medium text-on-primary hover:bg-primary-hover"
                   >
                     Draft reply
                   </button>
@@ -252,7 +252,7 @@ export const AiDraftSources: FC<{ grounding: DraftGrounding | null }> = ({ groun
       <Link
         to="/knowledge"
         title={`Based on: ${titles}`}
-        className="mb-2 flex min-w-0 items-center gap-1.5 text-[11px] text-ink-muted hover:text-ink"
+        className="mb-2 flex min-w-0 items-center gap-1.5 text-xs text-ink-muted hover:text-ink"
       >
         <BookOpenIcon className="h-3.5 w-3.5 shrink-0" />
         <span className="truncate">Based on {titles}</span>
@@ -261,7 +261,7 @@ export const AiDraftSources: FC<{ grounding: DraftGrounding | null }> = ({ groun
   }
   if (grounding.knowledge === "not_covered") {
     return (
-      <p className="mb-2 flex min-w-0 items-start gap-1.5 text-[11px] leading-snug text-amber-700 dark:text-amber-300">
+      <p className="mb-2 flex min-w-0 items-start gap-1.5 text-xs leading-snug text-amber-700 dark:text-amber-300">
         <ExclamationTriangleIcon className="mt-px h-3.5 w-3.5 shrink-0" />
         <span>
           Your knowledge base doesn&apos;t cover this — fill in the [placeholders] before sending.
@@ -279,7 +279,7 @@ export const AiDraftSources: FC<{ grounding: DraftGrounding | null }> = ({ groun
   }
   if (grounding.knowledge === "empty" && canManageKnowledge) {
     return (
-      <Link to="/knowledge" className="mb-2 flex items-center gap-1.5 text-[11px] text-ink-muted hover:text-ink">
+      <Link to="/knowledge" className="mb-2 flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink">
         <BookOpenIcon className="h-3.5 w-3.5 shrink-0" />
         Drafts get much better when they know your policies and FAQs — add them to the knowledge base.
       </Link>
@@ -318,7 +318,7 @@ export const AiSummaryCard: FC<{ conversation: ConversationDetail; className?: s
             type="button"
             onClick={() => void run(true)}
             disabled={loading}
-            className="text-[11px] font-medium text-ink-muted hover:text-ink disabled:opacity-50"
+            className="text-xs font-medium text-ink-muted hover:text-ink disabled:opacity-50"
           >
             {loading ? "Updating…" : summary.stale ? "Update" : "Refresh"}
           </button>
@@ -327,7 +327,7 @@ export const AiSummaryCard: FC<{ conversation: ConversationDetail; className?: s
       {summary?.text ? (
         <>
           <p className="whitespace-pre-line text-sm leading-relaxed text-ink">{summary.text}</p>
-          <p className="mt-2 text-[11px] text-ink-muted">
+          <p className="mt-2 text-xs text-ink-muted">
             {summary.stale ? "New messages since this summary · " : ""}
             {summary.generatedAt ? `Written ${formatRelative(summary.generatedAt)}` : ""} · check before relying on it
           </p>

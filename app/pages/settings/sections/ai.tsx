@@ -38,7 +38,7 @@ const COMPATIBLE_PRESETS = [
 ];
 
 const field =
-  "h-[42px] w-full rounded-md border border-line bg-field px-3.5 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15";
+  "h-9 w-full rounded-md border border-control bg-field px-3.5 type-body text-ink transition-colors duration-150 placeholder:text-ink-muted";
 
 /** Connect the organization's own AI provider: provider → key → model → save (verified). */
 const ProviderForm: FC<{ status: AiStatus }> = ({ status }) => {
@@ -135,7 +135,7 @@ const ProviderForm: FC<{ status: AiStatus }> = ({ status }) => {
                 onClick={() => setBaseUrl(preset.url)}
                 className={cn(
                   "rounded-md px-2.5 py-1 text-xs font-medium transition",
-                  baseUrl === preset.url ? "bg-primary-600 text-white" : "bg-surface-2 text-ink-soft hover:text-ink",
+                  baseUrl === preset.url ? "bg-primary text-on-primary" : "bg-surface-2 text-ink-soft hover:text-ink",
                 )}
               >
                 {preset.name}
@@ -393,8 +393,8 @@ const AutoReplyCard: FC<{ available: boolean }> = ({ available }) => {
         <ul className="space-y-2 text-sm text-ink-soft">
           {[
             <>Answers <strong className="text-ink">only from your knowledge base</strong>, in the customer&apos;s language. It never promises refunds, discounts or anything it can&apos;t see.</>,
-            <>Hands over — with your message below — when it isn&apos;t covered, the customer asks for a person, is upset, or needs something looked up.</>,
-            <>Stops the moment an agent replies, and after {3} answers at most. Customers always see it&apos;s the <strong className="text-ink">AI assistant</strong>.</>,
+            <>Hands over — with your message below — when a question isn&apos;t covered, the customer is upset, or something needs looking up. It still answers a later question your knowledge base does cover.</>,
+            <>Stops for good the moment an agent replies or the customer asks for a person, and after {3} answers at most. Customers always see it&apos;s the <strong className="text-ink">AI assistant</strong>.</>,
           ].map((item, i) => (
             <li key={i} className="flex gap-2.5">
               <SparklesIcon className="mt-0.5 h-4 w-4 shrink-0 text-fuchsia-600 dark:text-phosphor" />
@@ -402,6 +402,12 @@ const AutoReplyCard: FC<{ available: boolean }> = ({ available }) => {
             </li>
           ))}
         </ul>
+        {saved.enabled && (
+          <p className="type-caption text-ink-muted">
+            To try it, start a new conversation from your widget. The assistant stays out of conversations a teammate
+            has already replied in.
+          </p>
+        )}
         <div className={cn("space-y-4 border-t border-line pt-4", off && "opacity-50")}>
           <div>
             <p className="text-sm font-medium text-ink-soft">Answer on</p>
@@ -438,7 +444,7 @@ const AutoReplyCard: FC<{ available: boolean }> = ({ available }) => {
               value={handoff}
               disabled={!available || off}
               onChange={(e) => setHandoff(e.target.value)}
-              className="w-full rounded-md border border-line bg-field px-3 py-2 text-sm text-ink outline-none focus:border-primary-500 disabled:opacity-60"
+              className="w-full rounded-md border border-control bg-field px-3 py-2 type-body text-ink disabled:opacity-60"
             />
             {handoff.trim() !== saved.handoffMessage && (
               <div className="flex justify-end">

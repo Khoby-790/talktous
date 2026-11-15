@@ -114,7 +114,7 @@ const CustomerSidebar: FC<CustomerSidebarProps> = ({ conversation, onClose, link
               >
                 <div className="flex items-center justify-between gap-2">
                   <Badge status={c.status} />
-                  <span className="text-[11px] text-ink-muted">{formatShort(c.lastMessageAt)}</span>
+                  <span className="text-xs text-ink-muted">{formatShort(c.lastMessageAt)}</span>
                 </div>
                 <p className="mt-1 truncate text-xs text-ink-soft">{c.subject ?? c.lastMessagePreview ?? "—"}</p>
               </Link>

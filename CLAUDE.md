@@ -306,7 +306,8 @@ import { TextInput, SelectInput, Show, Paginator, Badge, Avatar } from "componen
 | **Avatar** | Agent/customer avatar with initials fallback (sm/md/lg/xl) |
 | **Spinner** | Loading indicator |
 | **CopyButton** | Copies text to clipboard with visual feedback |
-| **EmptyState** | Empty state illustration + CTA |
+| **EmptyState** | Nothing here yet: one sentence saying what will appear + one action. No illustration |
+| **ErrorState** | A request failed: inline banner saying what failed + "Try again". Never show an EmptyState for a failed request |
 | **StatusDot** | Colored dot indicator for online status |
 
 ### Form Components (`components/forms/`)
@@ -492,6 +493,10 @@ Account
   └── Profile
 ```
 
+### Support chat inside the dashboard
+
+`root.tsx` embeds Asotie's own widget (`widget.js`) site-wide. On marketing and auth pages its floating launcher shows as usual. Inside the app shell the launcher is hidden (`layouts/app` sets `data-app-shell` on `<html>`; see `app.css`) because it covered the inbox's Send button and table columns; the chat opens from **Help & support** in the sidebar via `window.Asotie.open()`.
+
 ### URL State for Modals and Tabs
 
 ```typescript
@@ -567,7 +572,7 @@ Section labels:        text-xs font-light text-gray-500 uppercase tracking-wider
 Field labels:          text-sm font-medium text-gray-700
 Values:                text-sm text-gray-900
 Empty values:          "—" via EmptyValue component
-Input height:          h-[38px]
+Input height:          h-9 (36px), with border-control
 Primary color:         text-primary-600, bg-primary-600, focus:ring-primary-500
 Danger color:          text-red-600, bg-red-50
 Success color:         text-green-600, bg-green-50
@@ -575,6 +580,34 @@ Sidebar bg:            bg-gray-900 (dark) text-gray-100
 Card bg:               bg-white dark:bg-gray-800
 Border:                border-gray-200 dark:border-gray-700
 ```
+
+### Design language (the rules) and Auros (the look)
+
+The **Asotie design language** — "Support that listens first" — says how the product behaves. It lives in a Design System artifact: https://claude.ai/artifact/XDqMDSW1MxkJhPMBQwD4Zn (brand book, Dashboard and Website sections, tokens, component guides). **Auros** (header of `app/app.css`) is the look. Where the two disagree on look, Auros wins: the teal palette, weights 400/500, uppercase tracked labels (`label-caps`), 16px cards and 6px small radii, flat cards, and the dark fluid marketing site. Everything else follows the design language:
+
+- **One spark.** `accent` (ember) is only for what needs attention now: the Inbox count, unread counts, the notification dot. The open conversation sits on `bg-accent-soft`. Never use it for navigation state, a status, or a button inside the dashboard. Text on an accent fill is `text-on-accent`; white fails contrast. The filled accent button (`variant="ember"`) is for the front door only (auth, onboarding, marketing), one per screen.
+- **One primary button per view.** Other actions are `secondary`, low emphasis is `ghost`, destructive is `danger` (outlined, behind a `ConfirmModal`). Labels name the action in sentence case: "Send reply", "Mark as resolved".
+- **Fit the view.** The shell never scrolls. List pages pin their header and filters and scroll the table as a pane (page root `flex flex-col md:h-full`, table inside a `md:flex-1 md:basis-0` wrapper with `md:max-h-full`); the dashboard uses `<Pane>` from `components/dashboard`. Add a pane, a tab or a drawer before adding page scroll.
+- **Type roles** (utilities in `app.css`): `type-title-lg` page title · `type-title-md` panel and dialog titles · `type-title-sm` card titles · `type-body` (15px) the default, messages, table cells · `type-label` (13px) buttons, nav, form labels · `type-caption` (12px) timestamps, badges, help text. Nothing in the dashboard is set below 12px. They are named `type-*`, not `text-*`, so `cn()` doesn't mistake one for a colour and drop it.
+- **Density.** Controls are 36px (`h-9`), 44px on the front door. Table rows are 44px and one line; list rows are two lines. Sidebar 240px, top bar 56px, page gutter 24px. Numbers are right-aligned in tabular figures.
+- **Controls** (inputs, selects, secondary buttons) use `border-control`, which holds 3:1 on every ground. `border-line` is for hairlines only.
+- **Focus.** One ring for every interactive element, set in the base layer: 2px, 2px offset, `focus` colour. Don't add `outline-none` or `focus:ring-*`. A box that wraps a bare input takes `focus-within-ring`.
+- **States.** Empty: one sentence and one action (`EmptyState`). Loading: still skeleton blocks (`skeleton`), no spinners for content. Error: an inline banner with a retry (`ErrorState`).
+- **Motion.** 150ms for hover and press, 250ms for panels and menus, ease-out. Nothing loops in the dashboard. Under reduced motion, entrances become opacity changes. Floating layers (menus, dialogs, toasts) are the only things with a shadow (`shadow-pop`).
+- **Charts.** `--chart-main` for the main series, `ink-muted` for comparisons, `--series-1…4` (steps in lightness) for parts of a whole. No state colours in charts.
+- **Voice.** Sentence case, name the action, say what went wrong and how to fix it, no exclamation marks.
+- **Theming.** Semantic colour tokens are declared with `@theme inline`, so a subtree can force a theme (`.dark` on the auth and onboarding wrappers) and utilities follow it.
+
+**Marketing site: cinematic.** The landing page (`pages/landing`) is told as a short film in numbered scenes, built from footage and stills in `public/landing/` and the pieces in `pages/landing/cinema.tsx` (`Footage`, `Still`, `Grain`, `Slate`, `Subtitle`). This is the one place the "nothing loops" rule doesn't apply. Conventions:
+- A clip is three files with one base name: `<name>.mp4` (1080p, H.264, no audio, about 2 MB), `<name>-sm.mp4` (540p, for phones) and `<name>.jpg` (its first frame). `<Footage name="hero" />` shows the still first and fades the clip in; clips play only while on screen and not at all under reduced motion or data saving.
+- Clips end on the frame they start on, so the loop has no seam. The slow push-in is CSS (`kenburns`), not camera movement in the footage.
+- People have a tall still (`kwame.jpg`) and a square face crop for avatars (`kwame-face.jpg`); see `IMG` in `components/fluid`.
+- On `<img>`, put `loading="lazy"` before `src`, or the download starts before the browser knows it may wait.
+- The media was generated with OpenArt (Nano Banana Pro for stills; Veo 3.1 image-to-video with the same image as first and last frame for the loops). Imagery follows the design language: customers being helped and the team caught mid-work — nobody posed, nobody in a headset, no readable screens.
+
+**Palette experiment (opt-in).** `app/palette-neutral.css` re-points the colour roles to the design language's own palette — near-black, white and one orange, no teal. It applies only while `<html data-palette="neutral">` is set, which the theme init script does from `localStorage["talktous:palette"]`: open any page with `?palette=neutral` to turn it on and `?palette=auros` to go back. Auros stays the default. To keep a palette swappable, components use roles rather than hues: `bg-primary text-on-primary` for the filled action (not `bg-primary-600 text-white`), `bg-info-soft text-info` for an open status, `bg-chart` for the main chart series. The `primary-50…900` ramp is for text, icons and tints only.
+
+Not applied yet, because each needs a product decision: six or fewer top-level sidebar destinations (there are eleven) and the phone bottom bar that depends on it; the status names Waiting and Overdue; and Insights, Settings, Apps, Knowledge and the detail pages, which still scroll as one pane.
 
 ---
 
@@ -601,8 +634,10 @@ Payloads carry ids only — refetch through GraphQL. The transport comes from th
 
 Attachments: upload with `uploadFile(file, token)` (`lib/uploads.ts`, → `POST {api}/api/v1/uploads`), then send the returned `{url,name,contentType,size}` in `attachments`. Render with `AttachmentList` (`components/conversations/attachments.tsx`).
 
+The client reports whether events are actually flowing (`RealtimeClient.onStatus`), which is not the same as having subscribed. If the stream endpoints the API advertises can't be reached (a stale `API_PUBLIC_URL`), the stream client retries the same paths on the origin GraphQL already uses, then backs off.
+
 Used in:
-- `hooks/ui/use-conversation-subscription.ts` — `useConversationSubscription(events, handler)` and `useLiveRefetch(refetch, events)` (subscribes; polls every `currentConfigVar.pollInterval` only if the API can't be reached)
+- `hooks/ui/use-conversation-subscription.ts` — `useConversationSubscription(events, handler)` and `useLiveRefetch(refetch, events)` (subscribes; polls every `currentConfigVar.pollInterval` while realtime is unavailable or disconnected, and refetches once on reconnect)
 - `pages/widget` — subscribes to `private-conversation-{id}` with the customer's widget token
 
 ---
@@ -633,5 +668,6 @@ Agent-facing only (phase 1): a human always sends. Bring your own key: each org 
 8. **Styling**: Tailwind CSS + `cn()`. Consistent section/grid/label patterns everywhere
 9. **State**: Apollo reactive vars for auth + config; URL state for modals, tabs, filters
 10. **Notifications**: Global toasts (`toast.success/error` from `hooks/ui/use-toast`, rendered by `<Toaster/>`); API validation errors go onto forms with `applyFormErrors`
-11. **Empty states**: Always use `<EmptyState>` component with contextual illustration + CTA
+11. **Empty states**: Always use `<EmptyState>` component with contextual illustration + CTA. A failed request is not an empty state: read `error` from the data hook and render `<ErrorState onRetry={refetch}>` (or pass `error`/`onRetry` to `TableComponent`)
 12. **Loading states**: Always use shimmer components, never raw spinners for page-level loads
+13. **Design language**: UI work follows the Asotie design language, in the Auros look — see "Design language (the rules) and Auros (the look)" above

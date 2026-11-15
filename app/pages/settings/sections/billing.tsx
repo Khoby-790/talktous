@@ -36,7 +36,7 @@ const Meter: FC<{ label: string; used: number; limit: number | null }> = ({ labe
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2">
         <div
-          className={cn("h-full rounded-full", over ? "bg-red-500" : pct > 80 ? "bg-amber-500" : "bg-primary-600")}
+          className={cn("h-full rounded-full", over ? "bg-red-500" : pct > 80 ? "bg-amber-500" : "bg-chart")}
           style={{ width: limit === null ? "4%" : `${Math.max(pct, 2)}%` }}
         />
       </div>

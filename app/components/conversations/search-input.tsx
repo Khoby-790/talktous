@@ -22,7 +22,7 @@ export const SearchInput: FC<{
   return (
     <div
       className={cn(
-        "flex h-9 items-center gap-2 rounded-md border border-line bg-field px-3 text-ink-muted transition focus-within:border-primary-500",
+        "focus-within-ring flex h-9 items-center gap-2 rounded-md border border-control bg-field px-3 text-ink-muted transition-colors duration-150 hover:border-ink-soft",
         className,
       )}
     >
@@ -32,10 +32,10 @@ export const SearchInput: FC<{
         onChange={(e) => setText(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full min-w-0 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
+        className="type-body w-full min-w-0 bg-transparent text-ink outline-none placeholder:text-ink-muted"
       />
       {text && (
-        <button type="button" onClick={() => setText("")} aria-label="Clear search" className="hover:text-ink">
+        <button type="button" onClick={() => setText("")} aria-label="Clear search" className="rounded hover:text-ink">
           <XMarkIcon className="h-4 w-4" />
         </button>
       )}

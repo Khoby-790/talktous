@@ -11,7 +11,7 @@ import { OrbitStage } from "./stage";
  * on the right from lg up.
  */
 const AuthLayout: FC<{ children: ReactNode }> = ({ children }) => (
-  <div className="dark relative min-h-screen overflow-hidden bg-abyss font-sans text-silver antialiased selection:bg-ember selection:text-white">
+  <div className="dark relative min-h-screen overflow-hidden bg-abyss font-sans text-silver antialiased selection:bg-ember selection:text-on-accent">
     <FluidBackdrop intensity="soft" />
     <div className="relative grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <main className="flex min-h-screen flex-col px-6 py-7 sm:px-12">
