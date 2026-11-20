@@ -214,7 +214,7 @@ type Organization = {
   name: string;
   logo?: string;
   industry: string;
-  plan: "starter" | "growth" | "enterprise";
+  plan: "starter" | "growth" | "business" | "enterprise"; // "starter" is sold as Launch; Enterprise is contact-sales
   timezone: string;
   createdAt: string;
 };
