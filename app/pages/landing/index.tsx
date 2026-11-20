@@ -731,6 +731,15 @@ const secondaryCta =
 const PricingSection: FC = () => {
   const { pricing, loading } = usePricing();
   const trialDays = pricing?.trialDays || DEFAULT_TRIAL_DAYS;
+  const cards = plans.map((p) => {
+    const live = pricing?.plans.find((plan) => plan.id === p.id);
+    const price = p.contactSales ? { amount: "Custom", per: "" } : live ? formatPlanPrice(live) : null;
+    return { p, live, price, features: live?.features?.length ? live.features : p.features };
+  });
+  // Every price is set at one size: the largest at which the longest amount and
+  // its "/ mo" fit a card on one line (about 0.64em a character, 44px for "/ mo").
+  const longest = Math.max(1, ...cards.map((card) => card.price?.amount.length ?? 0));
+  const priceSize = `min(61px, calc((100cqw - 44px) / ${(longest * 0.64).toFixed(2)}))`;
   return (
     <Section id="pricing" className="bg-deep">
       <Reveal className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
@@ -745,15 +754,12 @@ const PricingSection: FC = () => {
         </p>
       </Reveal>
       <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {plans.map((p, i) => {
-          const live = pricing?.plans.find((plan) => plan.id === p.id);
-          const price = p.contactSales ? { amount: "Custom", per: "" } : live ? formatPlanPrice(live) : null;
-          const features = live?.features?.length ? live.features : p.features;
+        {cards.map(({ p, live, price, features }, i) => {
           return (
             <Reveal key={p.name} delay={i * 110}>
               <div
                 className={cn(
-                  "flex h-full flex-col rounded-[28px] p-9",
+                  "@container flex h-full flex-col rounded-[28px] p-9",
                   p.highlight ? "bg-kelp shadow-[0_0_80px_-30px_rgba(255,122,26,0.45)] ring-1 ring-ember/35" : "bg-abyss ring-1 ring-white/[0.04]"
                 )}
               >
@@ -765,8 +771,13 @@ const PricingSection: FC = () => {
                 <p className="mt-10 flex min-h-[61px] items-baseline gap-2">
                   {price ? (
                     <>
-                      <span className={cn("text-[61px] font-medium leading-none tracking-display", p.highlight ? "text-ember" : "text-white")}>{price.amount}</span>
-                      {price.per && <span className="text-sm text-silver">/ {price.per}</span>}
+                      <span
+                        className={cn("whitespace-nowrap text-[61px] font-medium leading-none tracking-display", p.highlight ? "text-ember" : "text-white")}
+                        style={{ fontSize: priceSize }}
+                      >
+                        {price.amount}
+                      </span>
+                      {price.per && <span className="whitespace-nowrap text-sm text-silver">/ {price.per}</span>}
                     </>
                   ) : loading ? (
                     <span className="h-[52px] w-40 animate-pulse self-center rounded-2xl bg-white/[0.06]" aria-label="Loading price" />
