@@ -271,7 +271,9 @@ select:not([multiple]):not([size]) {
    support"), so the floating launcher that widget.js draws is hidden — it sat
    on top of Send in the inbox and the last column of every table. The chat
    panel drops into the space the launcher occupied. */
-html[data-app-shell] body > button[style*="2147483647"] {
+html[data-app-shell] body > button[style*="2147483647"],
+html[data-app-shell] body > div[style*="2147483647"] {
+  /* The launcher was a bare button; since it became draggable it sits in a wrapper. */
   display: none !important;
 }
 html[data-app-shell] body > iframe[style*="2147483646"] {
